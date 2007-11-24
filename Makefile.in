@@ -83,12 +83,12 @@ pkgsysconfdir	= $(sysconfdir)/$(PKG_DIR)
 
 OBJEXT		= @OBJEXT@
 
-SOURCES		= basic_annealing.c multibest_annealing.c
+SOURCES		= basic_annealing.c multibest_annealing.c manytries_annealing.c
 OBJECTS		= $(SOURCES:.c=.$(OBJEXT))
 TARGETS		= $(LIBRARIES)
 
 TEST_SOURCES	= test_sinc.c test_sinxy.c test_fitting.c test_tsp.c \
-		  test_multi_sinc.c
+		  test_multi_sinc.c test_many_sinc.c
 TEST_OBJECTS	= $(TEST_SOURCES:.c=.$(OBJEXT))
 TEST_TARGETS	= $(notdir $(TEST_SOURCES:.c=))
 
@@ -104,8 +104,9 @@ TEST_FLAGS	= LD_LIBRARY_PATH="$(builddir)"
 INCLUDE_FILES	= $(srcdir)/gsl_annealing.h
 
 
-.PHONY: all clean test test-verbose test-tsp test-verbose-tsp test-sinc
-.PHONY: test-multi-sinc test-verbose-multi-sinc
+.PHONY: all clean test test-verbose test-tsp test-verbose-tsp
+.PHONY: test-sinc test-verbose-sinc
+.PHONY: test-multi-sinc test-verbose-multi-sinc test-many-sinc test-verbose-many-sinc
 
 all: $(TARGETS) $(TEST_TARGETS) $(OTHER_TARGETS)
 clean:
@@ -113,6 +114,7 @@ clean:
 test:
 	$(TEST_FLAGS) ./test_sinc
 	$(TEST_FLAGS) ./test_multi_sinc
+	$(TEST_FLAGS) ./test_many_sinc
 	$(TEST_FLAGS) ./test_sinxy
 	$(TEST_FLAGS) ./test_fitting
 	$(TEST_FLAGS) ./test_tsp
@@ -120,6 +122,7 @@ test:
 test-verbose:
 	$(TEST_FLAGS) ./test_sinc -v
 	$(TEST_FLAGS) ./test_multi_sinc -v
+	$(TEST_FLAGS) ./test_many_sinc -v
 	$(TEST_FLAGS) ./test_sinxy -v
 	$(TEST_FLAGS) ./test_fitting -v
 	$(TEST_FLAGS) ./test_tsp -v
@@ -130,8 +133,17 @@ test-sinc:
 test-multi-sinc:
 	$(TEST_FLAGS) ./test_multi_sinc
 
+test-many-sinc:
+	$(TEST_FLAGS) ./test_many_sinc
+
+test-verbose-sinc:
+	$(TEST_FLAGS) ./test_sinc -v
+
 test-verbose-multi-sinc:
 	$(TEST_FLAGS) ./test_multi_sinc -v
+
+test-verbose-many-sinc:
+	$(TEST_FLAGS) ./test_many_sinc -v
 
 test-tsp:
 	$(TEST_FLAGS) ./test_tsp

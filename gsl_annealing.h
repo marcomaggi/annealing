@@ -138,27 +138,28 @@ typedef struct gsl_annealing_multibest_workspace_t {
  ** ----------------------------------------------------------*/
 
 typedef struct gsl_annealing_manytries_workspace_t {
-  size_t		number_of_iterations_at_fixed_temperature;
-  void *		max_step_value;
-  double		minimum_acceptance_distance;
+  size_t	number_of_iterations_at_fixed_temperature;
+  void *	max_step_value;
 
-  double		boltzmann_constant;
-  double		temperature;		/* initial temperature */
-  double		damping_factor;
-  double		minimum_temperature;
+  double	boltzmann_constant;
+  double	temperature;		/* initial temperature */
+  double	damping_factor;
+  double	minimum_temperature;
+  double	restart_temperature;
+  int		restart_flag;
 
-  gsl_annealing_configuration_t		start_configuration;
-  gsl_annealing_configuration_t *	new_configurations;
+  gsl_annealing_configuration_t		current_configuration;
   gsl_annealing_configuration_t		best_configuration;
-  size_t	max_number_of_new_configuration;
+  gsl_annealing_configuration_t *	new_configurations;
+  double *	monte_carlo_coordinates;
+  size_t	number_of_tries;
 
-  gsl_rng *		numbers_generator;
+  gsl_rng *	numbers_generator;
 
   gsl_annealing_energy_fun_t *	energy_function;
   gsl_annealing_step_fun_t *	step_function;
   gsl_annealing_log_fun_t *	log_function;
   gsl_annealing_copy_fun_t *	copy_function;
-  gsl_annealing_metric_fun_t *	metric_function;
 
   void *		params;
 } gsl_annealing_manytries_workspace_t;

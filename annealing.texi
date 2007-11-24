@@ -110,6 +110,7 @@ Documentation License''.
 
 Appendices
 
+* References::                  Bilbiography and references.
 * Package License::             GNU General Public License.
 * Documentation License::       GNU Free Documentation License.
 
@@ -145,6 +146,7 @@ module.
 * annealing types::             Data types.
 * annealing basic::             Interface to the basic algorithm.
 * annealing multi::             Interface to the multi-best algorithm.
+* annealing many::              Interface to the many-tries algorithm.
 @end menu
 
 
@@ -796,7 +798,6 @@ Find 4 local minima of @code{f(t) = -sin(t)/t}.
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <unistd.h>
 #include <float.h>
 #include <gsl/gsl_rng.h>
 #include "gsl_annealing.h"
@@ -821,7 +822,7 @@ main (void)
   double        max_step = 10.0;
   
 
-  printf("test_multi_sinc: multi-best sinc minimisation with simulated annealing\n");
+  printf("multi-best sinc minimisation with simulated annealing\n");
 
   S.number_of_iterations_at_fixed_temperature = 10;
   S.max_step_value              = &max_step;
@@ -854,10 +855,12 @@ main (void)
 
   gsl_annealing_multibest_solve(&S);
 
-  printf("test_multi_sinc: found %u best solutions:",
-         S.best_configurations_count);
+  printf("found %u best solutions:", S.best_configurations_count);
   for (size_t i=0; i<S.best_configurations_count; ++i)
-    printf(" %.5f", *((double *)(array[i].data)));
+    @{
+      double *	value = array[i].data;
+      printf(" %.5f", *value);
+    @}
 
   gsl_rng_free(S.numbers_generator);
   exit(EXIT_SUCCESS);
@@ -914,7 +917,10 @@ log_function (void * W)
          S->best_configurations[S->best_configurations_count-1].energy,
          S->best_configurations_count);
   for (size_t i=0; i<S->best_configurations_count; ++i)
-    printf(" %.5f", *((double *)(S->best_configurations[i].data)));
+    @{
+      double *	value = S->best_configurations[i].data;
+      printf(" %.5f", *value);
+    @}
   printf("\n");
 @}
 
@@ -933,6 +939,455 @@ copy_function (void * dummy, void * dst_configuration, void * src_configuration)
 
 /* end of file */
 @end example
+
+
+@c ------------------------------------------------------------
+@node annealing many
+@section Interface to the many--tries algorithm
+
+
+@noindent
+To understand this section you have to read @ref{annealing algorithm}
+first.
+
+The many--tries algorithm makes use of the Monte Carlo method to select
+the new configuration. The algorithm itself is very simple, but its
+meaning is not immediate to understand if one does not know the
+Boltzmann distribution.
+
+
+@subsection The Boltzmann distribution
+
+
+@noindent
+Let's consider a volume of gas composed by @code{N} particles at a
+temperature @code{T}. We can partition the particles in @code{I} sets,
+indexed by @code{i \in [1, I]}, such that the number of particles in the
+@code{i}--th set is @code{N_i} and:
+
+@example
+    I
+N = S N_i
+   i=1 
+@end example
+
+@noindent
+We do the partition so that: in each set all the particles share the
+same energy level @code{E_i}.
+
+The Boltzmann distribution is:
+
+@example
+         g_i exp(-E_i / (k T))
+N_i/N = ------------------------
+         I
+         S g_j exp(-E_j / (k T))
+        j=1
+@end example
+
+@noindent
+where @code{k} is the Boltzmann constant; if we know the temperature
+@code{T} and all the possible energy states @code{E_i}, we can compute
+the fraction of particles in each state.
+
+Altenatively: the fraction @code{N_i/N} is the probability that a
+particle randomly selected in the gas is at the state @code{E_i}.
+
+Given two numbers @code{N_i} and @code{N_j}, and assuming @code{g_i =
+g_j}, we can write:
+
+@example
+          g_i exp(-E_i / (k T))
+N_i/N_j = --------------------- = exp(-(E_i - E_j) / (k T))
+          g_j exp(-E_j / (k T))
+@end example
+
+@noindent
+which gives us the probability centred around the state @code{E_j}.
+
+
+@subsection Monte Carlo method
+
+
+@noindent
+Let's say that we have a gas with @code{I} possible states, for which we
+can compute the energies @code{E_i}, @code{i \in [1, I]}. Using the
+Boltzmann distribution centred around a known level @code{E} having
+@code{N} particles:
+
+@example
+N_i/N = exp(-(E_i - E) / (k T))            i \in [1, I]
+@end example
+
+@noindent
+we can compute the fractions @code{N_i/N}.
+
+The Monte Carlo method simulates the random extraction of a particle and
+the determination of its energy state:
+
+@enumerate
+@item
+compute samples from a coordinate @code{X}:
+
+@example
+X_0 = 0      X_i = N_i/N + X_@{i-1@}       i \in [1, I]
+@end example
+
+@item
+generate a random number @code{x} from a uniform distribution in the
+range @code{[0, X_I]};
+
+@item
+select the range for which @code{x \in [X_@{i-1@}, X_i]};
+@end enumerate
+
+@noindent
+the result of the simulation is that the particle has energy state
+@code{E_i}, so it lies in the state @code{i}.
+
+
+@subsection Application to simulated annealing
+
+
+@noindent
+To apply the method we substitute the number of iterations at fixed
+temperature with the following process:
+
+@enumerate
+@item
+create a number @code{I-1} of new configurations; add the current
+configuration, obtaining a set of @code{I} configurations;
+
+@item
+for each configuration: compute the energy level @code{E_i} centred
+around the energy of the current configuration;
+
+@item
+apply the Monte Carlo method to select a state;
+@end enumerate
+
+@noindent
+the configuration associated to the selected state is the new
+configuration.
+
+We notice that:
+
+@itemize
+@item
+the fraction associated to the current configuration is:
+
+@example
+N_cur/N = exp(-(E - E) / (k T)) = 1
+@end example
+
+@item
+the fraction associated to a configuration with energy higher than
+@code{E} is:
+
+@example
+E_hi > E     =>      (E_hi - E) > 0
+             =>      N_hi/N = exp(-(E_hi - E) / (k T)) < 1
+@end example
+
+@item
+the fraction associated to a configuration with energy lower than
+@code{E} is:
+
+@example
+E_lo < E     =>      (E_lo - E) < 0
+             =>      N_lo/N = exp(-(E_lo - E) / (k T)) > 1
+@end example
+
+@noindent
+when the temperature is low the exponential becomes huge and the
+library forces the fraction to the value of @code{10.0};
+@end itemize
+
+@noindent
+so the lower energy configurations have more probability to be selected
+that the current and higher energy ones, but still there is the
+possibility to select a higher energy configuration.
+
+
+@subsection Interface
+
+
+@deftp {Struct Typedef} gsl_annealing_manytries_workspace_t
+Holds all the data required to run a many-tries simulated annealing
+algorithm. It must be allocated and freed by the user code. Public
+fields:
+
+@table @code
+@item size_t number_of_iterations_at_fixed_temperature
+self explaining;
+
+@item size_t number_of_tries
+the number of new configurations to generate at fixed temperature; this
+is the @code{I-1} number;
+
+@item void * max_step_value
+pointer to the value used to limit the ``distance'' between new
+configurations and the current configuration; it can reference any type
+of value, it is accessed only by the user supplied functions;
+
+@item double boltzmann_constant
+the constant used in the energy computation; it must be positive; when
+tuning the parameters for a search a good start value is @code{1.0};
+
+@item double temperature
+the initial value for the temperature;
+
+@item double minimum_temperature
+the minimum value for the temperature: when the value in the field
+@code{temperature} drops below this level the outer loop stops;
+
+@item double restart_temperature
+the temperature level that causes the @emph{current} configuration to be
+reset to the @emph{best so far};
+
+restarting is useful to prevent the search to get lost at low
+temperature in a region with no interesting minima;
+
+restarting is optional: if we select @code{DBL_MIN} as value, it is
+never @code{temperature < restart_temperature} and the configuration is
+never reset (@code{DBL_MIN} is defined in @file{float.h}, but any
+negative value will do);
+
+the value must be less than @code{temperature}, or the algorithm will
+restart at each iteration;
+
+@item int restart_flag
+initially set to @code{0} by @function{gsl_annealing_manytries_solve}, it
+is set to @code{1} if/when the algorithm is restarted from the best
+configuration;
+
+@item double damping_factor
+the coefficient used to cool the temperature; it must be a number
+slightly above @code{1.0};
+
+@item gsl_annealing_configuration_t current_configuration
+holds the @emph{current} configuration value; its @code{data} field must
+be initialised with a pointer to the start configuration;
+
+@item gsl_annealing_configuration_t best_configuration
+holds the @emph{best so far} configuration value; its @code{data} field
+must be initialised with a pointer to a memory block large enough to
+hold a configuration value; the memory block must be initialised with an
+invalid value that can be recognised by @code{copy_function};
+
+@item gsl_annealing_configuration_t * new_configurations
+pointer to an array of @code{number_of_tries} structures used to hold
+references to the @emph{new} configurations; the @code{data} field of
+the structures must be initialised with a pointer to a memory block
+large enough to hold a configuration value; the memory block must be
+initialised with an invalid value that can be recognised by
+@code{copy_function};
+
+@item double * monte_carlo_coordinates
+pointer to an array of @code{number_of_tries} values used to store the
+Monte Carlo method coordinates for the new configurations (the
+coordinate for the current configuration is always @code{1.0}, so it
+does not need a variable);
+
+@item gsl_rng * numbers_generator
+the random number generator used to apply the Boltzmann distribution
+acceptance criterion; it can be used also to generate the random step;
+
+@item gsl_annealing_energy_fun_t * energy_function
+the user supplied function used to compute the energy of a
+configuration;
+
+@item gsl_annealing_step_fun_t * step_function
+the user supplied function used to compute the @emph{new} configuration
+from the @emph{current} configuration;
+
+@item gsl_annealing_log_fun_t * log_function
+the user supplied function used to log the search path; it can be
+@code{NULL} if no logging is required;
+
+@item gsl_annealing_copy_fun_t * copy_function
+the user supplied function used to copy a configuration from an
+allocation space to another;
+
+@item void * params
+this is a free field that can be used to hand data to the user supplied
+functions.
+@end table
+@end deftp
+
+
+@deftypefun void gsl_annealing_manytries_solve (gsl_annealing_manytries_workspace_t * @var{S})
+Does the search.
+
+The structure referenced by @var{S} must be allocated and initialised by
+the user before invoking this function, and freed by the user after this
+function has returned.
+
+Space for the data referenced by the @code{current_configuration},
+@code{best_configuration} and @code{new_configuration} fields in @var{S}
+must be allocated by the user before invoking this function, and freed
+by the user after this function has returned.
+
+This function does no resource allocation, so it is perfectly all right
+if the user supplied functions use a dynamic wind mechanism, like
+@function{setjmp} and @function{longjmp}, to report errors.
+
+When this function returns: the best configuration found is in the
+@code{best_configuration} field.
+@end deftypefun
+
+
+@subsection Examples
+
+
+@noindent
+Find minimum of @code{f(t) = -sin(t)/t}.
+
+
+@example
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <float.h>
+#include <gsl/gsl_rng.h>
+#include "gsl_annealing.h"
+
+
+static	gsl_annealing_energy_fun_t	energy_function;
+static	gsl_annealing_step_fun_t	step_function;
+static	gsl_annealing_log_fun_t		log_function;
+static	gsl_annealing_copy_fun_t	copy_function;
+
+/** ------------------------------------------------------------
+ ** Main.
+ ** ----------------------------------------------------------*/
+
+#define TRIES   10
+
+int
+main (int argc, char ** argv)
+@{
+  gsl_annealing_manytries_workspace_t   S;
+  gsl_annealing_configuration_t         array[TRIES];
+  double        configurations[2 + TRIES]; /* best, current and new tries */
+  double        monte_carlo_coordinates[TRIES];
+  double        max_step = 10.0;
+
+  
+  printf("many-tries sinc minimisation with simulated annealing\n");
+
+  S.number_of_iterations_at_fixed_temperature = 10;
+  S.max_step_value              = &max_step;
+
+  S.temperature                 = 10.0;
+  S.minimum_temperature         = 1.0e-6;
+  S.restart_temperature         = DBL_MIN; /* do not restart */
+  S.boltzmann_constant          = 1.0;
+  S.damping_factor              = 1.005;
+
+  S.energy_function             = energy_function;
+  S.step_function               = step_function;
+  S.copy_function               = copy_function;
+  S.log_function                = log_function;
+
+  S.numbers_generator           = gsl_rng_alloc(gsl_rng_rand);
+  gsl_rng_set(S.numbers_generator, 15);
+
+  S.current_configuration.data  = &(configurations[0]);
+  S.best_configuration.data     = &(configurations[1]);
+  S.new_configurations          = array;
+  S.monte_carlo_coordinates     = monte_carlo_coordinates;
+  S.number_of_tries             = TRIES;
+
+  for (size_t i=0; i<S.number_of_tries; ++i)
+    array[i].data = &(configurations[i+2]);
+
+  configurations[0] = 100.0;
+
+  gsl_annealing_manytries_solve(&S);
+
+  printf("final best solution: %f, global 0.0\n", configurations[1]);
+
+  gsl_rng_free(S.numbers_generator);
+  exit(EXIT_SUCCESS);
+@}
+
+/** ------------------------------------------------------------
+ ** Iteration functions.
+ ** ----------------------------------------------------------*/
+
+static double
+alea (gsl_annealing_manytries_workspace_t * S)
+@{
+  double        max_step = *((double *)S->max_step_value);
+
+  return (2.0 * gsl_rng_uniform(S->numbers_generator) - 1.0) * max_step;
+@}
+
+/* ------------------------------------------------------------ */
+
+double
+energy_function (void * dummy, void * configuration)
+@{
+  double        C = *((double *)configuration);
+
+  return -sin(C)/C;
+@}
+void
+step_function (void * W, void * configuration)
+@{
+  gsl_annealing_manytries_workspace_t * S = W;
+  double *      C = (double *)configuration;
+  double        c;
+
+  do c = *C + alea(S); while (fabs(c) > 120.0);
+  *C = c;
+@}
+void
+log_function (void * W)
+@{
+  gsl_annealing_manytries_workspace_t * S = W;
+  double *      current = (double *)S->current_configuration.data;
+  double *      best    = (double *)S->best_configuration.data;
+
+  printf("current %f (energy %f), best %f (energy %f)\n",
+         *current, S->current_configuration.energy,
+         *best,    S->best_configuration.energy);
+@}
+
+/** ------------------------------------------------------------
+ ** Configuration handling functions.
+ ** ----------------------------------------------------------*/
+
+void
+copy_function (void * dummy, void * dst_configuration, void * src_configuration)
+@{
+  double *      dst = dst_configuration;
+  double *      src = src_configuration;
+
+  *dst = *src;
+@}
+
+/* end of file */
+@end example
+
+
+@c ------------------------------------------------------------
+@node References
+@chapter Bilbiography and references
+
+
+@noindent
+``Boltzmann distribution.'' Wikipedia, The Free Encyclopedia. 24 Jan
+2007, 14:52 UTC. Wikimedia Foundation, Inc. 26 Feb 2007
+@url{http://en.wikipedia.org/w/index.php?title=Boltzmann_distribution&oldid=102908405}.
+
+
+
 
 @c ------------------------------------------------------------
 
