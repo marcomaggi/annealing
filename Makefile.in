@@ -1,0 +1,204 @@
+# Makefile --
+
+
+#page
+## ------------------------------------------------------------
+## Setup.
+## ------------------------------------------------------------
+
+PACKAGE_NAME	= @PACKAGE_NAME@
+PACKAGE_VERSION = @PACKAGE_VERSION@
+
+PKG_DIR		= $(PACKAGE_NAME)/$(PACKAGE_VERSION)
+PKG_ID		= $(PACKAGE_NAME)_$(PACKAGE_VERSION)
+
+#page
+## ------------------------------------------------------------
+## Programs.
+## ------------------------------------------------------------
+
+RM		= @RM@ -fvr
+RM_SILENT	= @RM@ -fr
+
+TAR		= @TAR@
+TLA		= @TLA@
+MKDIR		= @MKDIR@ -p
+FIND		= @FIND@
+
+DIR_INSTALL_MODE  = 0755
+FILE_INSTALL_MODE = 0444
+BIN_INSTALL_MODE  = 0755
+
+INSTALL		= @INSTALL@
+INSTALL_DIR	= $(INSTALL) -m $(DIR_INSTALL_MODE) -d
+INSTALL_FILE	= $(INSTALL) -m $(FILE_INSTALL_MODE)
+INSTALL_BIN	= $(INSTALL) -m $(BIN_INSTALL_MODE)
+
+CC		= @CC@
+RANLIB		= @RANLIB@
+AR		= @AR@
+
+#page
+## ------------------------------------------------------------
+## Directories.
+## ------------------------------------------------------------
+
+top_srcdir	= @top_srcdir@
+srcdir		= @srcdir@
+builddir	= $(srcdir)/"=build"
+
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+
+bindir		= @bindir@
+datadir		= @datadir@
+docdir		= $(prefix)/doc
+includedir	= @includedir@
+infodir		= @infodir@
+libdir		= @libdir@
+libexecdir	= @libexecdir@
+localstatedir	= @localstatedir@
+mandir		= @mandir@
+sbindir		= @sbindir@
+sharedstatedir	= @sharedstatedir@
+sysconfdir	= @sysconfdir@
+
+pkgdatadir	= $(datadir)/$(PKG_DIR)
+pkgdocdir	= $(docdir)/packages/$(PKG_DIR)
+pkgexampledir	= $(pkgdocdir)/examples
+pkghtmldir	= $(pkgdocdir)/HTML
+pkginfodir	= $(pkgdocdir)/info
+pkgincludedir	= $(includedir)/$(PKG_DIR)
+pkglibdir	= $(libdir)/$(PKG_DIR)
+pkglibexecdir	= $(libexecdir)/$(PKG_DIR)
+pkgsysconfdir	= $(sysconfdir)/$(PKG_DIR)
+
+
+#page
+## ------------------------------------------------------------
+## Main rules.
+## ------------------------------------------------------------
+
+OBJEXT		= @OBJEXT@
+
+SOURCES		= annealing.c
+TEST_SOURCES	= test_sinc.c test_sinxy.c test_fitting.c
+OBJECTS		= $(SOURCES:.c=.$(OBJEXT))
+TEST_OBJECTS	= $(TEST_SOURCES:.c=.$(OBJEXT))
+LIBRARIES	= libgsl-annealing.so
+TARGETS		= $(LIBRARIES)
+TEST_TARGETS	= $(notdir $(TEST_SOURCES:.c=))
+CLEANFILES	= $(LIBRARIES) $(OBJECTS) $(TEST_TARGETS) $(TEST_OBJECTS)
+
+TEST_FLAGS	= LD_LIBRARY_PATH="$(builddir)"
+
+
+.PHONY: all clean test test-verbose
+
+all: $(TARGETS) $(TEST_TARGETS)
+clean:
+	@$(RM) $(CLEANFILES)
+test:
+	$(TEST_FLAGS) ./test_sinc
+	$(TEST_FLAGS) ./test_sinxy
+	$(TEST_FLAGS) ./test_fitting
+
+test-verbose:
+	$(TEST_FLAGS) ./test_sinc -v
+	$(TEST_FLAGS) ./test_sinxy -v
+	$(TEST_FLAGS) ./test_fitting -v
+
+
+#page
+## ------------------------------------------------------------
+## C stuff.
+## ------------------------------------------------------------
+
+vpath		%.c	$(srcdir)
+vpath		%.h	$(srcdir)
+
+C_DEFAULT	= -pipe -shared -fPIC -std=c99
+C_WARNINGS	= -Wall -W -pedantic -Wextra \
+			-Wmissing-prototypes \
+			-Wpointer-arith -Wcast-qual -Wcast-align \
+			-Wwrite-strings -Wnested-externs \
+			-Wstrict-prototypes -Wshadow -fno-common
+DEFS		= @DEFS@
+LIBS		= @LIBS@
+INCLUDES	= @INCLUDES@ -I$(srcdir) -I$(builddir)
+CFLAGS		= @CFLAGS@
+ALL_CFLAGS	= $(C_DEFAULT) $(C_WARNINGS) $(INCLUDES) $(CFLAGS) $(DEFS)
+ALL_TEST_CFLAGS	= -pipe -std=c99 $(C_WARNINGS) $(INCLUDES) $(CFLAGS) $(DEFS)
+CC_COMPILE	= $(CC) $(ALL_CFLAGS) -c -o
+CC_BUILD	= $(CC) $(ALL_CFLAGS) -o
+CC_BUILD_TEST	= $(CC) $(ALL_TEST_CFLAGS) -o
+STRIP		= @STRIP@ -s
+LINKFLAGS	= @LINKFLAGS@
+
+%.$(OBJEXT) : %.c gsl_annealing.h
+	$(CC_COMPILE) $(@) $(<)
+
+$(LIBRARIES) : $(OBJECTS)
+	$(CC_BUILD) $(@) $(^) $(LINKFLAGS) $(LIBS)
+	$(STRIP) $(@)
+
+$(TEST_TARGETS): % : %.$(OBJEXT)
+	$(CC_BUILD_TEST) $(@) $(^) -L$(builddir) -lgsl-annealing $(LIBS)
+
+#page
+## ------------------------------------------------------------
+## Documentation.
+## ------------------------------------------------------------
+
+vpath	%.texi		$(srcdir)
+
+doc_SOURCES	= annealing.texi
+doc_TARGETS	= $(doc_SOURCES:.texi=.info)
+doc_CLEANFILES	= *.info*
+
+MAKEINFO_FLAGS	= --no-split -I $(srcdir) -I $(top_srcdir)
+MAKEINFO	= makeinfo $(MAKEINFO_FLAGS) -o
+
+.PHONY: doc doc-clean rinfo
+
+all: doc
+clean: doc-clean
+doc: $(doc_TARGETS)
+doc-clean:
+	@$(RM) $(doc_CLEANFILES)
+
+%.info : %.texi version.texiinc
+	$(MAKEINFO) $(@) $(<)
+
+version.texiinc: Makefile
+	@echo -e "@macro version{}\n$(PACKAGE_VERSION)\n@end macro\n" >$(@)
+
+rinfo:
+	info -f ./annealing.info
+
+#page
+## ------------------------------------------------------------
+## Installation.
+## ------------------------------------------------------------
+
+.PHONY: install
+
+install:
+	$(INSTALL_DIR)  $(DESTDIR)$(libdir)
+	$(INSTALL_FILE) $(LIBRARIES) $(DESTDIR)$(libdir)
+	$(INSTALL_DIR)  $(DESTDIR)$(infodir)
+	$(INSTALL_FILE) $(doc_TARGETS) $(DESTDIR)$(infodir)
+
+
+#page
+## ------------------------------------------------------------
+## Inspection.
+## ------------------------------------------------------------
+
+.PHONY: echo-variable
+
+echo-variable:
+	@echo $(VARIABLE)=$($(VARIABLE))
+
+
+### end of file

@@ -1,0 +1,173 @@
+\input texinfo.tex
+@c %**start of header
+@setfilename annealing.info
+@settitle Annealing
+@c %**end of header
+
+@include version.texiinc
+
+@ignore
+@syncodeindex tp cp
+@syncodeindex vr cp
+@syncodeindex fn cp
+@end ignore
+
+@c ------------------------------------------------------------
+
+@macro authorname{}
+Mark Galassi and Marco Maggi
+@end macro
+
+@macro copyrightyears{}
+1996, 1997, 1998, 1999, 2000, 2007
+@end macro
+
+@macro gnu{}
+@acronym{GNU}
+@end macro
+
+@macro gpl{}
+@acronym{GPL}
+@end macro
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+@macro function{NAME}
+@code{\NAME\()}
+@end macro
+
+@macro null{}
+@code{NULL}
+@end macro
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+@macro gslref{NODE}
+@xref{\NODE\,\NODE\,gsl-ref,gsl-ref}
+@end macro
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+@c ------------------------------------------------------------
+@titlepage
+@title Annealing
+@subtitle @version{}
+@author @authorname{}
+@page
+@vskip 0pt plus 1filll
+@noindent
+Copyright @copyright{}  @copyrightyears{}  by @authorname{}
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.2 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, no Front--Cover Texts, and no Back--Cover Texts.  A
+copy of the license is included in the section entitled ``GNU Free
+Documentation License''.
+@end titlepage
+
+
+@c ------------------------------------------------------------
+
+@ifinfo
+@dircategory Mathematics
+@direntry
+* annealing: (annealing).       A reworking of GSL's simulated annealing module.
+@end direntry
+@end ifinfo
+
+
+@c ------------------------------------------------------------
+@ifnottex
+@node Top
+@top Annealing
+
+
+@noindent
+Annealing is a C language library extension the @gnu{} Scientific
+Library, attempting a redesign of the simulated annealing module. This
+document describes version @version{}.
+
+The package is distributed under the terms of the @gnu{} General Public
+License (@gpl{}).
+
+Copyright @copyright{}  @copyrightyears{}  by @authorname{}.
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.2 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, no Front--Cover Texts, and no Back--Cover Texts.  A
+copy of the license is included in the section entitled ``GNU Free
+Documentation License''.
+     
+@menu
+* overview::                    Overview of the package. 
+
+
+Appendices
+
+* Package License::             GNU General Public License.
+* Documentation License::       GNU Free Documentation License.
+* References::                  Bibliography and references.
+
+Indexes
+
+* Concept Index::               An entry for each concept. 
+* Function Index::              An entry for each function. 
+* Variable Index::              An entry for each variable. 
+* Type Index::                  An entry for each type. 
+@end menu
+@end ifnottex
+
+
+@c ------------------------------------------------------------
+@node overview
+@chapter Overview of the package
+
+
+@noindent
+
+
+
+
+
+
+@c ------------------------------------------------------------
+
+@include fdl.texiinc
+@include gpl.texiinc
+
+@c ------------------------------------------------------------
+@node References
+@appendix Bibliography and references
+
+
+@c ------------------------------------------------------------
+@node Concept Index
+@appendix An entry for each concept
+     
+@printindex cp
+     
+@node Function Index
+@appendix An entry for each function. 
+
+@printindex fn
+
+@node Variable Index
+@appendix An entry for each variable. 
+
+@printindex vr
+
+@node Type Index
+@appendix An entry for each type. 
+
+@printindex tp
+
+@contents
+@bye
+
+@c end of file
+@c Local Variables:
+@c mode: texinfo
+@c page-separator: \"^@c -+$\"
+@c End:

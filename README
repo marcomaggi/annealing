@@ -1,0 +1,125 @@
+
+			 Annealing
+			 =========
+
+
+Topics
+------
+
+  1. Introduction
+  2. License
+  3. Install
+  4. Usage
+  A. Credits
+  B. Bugs
+  C. Resources
+
+
+1. Introduction
+---------------
+
+Annealing is a C language extension library for GSL, the GNU
+Scientific Library,  attempting a redesign  of the simulated
+annealing module.
+
+  The  code is a  reworking of  the files  "gsl_siman.h" and
+"siman.c" from the GSL 1.9 distribution (Thu Feb 22, 2007).
+
+  *NOTE* The  last time the  author bothered to  update this
+paragraph he had tested GSL 1.9. 
+
+  *NOTE* The author supports  only the GNU infrastructure on
+a Linux+GNU  system: GNU C  Compiler; GNU Make;  GNU command
+line utilities like 'rm', 'tar' and 'gzip'; GNU arch.
+
+
+2. License
+----------
+
+Copyright (C) 1996, 1997, 1998, 1999, 2000 Mark Galassi
+Copyright (c) 2007 Marco Maggi.
+
+This is free software  you can redistribute it and/or modify
+it  under the  terms of  the GNU  General Public  License as
+published by the Free Software Foundation; either version 2,
+or (at your option) any later version.
+
+This file is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY;  without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+the GNU General Public License for more details.
+
+You should  have received a  copy of the GNU  General Public
+License along with this file; see the file COPYING.  If not,
+write to the Free Software Foundation, Inc., 59 Temple Place
+- Suite 330, Boston, MA 02111-1307, USA.
+
+
+3. Install
+----------
+
+Do this:
+
+    $ cd annealing
+    $ mkdir "=build"
+    $ cd "=build"
+
+to inspect the available configuration options:
+
+    $ ../configure --help
+
+then do it:
+
+    $ ../configure [options]
+    $ make
+    $ make test
+    $ make install
+
+  The Makefile supports  the DESTDIR environment variable to
+install files in a  temporary location, example: to see what
+will happen:
+
+    $ make -n install DESTDIR=/tmp/marco/annealing
+
+to really do it:
+
+    $ make install DESTDIR=/tmp/marco/annealing
+
+
+4. Usage
+--------
+
+Read the documentation in Info format. 
+
+
+A. Credits
+----------
+
+Annealing was written by  Marco Maggi reworking code by Mark
+Galassi.
+
+
+B. Bugs
+-------
+
+Bug  reports  are appreciated:  register  them  at the  GNA!
+project site of GEE.
+
+
+C. Resources
+------------
+
+The GNU Project software can be found here:
+
+		   <http://www.gnu.org/>
+
+the  latest version  of this  package  can be  found in  the
+dowload area of:
+
+	       <http://gna.org/projects/gee/>
+
+
+### end of file
+# Local Variables:
+# mode: text
+# End:
