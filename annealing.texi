@@ -30,6 +30,10 @@ Mark Galassi and Marco Maggi
 @acronym{GPL}
 @end macro
 
+@macro gsl{}
+@acronym{GSL}
+@end macro
+
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @macro function{NAME}
@@ -102,13 +106,12 @@ Documentation License''.
      
 @menu
 * overview::                    Overview of the package. 
-
+* annealing::                   Simulated annealing.
 
 Appendices
 
 * Package License::             GNU General Public License.
 * Documentation License::       GNU Free Documentation License.
-* References::                  Bibliography and references.
 
 Indexes
 
@@ -126,20 +129,345 @@ Indexes
 
 
 @noindent
+Annealing is a C language extension library for @gsl{}, the @gnu{}
+Scientific Library, attempting a redesign of the simulated annealing
+module.
 
 
 
+@c ------------------------------------------------------------
+@node annealing
+@chapter Simulated annealing
 
+
+@menu
+* annealing algorithm::         The basic algorithm.
+* annealing basic::             Interface to the basic algorithm.
+@end menu
+
+
+@c ------------------------------------------------------------
+@node annealing algorithm
+@section The basic algorithm
+
+
+@noindent
+Here is an explanation of the basic algorithm. The idea is to generate
+at random new configurations in the solution's space, and apply two
+criteria to decide if the a new configuration must be accepted or
+not. The criteria are: if lower energy accept, if upper energy accept
+with a probability from a Boltmann distribution.
+
+It goes like this:
+
+@enumerate
+@item
+interpret the start configuration as @emph{current} and also register it
+as @emph{best so far};
+
+@item
+start a number of iterations at fixed temperature:
+
+@enumerate a
+@item
+compute a @emph{new} configuration by taking a random step from the
+@emph{current} configuration;
+
+@item
+evaluate the @emph{new} configuration's energy:
+
+@itemize
+@item
+if @code{new_E <= best_E}: register the @emph{new} configuration as both
+@emph{best so far} and @emph{current};
+
+@item
+else compute:
+
+@example
+R = exp(-(new_E - best_E)/(k * T)
+@end example
+
+@noindent
+where @code{T} is the current temperature and @code{k} the Boltzmann
+constant; if @code{R} is greater than a random number in the range
+@code{[0, 1)}: register the @emph{new} configuration as @emph{current};
+
+@item
+else: discard the @emph{new} configuration;
+@end itemize
+
+@item
+if not done all the iterations: go back to @code{a};
+@end enumerate
+
+@item
+cool the temperature, the new value is:
+
+@example
+T_new = T / mu
+@end example
+
+@noindent
+where @code{mu} is the damping factor: it must be a number greater than
+@code{1};
+
+@item
+if the new temperature is less than the selected minimum value: stop and
+report the better configuration as result;
+
+@item
+if the new temperature is less than the selected restart value: discard
+the @emph{current} configuration replacing it with the @emph{best so
+far};
+
+@item
+go to 2.
+@end enumerate
+
+Notes:
+
+@itemize
+@item
+there are two nested loops: the outer does as many iterations as
+required to cool the temperature from the initial value to the minimum;
+the inner does a fixed number of iterations at the same temperature.
+
+@item
+at least one outer iteration is performed, so the number of outer
+iterations can be computed like this:
+
+@example
+initial = 100;
+minimum = 1;
+damping = 1.005;
+count   = 1;
+
+for (l = initial; l >= miminum; l /= damping, ++count)
+  ;
+/* count = 925 */
+@end example
+
+@item
+the cooling waveform for the temperature is somewhat like an
+exponential; for the example above the application of nonlinear
+multifitting with the exponential model returns the following:
+
+@example
+T(x) = A exp(-lam x)    A=99.9999999173883  lam=4.60350080940739
+@end example
+
+@noindent
+which fits very well the curve.
+
+@item
+the value:
+
+@example
+R = exp(-(new_E - best_E)/(k * T))
+@end example
+
+@noindent
+is computed only if @code{new_E > best_E}, so it is always:
+
+@example
+new_E - best_E > 0  => R \in [0, 1)
+@end example
+
+@noindent
+with @code{R} near @code{1} when @code{k * T} is high, and near @code{0}
+when @code{k * T} is low.
+
+@item
+during the first iterations: the temperature drops rapidly and its value
+is high; this means that a worse configuration is more likely to be
+accepted;
+
+@item
+during the last iterations: the temperature drops slowly and its value
+is low; this means that a worse configuration is less likely to be
+accepted;
+
+@item
+with the basic algorithm only three configuration objects are in
+existence at any instant: @emph{current}, @emph{best so far},
+@emph{new}; so the memory space required to hold them can be allocated
+at the beginning of the algorithm and released at the end by the user
+code;
+
+@item
+the algorithm as no need to report errors if:
+
+@enumerate
+@item
+we avoid memory allocation in the code that builds new configurations;
+
+@item
+building a new configuration from an existent one cannot fail.
+@end enumerate
+@end itemize
+
+
+@c ------------------------------------------------------------
+@node annealing basic
+@section Interface to the basic algorithm
+
+
+@subsection Data types
+
+
+@deftp {Struct Typedef} gsl_annealing_simple_workspace_t
+Holds all the data required to run a basic simulated annealing
+algorithm. It must be allocated and freed by the user code. Public
+fields:
+
+@table @code
+@item size_t number_of_iterations_at_fixed_temperature
+self explaining;
+
+@item void * max_step_value
+pointer to the value used to limit the ``distance'' between new
+configurations and the current configuration; it can reference any type
+of value, it is accessed only by the user supplied functions;
+
+@item double boltzmann_constant
+the constant used in the energy computation; it must be positive; when
+tuning the parameters for a search a good start value is @code{1.0};
+
+@item double temperature
+the initial value for the temperature;
+
+@item double minimum_temperature
+the minimum value for the temperature: when the value in the field
+@code{temperature} drops below this level the outer loop stops;
+
+@item double restart_temperature
+the temperature level that causes the @emph{current} configuration to be
+reset to the @emph{best so far};
+
+restarting is useful to prevent the search to get lost at low
+temperature in a region with no interesting minima;
+
+restarting is optional: if we select @code{DBL_MIN} as value, it is
+never @code{restart_temperature > temperature} and the configuration is
+never reset (@code{DBL_MIN} is defined in @file{float.h}, but any
+negative value will do);
+
+the value must be less than @code{temperature}, or the algorithm will
+restart at each iteration;
+
+@item double damping_factor
+the coefficient used to cool the temperature; it must be a number
+slightly above @code{1.0};
+
+@item void * configuration
+pointer to the @emph{current} configuration value; it can reference any
+type of data, it is accessed only by the user supplied functions;
+
+@item void * best_configuration
+pointer to a data area that will hold the @emph{best so far}
+configuration value; it can reference any type of data, it is accessed
+only by the user supplied functions; it must be initialised with an
+invalid value that can be recognised by @code{copy_function};
+
+@item void * new_configuration
+pointer to a data area that will hold the @emph{new} configuration
+value; it can reference any type of data, it is accessed only by the
+user supplied functions; it must be initialised with an invalid value
+that can be recognised by @code{copy_function};
+
+@item double energy
+@itemx double best_energy
+@itemx double new_energy
+the energy values of the configurations;
+
+@item gsl_rng * numbers_generator
+the random number generator used to apply the Boltmann distribution
+acceptance criterion; it can be used also to generate the random step;
+
+@item gsl_annealing_energy_fun_t * energy_function
+the user supplied function used to compute the energy of a
+configuration;
+
+@item gsl_annealing_step_fun_t * step_function
+the user supplied function used to compute the @emph{new} configuration
+from the @emph{current} configuration;
+
+@item gsl_annealing_log_fun_t * log_function
+the user supplied function used to log the search path; it can be
+@code{NULL} if no logging is required;
+
+@item gsl_annealing_copy_fun_t * copy_function
+the user supplied function used to copy a configuration from an
+allocation space to another;
+
+@item void * params
+this is a free field that can be used to hand data to the user supplied
+functions.
+@end table
+@end deftp
+
+
+In the following function types: when the function is invoked by
+@function{gsl_annealing_simple_solve} the argument @var{S} references a
+structure of type @code{gsl_annealing_simple_workspace_t}.
+
+
+@deftypefun double gsl_annealing_energy_fun_t (void * @var{S}, void * @var{configuration})
+Must compute and return the energy value for @var{configuration}.
+@end deftypefun
+
+
+@deftypefun void gsl_annealing_step_fun_t (void * @var{S}, void * @var{configuration})
+Must use the data in @var{S} to transform @var{configuration} to a new value.
+@end deftypefun
+
+
+@c @deftypefun double gsl_annealing_metric_fun_t (void * configuration_a, void * configuration_b);
+
+@c @end deftypefun
+
+
+@deftypefun void gsl_annealing_log_fun_t (void * @var{S})
+Invoked at the end of each internal loop.
+@end deftypefun
+
+
+@deftypefun void gsl_annealing_copy_fun_t (void * @var{S}, void * @var{dst_configuration}, void * @var{src_configuration})
+Invoked to clone a configuration. It is responsibility of this function
+to free resources in @var{dst_configuration} before overwriting them
+with values from @var{src_configuration}.
+@end deftypefun
+
+
+@subsection Functions
+
+
+@deftypefun void gsl_annealing_simple_solve (gsl_annealing_simple_workspace_t * @var{S})
+Does the search.
+
+The structure referenced by @var{S} must be allocated and initialised by
+the user before invoking this function, and freed by the user after this
+function has returned.
+
+Space for @code{configuration}, @code{best_configuration} and
+@code{new_configuration} fields in @var{S} must be allocated by the user
+before invoking this function, and freed by the user after this function
+has returned.
+
+This function does no resource allocation, so it is perfectly all right
+if the user supplied functions use a dynamic wind mechanism, like
+@function{setjmp} and @function{longjmp}, to report errors.
+
+When this function returns: the best configuration found is in the
+@code{best_configuration} field.
+@end deftypefun
 
 
 @c ------------------------------------------------------------
 
 @include fdl.texiinc
 @include gpl.texiinc
-
-@c ------------------------------------------------------------
-@node References
-@appendix Bibliography and references
 
 
 @c ------------------------------------------------------------

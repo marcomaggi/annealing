@@ -5,7 +5,7 @@
    
    Abstract
    
-   
+	Solve the TSP for 12 cities.
    
    Copyright (c) 2007 Marco Maggi
    
@@ -35,6 +35,7 @@
 #include <string.h>
 #include <math.h>
 #include <unistd.h>
+#include <float.h>
 #include <gsl/gsl_rng.h>
 #include "gsl_annealing.h"
 
@@ -141,8 +142,7 @@ main (int argc, char ** argv)
 
     S.temperature		= 20.0;
     S.minimum_temperature	= 2.0e-6;
-    S.restart_temperature	= S.temperature;
-/*     S.restart_temperature	= 1.0; */
+    S.restart_temperature	= DBL_MIN; /* do not restart */
     S.boltzmann_constant	= 1.0;
     S.damping_factor		= 1.005;
 
@@ -186,8 +186,9 @@ main (int argc, char ** argv)
  ** ----------------------------------------------------------*/
 
 double
-energy_function (gsl_annealing_simple_workspace_t * S, void * configuration)
+energy_function (void * W, void * configuration)
 {
+  gsl_annealing_simple_workspace_t * S = W;
   size_t *	C = configuration;
   tsp_data_t *	D = S->params;
   double	energy = 0.0;
@@ -200,19 +201,20 @@ energy_function (gsl_annealing_simple_workspace_t * S, void * configuration)
   return energy;
 }
 void
-step_function (gsl_annealing_simple_workspace_t * S, void * configuration)
+step_function (void * W, void * configuration)
 {
+  gsl_annealing_simple_workspace_t * S = W;
   size_t *	C = configuration;
   tsp_data_t *	D = S->params;
-  double	W = *((size_t *)S->max_step_value);
+  double	step = *((size_t *)S->max_step_value);
   long		idx1, idx2, number_of_swaps;
   size_t	tmp;
 
 
   do
-    number_of_swaps = gsl_rng_uniform_int(S->numbers_generator, W);
+    number_of_swaps = gsl_rng_uniform_int(S->numbers_generator, step);
   while (0 == number_of_swaps);
-  number_of_swaps = W;
+
   for (long i=0; i<number_of_swaps; ++i)
     {
       idx1 = gsl_rng_uniform_int(S->numbers_generator, D->num);
@@ -223,8 +225,9 @@ step_function (gsl_annealing_simple_workspace_t * S, void * configuration)
     }
 }
 void
-log_function (gsl_annealing_simple_workspace_t * S)
+log_function (void * W)
 {
+  gsl_annealing_simple_workspace_t * S = W;
   tsp_data_t *	D = S->params;
   size_t *	C = S->configuration;
   size_t *	B = S->best_configuration;
@@ -249,9 +252,9 @@ log_function (gsl_annealing_simple_workspace_t * S)
  ** ----------------------------------------------------------*/
 
 void
-copy_function (gsl_annealing_simple_workspace_t	* S,
-	       void * dst_configuration, void * src_configuration)
+copy_function (void * W, void * dst_configuration, void * src_configuration)
 {
+  gsl_annealing_simple_workspace_t * S = W;
   tsp_data_t *	D = S->params;
   size_t *	dst = dst_configuration;
   size_t *	src = src_configuration;

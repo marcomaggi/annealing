@@ -5,7 +5,9 @@
    
    Abstract
    
-   
+	Find the best fit against a vector of sample for the exponential
+	model: 'y(t)  = A *  exp(-lam * t)  + b', with  parameters: 'A',
+	'lam', 'b'.
    
    Copyright (c) 2007 Marco Maggi
    
@@ -177,8 +179,9 @@ alea (gsl_annealing_simple_workspace_t * S, double max_step)
 /* ------------------------------------------------------------ */
 
 double
-energy_function (gsl_annealing_simple_workspace_t * S, void * configuration)
+energy_function (void * W, void * configuration)
 {
+  gsl_annealing_simple_workspace_t * S = W;
   configuration_t *	C = configuration;
   fitting_data_t *	D = S->params;
   double		norm = 0.0, delta;
@@ -191,18 +194,20 @@ energy_function (gsl_annealing_simple_workspace_t * S, void * configuration)
   return norm;
 }
 void
-step_function (gsl_annealing_simple_workspace_t * S, void * configuration)
+step_function (void * W, void * configuration)
 {
+  gsl_annealing_simple_workspace_t * S = W;
   configuration_t *	C = configuration;
-  fitting_step_t *	W = S->max_step_value;
+  fitting_step_t *	step = S->max_step_value;
 
-  C->A		+= alea(S, W->A);
-  C->lambda	+= alea(S, W->lambda);
-  C->b		+= alea(S, W->b);
+  C->A		+= alea(S, step->A);
+  C->lambda	+= alea(S, step->lambda);
+  C->b		+= alea(S, step->b);
 }
 void
-log_function (gsl_annealing_simple_workspace_t * S)
+log_function (void * W)
 {
+  gsl_annealing_simple_workspace_t * S = W;
   configuration_t *	C = S->configuration;
   configuration_t *	B = S->best_configuration;
 
@@ -219,8 +224,7 @@ log_function (gsl_annealing_simple_workspace_t * S)
  ** ----------------------------------------------------------*/
 
 void
-copy_function (gsl_annealing_simple_workspace_t	* dummy,
-	       void * dst_configuration, void * src_configuration)
+copy_function (void * dummy, void * dst_configuration, void * src_configuration)
 {
   configuration_t *	dst = dst_configuration;
   configuration_t *	src = src_configuration;

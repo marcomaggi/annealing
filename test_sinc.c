@@ -5,7 +5,7 @@
    
    Abstract
    
-   
+	Find the minimum of 'f(t) = -sin(t)/t'.
    
    Copyright (c) 2007 Marco Maggi
    
@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <unistd.h>
+#include <float.h>
 #include <gsl/gsl_rng.h>
 #include "gsl_annealing.h"
 
@@ -88,7 +89,7 @@ main (int argc, char ** argv)
 
   S.temperature		= 0.02;
   S.minimum_temperature	= 1.0e-6;
-  S.restart_temperature	= S.temperature; /* do not restart */
+  S.restart_temperature	= DBL_MIN; /* do not restart */
   S.boltzmann_constant	= 1.0;
   S.damping_factor	= 1.005;
 
@@ -122,25 +123,26 @@ main (int argc, char ** argv)
  ** ----------------------------------------------------------*/
 
 double
-energy_function (gsl_annealing_simple_workspace_t * dummy,
-		 void * configuration)
+energy_function (void * dummy, void * configuration)
 {
   double	C = *((double *)configuration);
 
   return -sin(C)/C;
 }
 void
-step_function (gsl_annealing_simple_workspace_t * S,
-	       void * configuration)
+step_function (void * W, void * configuration)
 {
+  gsl_annealing_simple_workspace_t * S = W;
   double *	C = (double *)configuration;
 
   *C += (2.0 * gsl_rng_uniform(S->numbers_generator) - 1.0) *
     *((double *)S->max_step_value);
 }
 void
-log_function (gsl_annealing_simple_workspace_t * S)
+log_function (void * W)
 {
+  gsl_annealing_simple_workspace_t * S = W;
+
   printf("current %f (energy %f), best %f (energy %f)\n",
 	 *((double *)S->configuration), energy_function(S, S->configuration),
 	 *((double *)S->best_configuration), energy_function(S, S->best_configuration));
@@ -152,8 +154,7 @@ log_function (gsl_annealing_simple_workspace_t * S)
  ** ----------------------------------------------------------*/
 
 void
-copy_function (gsl_annealing_simple_workspace_t	* dummy,
-	       void * dst_configuration, void * src_configuration)
+copy_function (void * dummy, void * dst_configuration, void * src_configuration)
 {
   double *	dst = dst_configuration;
   double *	src = src_configuration;

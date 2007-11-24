@@ -5,7 +5,7 @@
    
    Abstract
    
-   
+	Find the minimum of 'f(t) = -sin(sqrt(X*X + Y*Y))/(X*X + Y*Y)'.
    
    Copyright (c) 2007 Marco Maggi
    
@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <unistd.h>
+#include <float.h>
 #include <gsl/gsl_rng.h>
 #include "gsl_annealing.h"
 
@@ -88,7 +89,7 @@ main (int argc, char ** argv)
 
   S.temperature		= 10.0;
   S.minimum_temperature	= 1.0e-6;
-  S.restart_temperature	= S.temperature; /* do not restart */
+  S.restart_temperature	= DBL_MIN; /* do not restart */
   S.boltzmann_constant	= 1.0;
   S.damping_factor	= 1.005;
 
@@ -133,8 +134,7 @@ alea (gsl_annealing_simple_workspace_t * S)
 /* ------------------------------------------------------------ */
 
 double
-energy_function (gsl_annealing_simple_workspace_t * S,
-		 void * configuration)
+energy_function (void * dummy, void * configuration)
 {
   double *	C = configuration;
   double	X = C[0], Y = C[1];
@@ -142,16 +142,18 @@ energy_function (gsl_annealing_simple_workspace_t * S,
   return -sin(sqrt(X*X + Y*Y))/(X*X + Y*Y);
 }
 void
-step_function (gsl_annealing_simple_workspace_t * S, void * configuration)
+step_function (void * W, void * configuration)
 {
+  gsl_annealing_simple_workspace_t * S = W;
   double *	C = configuration;
 
   C[0] += alea(S);
   C[1] += alea(S);
 }
 void
-log_function (gsl_annealing_simple_workspace_t * S)
+log_function (void * W)
 {
+  gsl_annealing_simple_workspace_t * S = W;
   double *	C = S->configuration;
   double *	B = S->best_configuration;
 
@@ -166,8 +168,7 @@ log_function (gsl_annealing_simple_workspace_t * S)
  ** ----------------------------------------------------------*/
 
 void
-copy_function (gsl_annealing_simple_workspace_t	* dummy,
-	       void * dst_configuration, void * src_configuration)
+copy_function (void * W, void * dst_configuration, void * src_configuration)
 {
   double *	dst = dst_configuration;
   double *	src = src_configuration;

@@ -23,7 +23,10 @@ Scientific Library,  attempting a redesign  of the simulated
 annealing module.
 
   The  code is a  reworking of  the files  "gsl_siman.h" and
-"siman.c" from the GSL 1.9 distribution (Thu Feb 22, 2007).
+"siman.c"  from  the  GSL  1.9  distribution  (Thu  Feb  22,
+2007).  The TSP test  is a  reworking of  "siman_tsp.c". The
+documentation  is a reworking  of the  "Simulated Annealing"
+node in the GSL's Texinfo source.
 
   *NOTE* The  last time the  author bothered to  update this
 paragraph he had tested GSL 1.9. 

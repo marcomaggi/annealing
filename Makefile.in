@@ -84,21 +84,28 @@ pkgsysconfdir	= $(sysconfdir)/$(PKG_DIR)
 OBJEXT		= @OBJEXT@
 
 SOURCES		= annealing.c
-TEST_SOURCES	= test_sinc.c test_sinxy.c test_fitting.c test_tsp.c
 OBJECTS		= $(SOURCES:.c=.$(OBJEXT))
-TEST_OBJECTS	= $(TEST_SOURCES:.c=.$(OBJEXT))
-LIBRARIES	= libgsl-annealing.so
 TARGETS		= $(LIBRARIES)
+
+TEST_SOURCES	= test_sinc.c test_sinxy.c test_fitting.c test_tsp.c
+TEST_OBJECTS	= $(TEST_SOURCES:.c=.$(OBJEXT))
 TEST_TARGETS	= $(notdir $(TEST_SOURCES:.c=))
-CLEANFILES	= $(LIBRARIES) $(OBJECTS) $(TEST_TARGETS) $(TEST_OBJECTS)
+
+OTHER_SOURCES	= compute_outer_iterations.c
+OTHER_OBJECTS	= $(OTHER_SOURCES:.c=.$(OBJEXT))
+OTHER_TARGETS	= $(notdir $(OTHER_SOURCES:.c=))
+
+LIBRARIES	= libgsl-annealing.so
+CLEANFILES	= $(LIBRARIES) $(TEST_TARGETS) $(OTHER_TARGETS) \
+		  $(OBJECTS) $(TEST_OBJECTS) $(OTHER_OBJECTS)
 
 TEST_FLAGS	= LD_LIBRARY_PATH="$(builddir)"
 INCLUDE_FILES	= $(srcdir)/gsl_annealing.h
 
 
-.PHONY: all clean test test-verbose test-tsp test-verbose-tsp
+.PHONY: all clean test test-verbose test-tsp test-verbose-tsp test-sinc
 
-all: $(TARGETS) $(TEST_TARGETS)
+all: $(TARGETS) $(TEST_TARGETS) $(OTHER_TARGETS)
 clean:
 	@$(RM) $(CLEANFILES)
 test:
@@ -112,6 +119,9 @@ test-verbose:
 	$(TEST_FLAGS) ./test_sinxy -v
 	$(TEST_FLAGS) ./test_fitting -v
 	$(TEST_FLAGS) ./test_tsp -v
+
+test-sinc:
+	$(TEST_FLAGS) ./test_sinc
 
 test-tsp:
 	$(TEST_FLAGS) ./test_tsp
@@ -151,6 +161,9 @@ LINKFLAGS	= @LINKFLAGS@
 $(LIBRARIES) : $(OBJECTS)
 	$(CC_BUILD) $(@) $(^) $(LINKFLAGS) $(LIBS)
 	$(STRIP) $(@)
+
+compute_outer_iterations: % : %.$(OBJEXT)
+	$(CC_BUILD_TEST) $(@) $(^)
 
 $(TEST_TARGETS): % : %.$(OBJEXT)
 	$(CC_BUILD_TEST) $(@) $(^) -L$(builddir) -lgsl-annealing $(LIBS)

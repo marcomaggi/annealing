@@ -23,6 +23,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 #include <assert.h>
 
 #include <gsl/gsl_machine.h>
@@ -58,10 +59,19 @@ double safe_exp (double x)
 void 
 gsl_annealing_simple_solve (gsl_annealing_simple_workspace_t * S)
 {
+  assert(S->number_of_iterations_at_fixed_temperature > 0);
+  assert(S->boltzmann_constant > 0.0);
+  assert(S->temperature > 0.0 && S->minimum_temperature > 0.0);
+  assert(S->temperature > S->restart_temperature);
+  assert(S->damping_factor > 1.0);
+  assert(S->copy_function && S->energy_function && S->step_function);
+  assert(S->numbers_generator);
+
   S->copy_function(S, S->best_configuration, S->configuration);
-  S->best_energy = S->energy = S->energy_function(S, S->configuration);
-  S->new_energy  = 0.0;
   S->copy_function(S, S->new_configuration, S->configuration);
+  S->best_energy = S->new_energy = S->energy =
+    S->energy_function(S, S->configuration);
+
   if (S->log_function) S->log_function(S);
 
   for (;;)
@@ -92,6 +102,7 @@ gsl_annealing_simple_solve (gsl_annealing_simple_workspace_t * S)
 	{
 	  S->copy_function(S, S->configuration, S->best_configuration);
 	  S->energy = S->best_energy;
+	  S->restart_temperature = DBL_MIN;
 	}
     }
   /* The result is in 'S->best_configuration'. */
@@ -99,102 +110,117 @@ gsl_annealing_simple_solve (gsl_annealing_simple_workspace_t * S)
 
 
 /** ------------------------------------------------------------
- ** Many tries algorithm.
+ ** Multi-best algorithm.
  ** ----------------------------------------------------------*/
 
-#if 0
-void 
-gsl_siman_solve_many (const gsl_rng * r, void *x0_p, gsl_siman_Efunc_t Ef,
-                      gsl_siman_step_t take_step,
-                      gsl_siman_metric_t distance,
-                      gsl_siman_print_t print_position,
-                      size_t element_size,
-                      gsl_siman_params_t params)
+static int
+find_best_configuration_position (gsl_annealing_multi_workspace_t * S)
 {
-  /* the new set of trial points, and their energies and probabilities */
-  void *x, *new_x;
-  double *energies, *probs, *sum_probs;
-  double Ex;                    /* energy of the chosen point */
-  double T;                     /* the temperature */
-  int i, done;
-  double u;                     /* throw the die to choose a new "x" */
-  int n_iter;
+  int	position;
 
-  if (print_position) {
-    printf ("#-iter    temperature       position");
-    printf ("         delta_pos        energy\n");
-  }
-
-  x = (void *) malloc (params.n_tries * element_size);
-  new_x = (void *) malloc (params.n_tries * element_size);
-  energies = (double *) malloc (params.n_tries * sizeof (double));
-  probs = (double *) malloc (params.n_tries * sizeof (double));
-  sum_probs = (double *) malloc (params.n_tries * sizeof (double));
-
-  T = params.t_initial;
-/*    memcpy (x, x0_p, element_size); */
-  memcpy (x, x0_p, element_size);
-  done = 0;
-
-  n_iter = 0;
-  while (!done)
+  for (position=S->best_configurations_count-1; position>=0; --position)
     {
-      Ex = Ef (x);
-      for (i = 0; i < params.n_tries - 1; ++i)
-        {                       /* only go to N_TRIES-2 */
-          /* center the new_x[] around x, then pass it to take_step() */
-          sum_probs[i] = 0;
-          memcpy ((char *)new_x + i * element_size, x, element_size);
-          take_step (r, (char *)new_x + i * element_size, params.step_size);
-          energies[i] = Ef ((char *)new_x + i * element_size);
-          probs[i] = safe_exp (-(energies[i] - Ex) / (params.k * T));
-        }
-      /* now add in the old value of "x", so it is a contendor */
-      memcpy ((char *)new_x + (params.n_tries - 1) * element_size, x, element_size);
-      energies[params.n_tries - 1] = Ex;
-      probs[params.n_tries - 1] = safe_exp (-(energies[i] - Ex) / (params.k * T));
-
-      /* now throw biased die to see which new_x[i] we choose */
-      sum_probs[0] = probs[0];
-      for (i = 1; i < params.n_tries; ++i)
-        {
-          sum_probs[i] = sum_probs[i - 1] + probs[i];
-        }
-      u = gsl_rng_uniform (r) * sum_probs[params.n_tries - 1];
-      for (i = 0; i < params.n_tries; ++i)
-        {
-          if (u < sum_probs[i])
-            {
-              memcpy (x, (char *)new_x + i * element_size, element_size);
-              break;
-            }
-        }
-      if (print_position)
-        {
-          printf ("%5d\t%12g\t", n_iter, T);
-          print_position (x);
-          printf ("\t%12g\t%12g\n", distance (x, x0_p), Ex);
-        }
-      T /= params.mu_t;
-      ++n_iter;
-      if (T < params.t_min)
-        {
-          done = 1;
-        }
+      if (S->new_energy > S->best_energies[position])
+	break;
     }
+  for (int i=0; i<position; ++i)
+    {
+      double	distance =
+	S->metric_function(S, S->best_configurations[i], S->new_configuration);
 
-  /* now return the value via x0_p */
-  memcpy (x0_p, x, element_size);
-
-  /*  printf("the result is: %g (E=%g)\n", x, Ex); */
-
-  free (x);
-  free (new_x);
-  free (energies);
-  free (probs);
-  free (sum_probs);
+      if (distance < S->minimum_acceptance_distance) return -1;
+    }
+  return position;
 }
-#endif
+static void
+shift_best_configurations (gsl_annealing_multi_workspace_t * S, int idx)
+{
+  /*
+    Example: before:
+
+	best_configurations_max   = 5
+	best_configurations_count = 3
+	idx = 1
+
+	best_configurations -> | c0 | c1 | c2 | empty | empty |
+    
+    after:
+
+	best_configurations_max   = 5
+	best_configurations_count = 4
+
+	best_configurations -> | c0 | empty | c1 | c2 | empty |
+
+  */
+  for (int i=S->best_configurations_count-1; i>=idx; --i)
+    {
+      S->copy_function(S, S->best_configurations[i+1], S->best_configurations[i]);
+      S->best_energies[i+1] = S->best_energies[i];
+    }
+}
+static void
+store_new_at_position (gsl_annealing_multi_workspace_t * S, int idx)
+{
+  S->copy_function(S, (void *)S->best_configurations[idx], S->new_configuration);
+  S->best_energies[idx] = S->new_energy;
+}
+
+/* ------------------------------------------------------------ */
+
+void 
+gsl_annealing_multi_solve (gsl_annealing_multi_workspace_t * S)
+{
+  double	best_energies_array[S->best_configurations_max];
+
+  assert(S->number_of_iterations_at_fixed_temperature > 0);
+  assert(S->boltzmann_constant > 0.0);
+  assert(S->temperature > 0.0 && S->minimum_temperature > 0.0);
+  assert(S->damping_factor > 1.0);
+  assert(S->copy_function && S->energy_function && S->step_function);
+  assert(S->numbers_generator);
+
+  S->best_energies = best_energies_array;
+
+  S->copy_function(S, (void *)S->best_configurations[0], S->configuration);
+  S->copy_function(S, S->new_configuration, S->configuration);
+  S->best_energies[0] = S->new_energy = S->energy =
+    S->energy_function(S, S->configuration);
+
+  S->best_configurations_count = 1;
+  if (S->log_function) S->log_function(S);
+  
+  for (;;)
+    {
+      for (size_t i=0; i < S->number_of_iterations_at_fixed_temperature; ++i)
+	{
+	  S->copy_function(S, S->new_configuration, S->configuration);
+	  S->step_function(S, S->new_configuration);
+	  S->new_energy = S->energy_function(S, S->new_configuration);
+
+	  if (S->new_energy <= S->best_energies[S->best_configurations_count-1])
+	    {
+	      int	position;
+
+	      position = find_best_configuration_position(S);
+	      if (0 < position)
+		{
+		  shift_best_configurations(S, position);
+		  store_new_at_position(S, position);
+		}
+	    }
+	  else if (random_level(S) < new_level(S))
+	    {
+	      S->copy_function(S, S->configuration, S->new_configuration);
+	      S->energy = S->new_energy;
+	    }
+	}
+      if (S->log_function) S->log_function(S);
+
+      S->temperature /= S->damping_factor;
+      if (S->temperature < S->minimum_temperature) break;
+    }
+  /* The results are in 'S->best_configurations'. */
+}
 
 
 /* end of file */
