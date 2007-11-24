@@ -98,6 +98,7 @@ main (int argc, char ** argv)
   S.copy_function		= copy_function;
   S.log_function		= (verbose_mode)? log_function : NULL;
   S.metric_function		= metric_function;
+  S.cooling_function		= NULL;
 
   S.numbers_generator		= gsl_rng_alloc(gsl_rng_rand);
   gsl_rng_set(S.numbers_generator, 15);

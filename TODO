@@ -1,9 +1,10 @@
+
 			       Annealing
 			       =========
 
 
-* Modify  the  insert  sort  algorithms  in  "multibest_annealing.c"  to
-  discard a faraway configuration.
+* Modify  the  insert sort  algorithms  in  "multibest.c"  to discard  a
+  faraway configuration.
 
 
 

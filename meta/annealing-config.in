@@ -1,0 +1,231 @@
+#!@SHELL@
+# @PACKAGE_NAME_LOWERCASE@-config --
+# 
+# Package configuration script.
+
+#page
+## ------------------------------------------------------------
+## Variables.
+## ------------------------------------------------------------
+
+PACKAGE_NAME="@PACKAGE_NAME@"
+PACKAGE_VERSION="@PACKAGE_VERSION@"
+PACKAGE_VERSION_MAJOR_MINOR="@PACKAGE_VERSION_MAJOR_MINOR@"
+PACKAGE_XVERSION="@PACKAGE_XVERSION@"
+PACKAGE_NAME_LOWERCASE="@PACKAGE_NAME_LOWERCASE@"
+
+prefix="@prefix@"
+exec_prefix="@exec_prefix@"
+
+bindir="@bindir@"
+datarootdir="@datarootdir@"
+datadir="@datadir@"
+docdir="${prefix}/doc"
+includedir="@includedir@"
+infodir="@infodir@"
+libdir="@libdir@"
+libexecdir="@libexecdir@"
+localstatedir="@localstatedir@"
+mandir="@mandir@"
+sbindir="@sbindir@"
+sharedstatedir="@sharedstatedir@"
+sysconfdir="@sysconfdir@"
+
+PKG_DIR="@PKG_DIR@"
+pkgdatadir="@pkgdatadir@"
+pkgdocdir="@pkgdocdir@"
+pkgexampledir="@pkgexampledir@"
+pkghtmldir="@pkghtmldir@"
+pkgincludedir="@pkgincludedir@"
+pkglibdir="@pkglibdir@"
+pkglibexecdir="@pkglibexecdir@"
+pkgsysconfdir="@pkgsysconfdir@"
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Main.
+## ------------------------------------------------------------
+
+case "$1" in
+    --package-name)
+	echo "${PACKAGE_NAME}"
+	;;
+    --package-name-lowercase)
+	echo "${PACKAGE_NAME_LOWERCASE}"
+	;;
+    --package-version)
+	echo "${PACKAGE_VERSION}"
+	;;
+    --package-version-majmin)
+	echo "${PACKAGE_VERSION_MAJOR_MINOR}"
+	;;
+    --package-xversion)
+	echo "${PACKAGE_XVERSION}"
+	;;
+
+    ## ----------------------------------------
+
+    --library-interface-version)
+        echo "@annealing_INTERFACE_VERSION@"
+        ;;
+    --library-interface-major-version)
+        echo "@annealing_INTERFACE_MAJOR_VERSION@"
+        ;;
+    --library-interface-minor-version)
+        echo "@annealing_INTERFACE_MINOR_VERSION@"
+        ;;
+
+    --library-id)
+        # print the shared library identifier
+        echo "@annealing_LIBRARY_ID@"
+        ;;
+    --shared-library-name)
+        echo "@annealing_SHARED_LIBRARY_NAME@"
+        ;;
+    --static-library-name)
+        # print the the static library file name
+        echo "@annealing_STATIC_LIBRARY_NAME@"
+        ;;      
+
+    ## ----------------------------------------
+
+    --prefix)
+	echo "${prefix}"
+	;;
+    --exec-prefix)
+	echo "${exec_prefix}"
+	;;
+
+    --bindir)
+	echo "${bindir}"
+	;;
+    --datarootdir)
+	echo "${datarootdir}"
+	;;
+    --datadir)
+	echo "${datadir}"
+	;;
+    --docdir)
+	echo "${docdir}"
+	;;
+    --includedir)
+	echo "${includedir}"
+	;;
+    --infodir)
+	echo "${infodir}"
+	;;
+    --libdir)
+	echo "${libdir}"
+	;;
+    --libexecdir)
+	echo "${libexecdir}"
+	;;
+    --localstatedir)
+	echo "${localstatedir}"
+	;;
+    --mandir)
+	echo "${mandir}"
+	;;
+    --sbindir)
+	echo "${sbindir}"
+	;;
+    --sharedstatedir)
+	echo "${sharedstatedir}"
+	;;
+    --sysconfdir)
+	echo "${sysconfdir}"
+	;;
+
+    --pkgdatadir)
+	echo "${pkgdatadir}"
+	;;
+    --pkgdocdir)
+	echo "${pkgdocdir}"
+	;;
+    --pkgexampledir)
+	echo "${pkgexampledir}"
+	;;
+    --pkghtmldir)
+	echo "${pkghtmldir}"
+	;;
+    --pkgincludedir)
+	echo "${pkgincludedir}"
+	;;
+    --pkglibdir)
+	echo "${pkglibdir}"
+	;;
+    --pkglibexecdir)
+	echo "${pkglibexecdir}"
+	;;
+    --pkgsysconfdir)
+	echo "${pkgsysconfdir}"
+	;;
+    *)
+	echo 'usage: @PACKAGE_NAME_LOWERCASE@-config OPTION
+options:
+
+    --package-name              print the package name
+    --package-name-lowercase    print the package name in lower case chars
+    --package-version           print the full package version
+    --package-version-majmin    print the MAJOR.MINOR package version
+    --package-xversion          print the extended full package version
+
+    --library-interface-version
+                                print the library interface version
+    --library-interface-major-version
+                                print the library interface version
+                                major number
+    --library-interface-minor-version
+                                print the library interface version
+                                minor number
+
+    --library-id                print the library identifier
+    --shared-library-name       print the shared library file name
+    --static-library-name       print the static library file name
+
+    --prefix            print the installation prefix for
+                        architecture-independent files
+    --exec-prefix       print the installation prefix for
+                        architecture-dependent files
+
+    --bindir            print the directory for user executables
+    --datarootdir       print the root directory for read-only
+                        arch-independent data
+    --datadir           print the directory for read-only arch-independent data
+    --docdir            print the root directory for documentation
+    --includedir        print the directory for include files
+    --infodir           print the directory for Info files
+    --libdir            print the directory for object code files
+    --libexecdir        print the directory for executables
+    --localstatedir     print the directory for modifiable single-machine files
+    --mandir            print the directory for manual pages
+    --sbindir           print the directory for system admin executables
+    --sharedstatedir    print the directory for modifiable
+                        arch-independent files
+    --sysconfdir        print the directory for read-only single-machine data
+
+    --pkgdatadir        print the directory for package-specific data
+    --pkgdocdir         print the root directory for package-specific
+                        documentation
+    --pkgexampledir     print the directory for package-specific usage
+                        examples
+    --pkghtmldir        print the directory for package-specific HTML
+                        documentation
+    --pkgincludedir     print the directory for package-specific include files
+    --pkglibdir         print the directory for package-specific libraries
+    --pkglibexecdir     print the directory for package-specific executables
+    --pkgsysconfdir     print the directory for package-specific read-only
+                        single-machine data
+'
+        ;;
+esac
+
+exit 0
+
+### end of file
+# Local Variables:
+# mode: sh
+# page-delimiter: "^#page"
+# End:

@@ -89,7 +89,7 @@ compute_iterations_BUILDDIR		= $(builddir)/misc.d
 compute_iterations_program_BUILDDIR	= $(compute_iterations_BUILDDIR)
 compute_iterations_PREREQUISITES	= $(annealing_SRCDIR)/annealing.h
 
-$(eval $(call ds-c-sources-nop,compute_iterations,$(srcdir)/tests,compute_iterations.c))
+$(eval $(call ds-c-sources-nop,compute_iterations,$(srcdir)/other,compute_outer_iterations.c))
 $(eval $(call ds-c-program-no-install,compute_iterations,compute_iterations,$(compute_iterations_TARGETS)))
 
 .PHONY: compute_iterations

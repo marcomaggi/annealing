@@ -103,7 +103,7 @@ any later version published by the Free Software Foundation; with no
 Invariant Sections, no Front--Cover Texts, and no Back--Cover Texts.  A
 copy of the license is included in the section entitled ``GNU Free
 Documentation License''.
-     
+
 @menu
 * overview::                    Overview of the package. 
 * annealing::                   Simulated annealing.
@@ -120,7 +120,21 @@ Indexes
 * Function Index::              An entry for each function. 
 * Variable Index::              An entry for each variable. 
 * Type Index::                  An entry for each type. 
+
+@detailmenu
+ --- The Detailed Node Listing ---
+
+Simulated annealing
+
+* annealing algorithm::         The basic algorithm.
+* annealing types::             Data types.
+* annealing basic::             Interface to the basic algorithm.
+* annealing multi::             Interface to the multi-best algorithm.
+* annealing many::              Interface to the many-tries algorithm.
+
+@end detailmenu
 @end menu
+
 @end ifnottex
 
 
@@ -149,6 +163,8 @@ module.
 * annealing many::              Interface to the many-tries algorithm.
 @end menu
 
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ------------------------------------------------------------
 @node annealing algorithm
@@ -315,6 +331,7 @@ building a new configuration from an existent one cannot fail.
 @end itemize
 
 
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ------------------------------------------------------------
 @node annealing types
@@ -384,6 +401,12 @@ handed to this function is not important.
 @end deftypefun
 
 
+@deftypefun void annealing_cooling_fun_t (void * @var{S})
+Invoked to cool the temperature. Must update the @code{temperature}
+field of the workspace structure.
+@end deftypefun
+
+
 @deftypefun void annealing_log_fun_t (void * @var{S})
 Invoked once before the first iteration and then at the end of each
 internal loop.
@@ -398,6 +421,8 @@ It is responsibility of this function to free resources in
 @var{src_configuration}.
 @end deftypefun
 
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ------------------------------------------------------------
 @node annealing basic
@@ -481,9 +506,13 @@ configuration;
 the user supplied function used to compute the @emph{new} configuration
 from the @emph{current} configuration;
 
+@item annealing_cooling_fun_t * cooling_function
+the user supplied function used to cool the temperature; it can be
+@null{} to select the default cooling algorithm;
+
 @item annealing_log_fun_t * log_function
 the user supplied function used to log the search path; it can be
-@code{NULL} if no logging is required;
+@null{} if no logging is required;
 
 @item annealing_copy_fun_t * copy_function
 the user supplied function used to copy a configuration from an
@@ -568,6 +597,7 @@ main (void)
   S.step_function               = step_function;
   S.copy_function               = copy_function;
   S.log_function                = log_function;
+  S.cooling_function            = NULL;
 
   S.numbers_generator           = gsl_rng_alloc(gsl_rng_rand);
   gsl_rng_set(S.numbers_generator, 15);
@@ -648,6 +678,7 @@ copy_function (void * dummy,
 @end example
 
 
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ------------------------------------------------------------
 @node annealing multi
@@ -747,9 +778,13 @@ configuration;
 the user supplied function used to compute the @emph{new} configuration
 from the @emph{current} configuration;
 
+@item annealing_cooling_fun_t * cooling_function
+the user supplied function used to cool the temperature; it can be
+@null{} to select the default cooling algorithm;
+
 @item annealing_log_fun_t * log_function
 the user supplied function used to log the search path; it can be
-@code{NULL} if no logging is required;
+@null{} if no logging is required;
 
 @item annealing_copy_fun_t * copy_function
 the user supplied function used to copy a configuration from an
@@ -841,6 +876,7 @@ main (void)
   S.copy_function               = copy_function;
   S.log_function                = log_function;
   S.metric_function             = metric_function;
+  S.cooling_function            = NULL;
 
   S.numbers_generator           = gsl_rng_alloc(gsl_rng_rand);
   gsl_rng_set(S.numbers_generator, 15);
@@ -943,6 +979,8 @@ copy_function (void * dummy, void * dst_configuration, void * src_configuration)
 /* end of file */
 @end example
 
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ------------------------------------------------------------
 @node annealing many
@@ -1205,9 +1243,13 @@ configuration;
 the user supplied function used to compute the @emph{new} configuration
 from the @emph{current} configuration;
 
+@item annealing_cooling_fun_t * cooling_function
+the user supplied function used to cool the temperature; it can be
+@null{} to select the default cooling algorithm;
+
 @item annealing_log_fun_t * log_function
 the user supplied function used to log the search path; it can be
-@code{NULL} if no logging is required;
+@null{} if no logging is required;
 
 @item annealing_copy_fun_t * copy_function
 the user supplied function used to copy a configuration from an
@@ -1297,6 +1339,7 @@ main (int argc, char ** argv)
   S.step_function               = step_function;
   S.copy_function               = copy_function;
   S.log_function                = log_function;
+  S.cooling_function            = NULL;
 
   S.numbers_generator           = gsl_rng_alloc(gsl_rng_rand);
   gsl_rng_set(S.numbers_generator, 15);
@@ -1379,6 +1422,8 @@ copy_function (void * dummy, void * dst_configuration, void * src_configuration)
 /* end of file */
 @end example
 
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ------------------------------------------------------------
 @node References

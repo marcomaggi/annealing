@@ -71,7 +71,8 @@ typedef void	annealing_step_fun_t	(void * S, void * configuration);
 typedef double	annealing_metric_fun_t	(void * S,
 					 void * configuration_a,
 					 void * configuration_b);
-typedef void	annealing_log_fun_t		(void * S);
+typedef void	annealing_cooling_fun_t	(void * S);
+typedef void	annealing_log_fun_t	(void * S);
 typedef void	annealing_copy_fun_t	(void * S,
 					 void * dst_configuration,
 					 void * src_configuration);
@@ -103,8 +104,9 @@ typedef struct annealing_simple_workspace_t {
 
   annealing_energy_fun_t *	energy_function;
   annealing_step_fun_t *	step_function;
-  annealing_log_fun_t *	log_function;
+  annealing_log_fun_t *		log_function;
   annealing_copy_fun_t *	copy_function;
+  annealing_cooling_fun_t *	cooling_function;
 
   void *	params;
 } annealing_simple_workspace_t;
@@ -136,9 +138,10 @@ typedef struct annealing_multibest_workspace_t {
 
   annealing_energy_fun_t *	energy_function;
   annealing_step_fun_t *	step_function;
-  annealing_log_fun_t *	log_function;
+  annealing_log_fun_t *		log_function;
   annealing_copy_fun_t *	copy_function;
   annealing_metric_fun_t *	metric_function;
+  annealing_cooling_fun_t *	cooling_function;
 
   void *		params;
 } annealing_multibest_workspace_t;
@@ -160,8 +163,8 @@ typedef struct annealing_manytries_workspace_t {
   double	restart_temperature;
   int		restart_flag;
 
-  annealing_configuration_t		current_configuration;
-  annealing_configuration_t		best_configuration;
+  annealing_configuration_t	current_configuration;
+  annealing_configuration_t	best_configuration;
   annealing_configuration_t *	new_configurations;
   double *	monte_carlo_coordinates;
   size_t	number_of_tries;
@@ -170,8 +173,9 @@ typedef struct annealing_manytries_workspace_t {
 
   annealing_energy_fun_t *	energy_function;
   annealing_step_fun_t *	step_function;
-  annealing_log_fun_t *	log_function;
+  annealing_log_fun_t *		log_function;
   annealing_copy_fun_t *	copy_function;
+  annealing_cooling_fun_t *	cooling_function;
 
   void *		params;
 } annealing_manytries_workspace_t;

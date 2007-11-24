@@ -120,7 +120,11 @@ annealing_simple_solve (annealing_simple_workspace_t * S)
 	}
       if (S->log_function) S->log_function(S);
 
-      S->temperature /= S->damping_factor;
+      if (S->cooling_function)
+	S->cooling_function(S);
+      else
+	S->temperature /= S->damping_factor;
+
       if (S->temperature < S->minimum_temperature) break;
       if (S->temperature < S->restart_temperature)
 	{

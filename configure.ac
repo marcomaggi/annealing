@@ -14,14 +14,14 @@
 # from "${ds_top_srcdir}/infrastructure/acmacros.m4".
 
 
-AC_INIT([annealing], [0.2a0])
+AC_INIT([annealing], [0.2a1])
 AC_PREREQ(2.60)
 
 AC_SUBST([PACKAGE_VERSION],[0.2.0])
 AC_DEFINE([PACKAGE_VERSION],["0.2.0"],[full package version])
 
-AC_SUBST([PACKAGE_XVERSION],[0.2a0])
-AC_DEFINE([PACKAGE_XVERSION],["0.2a0"],[full extended package version])
+AC_SUBST([PACKAGE_XVERSION],[0.2a1])
+AC_DEFINE([PACKAGE_XVERSION],["0.2a1"],[full extended package version])
 
 AC_SUBST([PACKAGE_VERSION_MAJOR],[0])
 AC_DEFINE([PACKAGE_VERSION_MAJOR],["0"],[package version major number])
@@ -29,8 +29,8 @@ AC_DEFINE([PACKAGE_VERSION_MAJOR],["0"],[package version major number])
 AC_SUBST([PACKAGE_VERSION_MINOR],[2])
 AC_DEFINE([PACKAGE_VERSION_MINOR],["2"],[package version minor number])
 
-AC_SUBST([PACKAGE_VERSION_PATCH],[0])
-AC_DEFINE([PACKAGE_VERSION_PATCH],["0"],[package version patch number])
+AC_SUBST([PACKAGE_VERSION_PATCH],[1])
+AC_DEFINE([PACKAGE_VERSION_PATCH],["1"],[package version patch number])
 
 AC_SUBST([PACKAGE_VERSION_MAJOR_MINOR],[0.2])
 AC_DEFINE([PACKAGE_VERSION_MAJOR_MINOR],["0.2"],[package version major.minor])
@@ -41,6 +41,11 @@ AC_DEFINE([PACKAGE_NAME_LOWERCASE],["annealing"],[package name in lower case cha
 AC_CONFIG_AUX_DIR([infrastructure])
 m4_include([infrastructure/acmacros.m4])
 
+AC_CONFIG_FILES([meta.d/annealing-config:meta/annealing-config.in])
+AC_CONFIG_FILES([meta.d/annealing.pc:meta/annealing.pc.in])
+AC_CONFIG_FILES([meta.d/slackware/bin/slack-desc:meta/slackware/bin/slack-desc.in])
+AC_CONFIG_FILES([meta.d/slackware/doc/slack-desc:meta/slackware/doc/slack-desc.in])
+AC_CONFIG_FILES([meta.d/slackware/dev/slack-desc:meta/slackware/dev/slack-desc.in])
 m4_include([configuration/configure.ds])
 
 
