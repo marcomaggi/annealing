@@ -84,7 +84,7 @@ pkgsysconfdir	= $(sysconfdir)/$(PKG_DIR)
 OBJEXT		= @OBJEXT@
 
 SOURCES		= annealing.c
-TEST_SOURCES	= test_sinc.c test_sinxy.c test_fitting.c
+TEST_SOURCES	= test_sinc.c test_sinxy.c test_fitting.c test_tsp.c
 OBJECTS		= $(SOURCES:.c=.$(OBJEXT))
 TEST_OBJECTS	= $(TEST_SOURCES:.c=.$(OBJEXT))
 LIBRARIES	= libgsl-annealing.so
@@ -96,7 +96,7 @@ TEST_FLAGS	= LD_LIBRARY_PATH="$(builddir)"
 INCLUDE_FILES	= $(srcdir)/gsl_annealing.h
 
 
-.PHONY: all clean test test-verbose
+.PHONY: all clean test test-verbose test-tsp test-verbose-tsp
 
 all: $(TARGETS) $(TEST_TARGETS)
 clean:
@@ -105,12 +105,19 @@ test:
 	$(TEST_FLAGS) ./test_sinc
 	$(TEST_FLAGS) ./test_sinxy
 	$(TEST_FLAGS) ./test_fitting
+	$(TEST_FLAGS) ./test_tsp
 
 test-verbose:
 	$(TEST_FLAGS) ./test_sinc -v
 	$(TEST_FLAGS) ./test_sinxy -v
 	$(TEST_FLAGS) ./test_fitting -v
+	$(TEST_FLAGS) ./test_tsp -v
 
+test-tsp:
+	$(TEST_FLAGS) ./test_tsp
+
+test-verbose-tsp:
+	$(TEST_FLAGS) ./test_tsp -v
 
 #page
 ## ------------------------------------------------------------
@@ -195,7 +202,7 @@ dist_ARCHIVE_STORE_DIR	= $(HOME)/share/gna.org/gee/annealing
 bindist_ARCHIVE		= $(PKG_ID)_bin.tar.gz
 bindist_BUILD_DIR	= $(TMPDIR)/annealing
 
-.PHONY: install dist bindist
+.PHONY: install dist bindist dist-clean
 
 install:
 	test -d "$(DESTDIR)" || $(MKDIR) $(DESTDIR)
@@ -237,6 +244,8 @@ bindist:
 	@echo "cleaning target directory '$(bindist_BUILD_DIR)'"
 	$(RM_SILENT) $(bindist_BUILD_DIR)
 
+dist-clean:
+	$(RM) $(dist_ARCHIVE_NAME) $(dist_ARCHIVE_NAME).sig $(bindist_ARCHIVE)
 
 #page
 ## ------------------------------------------------------------

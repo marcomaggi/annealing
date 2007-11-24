@@ -63,6 +63,12 @@ typedef struct fitting_data_t {
   double	observations[NUM];
 } fitting_data_t;
 
+typedef struct fitting_step_t {
+  double	A;
+  double	lambda;
+  double	b;
+} fitting_step_t;
+
 static const configuration_t original_params = { 5.0, 0.1, 7.0 };
 
 static void make_observations	(double * t, double * observations, size_t num);
@@ -81,8 +87,8 @@ main (int argc, char ** argv)
 {
   gsl_annealing_simple_workspace_t	S;
   fitting_data_t	D;
+  fitting_step_t	max_step = { 1.0, 0.1, 1.0 };
   configuration_t	configurations[3];
-  double		max_step = 1.0;
   int			verbose_mode = 0;
   
 
@@ -93,13 +99,13 @@ main (int argc, char ** argv)
       switch (c)
 	{
 	case 'h':
-	  fprintf(stderr, "usage: test_sinxy [-v] [-h]\n");
+	  fprintf(stderr, "usage: test_fitting [-v] [-h]\n");
 	  goto exit;
 	case 'v':
 	  verbose_mode = 1;
 	  break;
 	default:
-	  fprintf(stderr, "test_sinxy error: unknown option %c\n", c);
+	  fprintf(stderr, "test_fitting error: unknown option %c\n", c);
 	  exit(EXIT_FAILURE);
 	}
   }
@@ -147,7 +153,7 @@ main (int argc, char ** argv)
 
   gsl_annealing_simple_solve(&S);
 
-  printf("test_sinxy: final best solution: %f, %f, %f; original: %g, %g, %g\n",
+  printf("test_fitting: final best solution: %f, %f, %f; original: %g, %g, %g\n",
 	 configurations[1].A, configurations[1].lambda, configurations[1].b,
 	 original_params.A, original_params.lambda, original_params.b);
   printf("------------------------------------------------------------\n\n");
@@ -163,10 +169,9 @@ main (int argc, char ** argv)
  ** ----------------------------------------------------------*/
 
 static double
-alea (gsl_annealing_simple_workspace_t * S)
+alea (gsl_annealing_simple_workspace_t * S, double max_step)
 {
-  return (2.0 * gsl_rng_uniform(S->numbers_generator) - 1.0) *
-    *((double *)S->max_step_value);
+  return (2.0 * gsl_rng_uniform(S->numbers_generator) - 1.0) * max_step;
 }
 
 /* ------------------------------------------------------------ */
@@ -189,10 +194,11 @@ void
 step_function (gsl_annealing_simple_workspace_t * S, void * configuration)
 {
   configuration_t *	C = configuration;
+  fitting_step_t *	W = S->max_step_value;
 
-  C->A		+= alea(S);
-  C->lambda	+= alea(S) * 0.1;
-  C->b		+= alea(S);
+  C->A		+= alea(S, W->A);
+  C->lambda	+= alea(S, W->lambda);
+  C->b		+= alea(S, W->b);
 }
 void
 log_function (gsl_annealing_simple_workspace_t * S)

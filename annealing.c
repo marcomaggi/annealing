@@ -60,6 +60,8 @@ gsl_annealing_simple_solve (gsl_annealing_simple_workspace_t * S)
 {
   S->copy_function(S, S->best_configuration, S->configuration);
   S->best_energy = S->energy = S->energy_function(S, S->configuration);
+  S->new_energy  = 0.0;
+  S->copy_function(S, S->new_configuration, S->configuration);
   if (S->log_function) S->log_function(S);
 
   for (;;)
