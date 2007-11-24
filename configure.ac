@@ -1,7 +1,7 @@
 # configure.ac --
 #
 
-AC_INIT([guile-endian], [0.1.0], [marcomaggi@gna.org])
+AC_INIT([annealing], [0.1.0], [marcomaggi@gna.org])
 AC_PREREQ(2.57)
 AC_COPYRIGHT([Copyright (C) 2007 by Marco Maggi])
 AC_CONFIG_SRCDIR([./annealing.c])
@@ -21,8 +21,11 @@ AC_ARG_VAR([RM],[deletes files and directories recursively])
 AC_PATH_PROG([TAR],[tar],[false])
 AC_ARG_VAR([TAR],[the GNU tar program])
 
-AC_PATH_PROG([GUILE],[guile],[false])
-AC_ARG_VAR([GUILE],[the Guile interpreter])
+AC_PATH_PROG([MV],[mv],[false])
+AC_ARG_VAR([MV],[the mv program])
+
+AC_PATH_PROG([BZIP2],[bzip2],[false])
+AC_ARG_VAR([BZIP2],[the bzip2 program])
 
 AC_PATH_PROG([FIND],[find],[false])
 AC_PATH_PROG([GUILE_SNARF],[guile-snarf],[false])

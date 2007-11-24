@@ -20,10 +20,12 @@ PKG_ID		= $(PACKAGE_NAME)_$(PACKAGE_VERSION)
 RM		= @RM@ -fvr
 RM_SILENT	= @RM@ -fr
 
+MV		= @MV@
 TAR		= @TAR@
-TLA		= @TLA@
 MKDIR		= @MKDIR@ -p
+BZIP2		= @BZIP2@
 FIND		= @FIND@
+TLA		= @TLA@
 
 DIR_INSTALL_MODE  = 0755
 FILE_INSTALL_MODE = 0444
@@ -91,6 +93,7 @@ TEST_TARGETS	= $(notdir $(TEST_SOURCES:.c=))
 CLEANFILES	= $(LIBRARIES) $(OBJECTS) $(TEST_TARGETS) $(TEST_OBJECTS)
 
 TEST_FLAGS	= LD_LIBRARY_PATH="$(builddir)"
+INCLUDE_FILES	= $(srcdir)/gsl_annealing.h
 
 
 .PHONY: all clean test test-verbose
@@ -178,16 +181,60 @@ rinfo:
 
 #page
 ## ------------------------------------------------------------
-## Installation.
+## Installation and distribution.
 ## ------------------------------------------------------------
 
-.PHONY: install
+TREE_VERSION	:= $(shell tla tree-version)
+PACKAGE_ID_NOP	= $(shell tla parse-package-name --package-version $(TREE_VERSION))
+
+TMPDIR			?= /tmp
+dist_ARCHIVE_TAR	= $(TMPDIR)/$(PKG_ID)_src.tar
+dist_ARCHIVE_BZ		= $(dist_ARCHIVE_TAR).bz2
+dist_ARCHIVE_STORE_DIR	= $(HOME)/share/gna.org/gee/annealing
+bindist_ARCHIVE		= $(PKG_ID)_bin.tar.gz
+bindist_BUILD_DIR	= $(TMPDIR)/annealing
+
+.PHONY: install dist bindist
 
 install:
+	test -d "$(DESTDIR)" || $(MKDIR) $(DESTDIR)
 	$(INSTALL_DIR)  $(DESTDIR)$(libdir)
 	$(INSTALL_FILE) $(LIBRARIES) $(DESTDIR)$(libdir)
 	$(INSTALL_DIR)  $(DESTDIR)$(infodir)
 	$(INSTALL_FILE) $(doc_TARGETS) $(DESTDIR)$(infodir)
+	$(INSTALL_DIR)  $(DESTDIR)$(includedir)
+	$(INSTALL_FILE) $(INCLUDE_FILES) $(DESTDIR)$(includedir)
+
+dist:
+	-@$(RM_SILENT) $(dist_ARCHIVE_BZ)
+	@cd $(srcdir)/.. && $(TAR) --create --dereference				\
+		--exclude=\*.bz2 --exclude=\*.gz			\
+		--exclude=\*~ --exclude=\=\*				\
+		--exclude={arch} --exclude=.arch-ids --exclude=\+\+\*	\
+		--exclude=\*.so --exclude=autom4te.cache		\
+		--verbose --file=$(dist_ARCHIVE_TAR) $(PACKAGE_ID_NOP) && \
+		$(BZIP2) --verbose --best $(dist_ARCHIVE_TAR)
+	@$(MV) -v $(dist_ARCHIVE_BZ) $(builddir)
+
+sign:
+	@gpg --verbose --default-key tungsteno --detach-sign \
+		--sign $(dist_ARCHIVE_BZ)
+
+store:
+	$(INSTALL_DIR) $(dist_ARCHIVE_STORE_DIR)
+	-cd $(dist_ARCHIVE_STORE_DIR) && \
+	$(RM) $(dist_ARCHIVE_BZ) $(dist_ARCHIVE_BZ).sig
+	$(INSTALL_FILE) $(dist_ARCHIVE_BZ) $(dist_ARCHIVE_BZ).sig \
+		$(dist_ARCHIVE_STORE_DIR)
+
+bindist:
+	@echo "cleaning target directory '$(bindist_BUILD_DIR)'"
+	$(RM_SILENT) $(bindist_BUILD_DIR)
+	$(MAKE) install DESTDIR=$(bindist_BUILD_DIR)
+	$(TAR) --directory=$(bindist_BUILD_DIR) --create --gzip --verbose \
+		--file=$(builddir)/$(bindist_ARCHIVE) .
+	@echo "cleaning target directory '$(bindist_BUILD_DIR)'"
+	$(RM_SILENT) $(bindist_BUILD_DIR)
 
 
 #page

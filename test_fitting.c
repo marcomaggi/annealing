@@ -147,7 +147,7 @@ main (int argc, char ** argv)
 
   gsl_annealing_simple_solve(&S);
 
-  printf("test_sinxy: final best solution: %f, %f, %f; originall: %g, %g, %g\n",
+  printf("test_sinxy: final best solution: %f, %f, %f; original: %g, %g, %g\n",
 	 configurations[1].A, configurations[1].lambda, configurations[1].b,
 	 original_params.A, original_params.lambda, original_params.b);
   printf("------------------------------------------------------------\n\n");
