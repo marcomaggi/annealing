@@ -141,9 +141,9 @@ main (int argc, char ** argv)
     S.numbers_generator		= gsl_rng_alloc(gsl_rng_rand);
     gsl_rng_set(S.numbers_generator, 15);
 
-    S.configuration		= &(configurations[0]);
-    S.best_configuration	= &(configurations[1]);
-    S.new_configuration		= &(configurations[2]);
+    S.current_configuration.data= &(configurations[0]);
+    S.best_configuration.data	= &(configurations[1]);
+    S.new_configuration.data	= &(configurations[2]);
 
     /* start configuration */
     configurations[0].A		= 6.0;
@@ -208,12 +208,12 @@ void
 log_function (void * W)
 {
   gsl_annealing_simple_workspace_t * S = W;
-  configuration_t *	C = S->configuration;
-  configuration_t *	B = S->best_configuration;
+  configuration_t *	C = S->current_configuration.data;
+  configuration_t *	B = S->best_configuration.data;
 
   printf("current: %f, %f, %f (energy %f); best: %f, %f, %f (energy %f)\n",
-	 C->A, C->lambda, C->b, energy_function(S, S->configuration),
-	 B->A, B->lambda, B->b, energy_function(S, S->best_configuration));
+	 C->A, C->lambda, C->b, S->current_configuration.energy,
+	 B->A, B->lambda, B->b, S->best_configuration.energy);
 }
 
 /* ------------------------------------------------------------ */

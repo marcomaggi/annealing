@@ -83,11 +83,12 @@ pkgsysconfdir	= $(sysconfdir)/$(PKG_DIR)
 
 OBJEXT		= @OBJEXT@
 
-SOURCES		= annealing.c
+SOURCES		= basic_annealing.c multibest_annealing.c
 OBJECTS		= $(SOURCES:.c=.$(OBJEXT))
 TARGETS		= $(LIBRARIES)
 
-TEST_SOURCES	= test_sinc.c test_sinxy.c test_fitting.c test_tsp.c
+TEST_SOURCES	= test_sinc.c test_sinxy.c test_fitting.c test_tsp.c \
+		  test_multi_sinc.c
 TEST_OBJECTS	= $(TEST_SOURCES:.c=.$(OBJEXT))
 TEST_TARGETS	= $(notdir $(TEST_SOURCES:.c=))
 
@@ -104,24 +105,33 @@ INCLUDE_FILES	= $(srcdir)/gsl_annealing.h
 
 
 .PHONY: all clean test test-verbose test-tsp test-verbose-tsp test-sinc
+.PHONY: test-multi-sinc test-verbose-multi-sinc
 
 all: $(TARGETS) $(TEST_TARGETS) $(OTHER_TARGETS)
 clean:
 	@$(RM) $(CLEANFILES)
 test:
 	$(TEST_FLAGS) ./test_sinc
+	$(TEST_FLAGS) ./test_multi_sinc
 	$(TEST_FLAGS) ./test_sinxy
 	$(TEST_FLAGS) ./test_fitting
 	$(TEST_FLAGS) ./test_tsp
 
 test-verbose:
 	$(TEST_FLAGS) ./test_sinc -v
+	$(TEST_FLAGS) ./test_multi_sinc -v
 	$(TEST_FLAGS) ./test_sinxy -v
 	$(TEST_FLAGS) ./test_fitting -v
 	$(TEST_FLAGS) ./test_tsp -v
 
 test-sinc:
 	$(TEST_FLAGS) ./test_sinc
+
+test-multi-sinc:
+	$(TEST_FLAGS) ./test_multi_sinc
+
+test-verbose-multi-sinc:
+	$(TEST_FLAGS) ./test_multi_sinc -v
 
 test-tsp:
 	$(TEST_FLAGS) ./test_tsp

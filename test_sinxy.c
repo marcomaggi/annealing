@@ -59,7 +59,7 @@ main (int argc, char ** argv)
 {
   gsl_annealing_simple_workspace_t	S;
   double	configurations[3][2];
-  double	max_step = 10.0;
+  double	max_step = 100.0;
   int		verbose_mode = 0;
   
 
@@ -84,10 +84,10 @@ main (int argc, char ** argv)
   printf("\n------------------------------------------------------------\n");
   printf("test_sinxy: sinxy minimisation with simulated annealing\n");
 
-  S.number_of_iterations_at_fixed_temperature = 10;
+  S.number_of_iterations_at_fixed_temperature = 100;
   S.max_step_value	= &max_step;
 
-  S.temperature		= 10.0;
+  S.temperature		= 60.0;
   S.minimum_temperature	= 1.0e-6;
   S.restart_temperature	= DBL_MIN; /* do not restart */
   S.boltzmann_constant	= 1.0;
@@ -101,9 +101,9 @@ main (int argc, char ** argv)
   S.numbers_generator	= gsl_rng_alloc(gsl_rng_rand);
   gsl_rng_set(S.numbers_generator, 15);
 
-  S.configuration	= &(configurations[0]);
-  S.best_configuration	= &(configurations[1]);
-  S.new_configuration	= &(configurations[2]);
+  S.current_configuration.data	= &(configurations[0]);
+  S.best_configuration.data	= &(configurations[1]);
+  S.new_configuration.data	= &(configurations[2]);
 
   configurations[0][0] = 15.0;
   configurations[0][1] = 15.0;
@@ -146,20 +146,23 @@ step_function (void * W, void * configuration)
 {
   gsl_annealing_simple_workspace_t * S = W;
   double *	C = configuration;
+  double	c0, c1;
 
-  C[0] += alea(S);
-  C[1] += alea(S);
+  do c0 = C[0] + alea(S); while (fabs(c0) > 30.0);
+  C[0] = c0;
+  do c1 = C[1] + alea(S); while (fabs(c1) > 30.0);
+  C[1] = c1;
 }
 void
 log_function (void * W)
 {
   gsl_annealing_simple_workspace_t * S = W;
-  double *	C = S->configuration;
-  double *	B = S->best_configuration;
+  double *	C = S->current_configuration.data;
+  double *	B = S->best_configuration.data;
 
   printf("current %f,%f (energy %f), best %f,%f (energy %f)\n",
-	 C[0], C[1], energy_function(S, S->configuration),
-	 B[0], B[1], energy_function(S, S->best_configuration));
+	 C[0], C[1], S->current_configuration.energy,
+	 B[0], B[1], S->best_configuration.energy);
 }
 
 
@@ -168,7 +171,7 @@ log_function (void * W)
  ** ----------------------------------------------------------*/
 
 void
-copy_function (void * W, void * dst_configuration, void * src_configuration)
+copy_function (void * dummy, void * dst_configuration, void * src_configuration)
 {
   double *	dst = dst_configuration;
   double *	src = src_configuration;

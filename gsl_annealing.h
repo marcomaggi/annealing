@@ -45,8 +45,13 @@ __BEGIN_DECLS
 
 
 /** ------------------------------------------------------------
- ** Simple algorithm type definitions.
+ ** Generic data types.
  ** ----------------------------------------------------------*/
+
+typedef struct gsl_annealing_configuration_t {
+  void *	data;
+  double	energy;
+} gsl_annealing_configuration_t;
 
 typedef double	gsl_annealing_energy_fun_t	(void * S, void * configuration);
 typedef void	gsl_annealing_step_fun_t	(void * S, void * configuration);
@@ -60,6 +65,12 @@ typedef void	gsl_annealing_copy_fun_t	(void * S,
 
 /* ------------------------------------------------------------ */
 
+
+
+/** ------------------------------------------------------------
+ ** Simple algorithm type definitions.
+ ** ----------------------------------------------------------*/
+
 typedef struct gsl_annealing_simple_workspace_t {
   size_t	number_of_iterations_at_fixed_temperature;
   void *	max_step_value;
@@ -69,22 +80,17 @@ typedef struct gsl_annealing_simple_workspace_t {
   double	damping_factor;
   double	minimum_temperature;
   double	restart_temperature;
+  int		restart_flag;
 
-  void *	configuration;
-  void *	new_configuration;
-  void *	best_configuration;
-
-  double	energy;
-  double	new_energy;
-  double	best_energy;
+  gsl_annealing_configuration_t		current_configuration;
+  gsl_annealing_configuration_t		new_configuration;
+  gsl_annealing_configuration_t		best_configuration;
 
   gsl_rng *	numbers_generator;
 
   gsl_annealing_energy_fun_t *	energy_function;
   gsl_annealing_step_fun_t *	step_function;
-
   gsl_annealing_log_fun_t *	log_function;
-
   gsl_annealing_copy_fun_t *	copy_function;
 
   void *	params;
@@ -97,7 +103,41 @@ typedef struct gsl_annealing_simple_workspace_t {
  ** Multi-best algorithm type definitions.
  ** ----------------------------------------------------------*/
 
-typedef struct gsl_annealing_multi_workspace_t {
+typedef struct gsl_annealing_multibest_workspace_t {
+  size_t	number_of_iterations_at_fixed_temperature;
+  void *	max_step_value;
+  double	minimum_acceptance_distance;
+
+  double	boltzmann_constant;
+  double	temperature;		/* initial temperature */
+  double	damping_factor;
+  double	minimum_temperature;
+
+  gsl_annealing_configuration_t		current_configuration;
+  gsl_annealing_configuration_t		new_configuration;
+  gsl_annealing_configuration_t *	best_configurations;
+  size_t	max_number_of_best_configurations;
+  size_t	best_configurations_count;
+
+  gsl_rng *	numbers_generator;
+
+  gsl_annealing_energy_fun_t *	energy_function;
+  gsl_annealing_step_fun_t *	step_function;
+  gsl_annealing_log_fun_t *	log_function;
+  gsl_annealing_copy_fun_t *	copy_function;
+  gsl_annealing_metric_fun_t *	metric_function;
+
+  void *		params;
+} gsl_annealing_multibest_workspace_t;
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Many tries algorithm type definitions.
+ ** ----------------------------------------------------------*/
+
+typedef struct gsl_annealing_manytries_workspace_t {
   size_t		number_of_iterations_at_fixed_temperature;
   void *		max_step_value;
   double		minimum_acceptance_distance;
@@ -107,29 +147,21 @@ typedef struct gsl_annealing_multi_workspace_t {
   double		damping_factor;
   double		minimum_temperature;
 
-  size_t		best_configurations_max;
-  size_t		best_configurations_count;
-
-  void *		configuration;
-  void *		new_configuration;
-  unsigned char **	best_configurations;
-
-  double		energy;
-  double		new_energy;
-  double *		best_energies;
+  gsl_annealing_configuration_t		start_configuration;
+  gsl_annealing_configuration_t *	new_configurations;
+  gsl_annealing_configuration_t		best_configuration;
+  size_t	max_number_of_new_configuration;
 
   gsl_rng *		numbers_generator;
 
   gsl_annealing_energy_fun_t *	energy_function;
   gsl_annealing_step_fun_t *	step_function;
-
   gsl_annealing_log_fun_t *	log_function;
-
   gsl_annealing_copy_fun_t *	copy_function;
   gsl_annealing_metric_fun_t *	metric_function;
 
   void *		params;
-} gsl_annealing_multi_workspace_t;
+} gsl_annealing_manytries_workspace_t;
 
 /* ------------------------------------------------------------ */
 
@@ -138,9 +170,9 @@ typedef struct gsl_annealing_multi_workspace_t {
  ** Algorithms.
  ** ----------------------------------------------------------*/
 
-extern void gsl_annealing_simple_solve (gsl_annealing_simple_workspace_t * S);
-extern void gsl_annealing_multi_solve  (gsl_annealing_multi_workspace_t * S);
-
+extern void gsl_annealing_simple_solve    (gsl_annealing_simple_workspace_t * S);
+extern void gsl_annealing_multibest_solve (gsl_annealing_multibest_workspace_t * S);
+extern void gsl_annealing_manytries_solve (gsl_annealing_manytries_workspace_t * S);
 
 __END_DECLS
 

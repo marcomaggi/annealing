@@ -154,9 +154,9 @@ main (int argc, char ** argv)
     S.numbers_generator		= gsl_rng_alloc(gsl_rng_rand);
     gsl_rng_set(S.numbers_generator, 15);
 
-    S.configuration		= &(configurations[0]);
-    S.best_configuration	= &(configurations[1]);
-    S.new_configuration		= &(configurations[2]);
+    S.current_configuration.data= &(configurations[0]);
+    S.best_configuration.data	= &(configurations[1]);
+    S.new_configuration.data	= &(configurations[2]);
 
     /* start configuration */
     for (size_t i=0; i<D.num; ++i)
@@ -229,19 +229,19 @@ log_function (void * W)
 {
   gsl_annealing_simple_workspace_t * S = W;
   tsp_data_t *	D = S->params;
-  size_t *	C = S->configuration;
-  size_t *	B = S->best_configuration;
-  size_t *	N = S->new_configuration;
+  size_t *	C = S->current_configuration.data;
+  size_t *	B = S->best_configuration.data;
+  size_t *	N = S->new_configuration.data;
 
   printf("current: ");
   for (size_t i=0; i<D->num; ++i) printf("%d,", C[i]);
-  printf(" (E %.1f)", energy_function(S, C));
+  printf(" (E %.1f)", S->current_configuration.energy);
   printf("; best: ");
   for (size_t i=0; i<D->num; ++i) printf("%d,", B[i]);
-  printf(" (E %.1f)", energy_function(S, B));
+  printf(" (E %.1f)", S->best_configuration.energy);
   printf("; new: ");
   for (size_t i=0; i<D->num; ++i) printf("%d,", N[i]);
-  printf(" (E %.1f)\n", energy_function(S, N));
+  printf(" (E %.1f)\n", S->new_configuration.energy);
 }
 
 /* ------------------------------------------------------------ */

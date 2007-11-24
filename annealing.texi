@@ -142,7 +142,9 @@ module.
 
 @menu
 * annealing algorithm::         The basic algorithm.
+* annealing types::             Data types.
 * annealing basic::             Interface to the basic algorithm.
+* annealing multi::             Interface to the multi-best algorithm.
 @end menu
 
 
@@ -156,7 +158,7 @@ Here is an explanation of the basic algorithm. The idea is to generate
 at random new configurations in the solution's space, and apply two
 criteria to decide if the a new configuration must be accepted or
 not. The criteria are: if lower energy accept, if upper energy accept
-with a probability from a Boltmann distribution.
+with a probability from a Boltzmann distribution.
 
 It goes like this:
 
@@ -182,10 +184,14 @@ if @code{new_E <= best_E}: register the @emph{new} configuration as both
 @emph{best so far} and @emph{current};
 
 @item
+else if @code{new_E <= current_E}: register the @emph{new} configuration
+as @emph{current};
+
+@item
 else compute:
 
 @example
-R = exp(-(new_E - best_E)/(k * T)
+R = exp(-(new_E - best_E)/(k * T))
 @end example
 
 @noindent
@@ -217,13 +223,12 @@ if the new temperature is less than the selected minimum value: stop and
 report the better configuration as result;
 
 @item
-if the new temperature is less than the selected restart value: discard
-the @emph{current} configuration replacing it with the @emph{best so
-far};
-
-@item
 go to 2.
 @end enumerate
+
+Additionally some algorithm allows restarting, between steps 4 and 5: if
+the new temperature is less than the selected restart value, discard the
+@emph{current} configuration replacing it with the @emph{best so far}.
 
 Notes:
 
@@ -249,16 +254,16 @@ for (l = initial; l >= miminum; l /= damping, ++count)
 @end example
 
 @item
-the cooling waveform for the temperature is somewhat like an
-exponential; for the example above the application of nonlinear
-multifitting with the exponential model returns the following:
+the cooling waveform of the temperature is somewhat like an exponential;
+for the example above the application of nonlinear multifitting with the
+exponential model returns the following:
 
 @example
 T(x) = A exp(-lam x)    A=99.9999999173883  lam=4.60350080940739
 @end example
 
 @noindent
-which fits very well the curve.
+which fits very well the curve;
 
 @item
 the value:
@@ -308,12 +313,93 @@ building a new configuration from an existent one cannot fail.
 @end itemize
 
 
+
+@c ------------------------------------------------------------
+@node annealing types
+@section Data types
+
+
+@subsection Data structures
+
+
+@deftp {Struct Typedef} gsl_annealing_configuration_t
+A container for the configuration object. Public fields:
+
+@table @code
+@item void * data
+pointer to a block of memory holding the configuration data; it can be
+any type of data: the annealing code does not access it directly, it is
+handled only by the user supplied functions;
+
+@item double energy
+the energy level associated to the configuration; it is computed by a
+user supplied function.
+@end table
+@end deftp
+
+
+@subsection User supplied functions
+
+
+@noindent
+In the following function types:
+
+@itemize
+@item
+when the function is invoked by @function{gsl_annealing_simple_solve}
+the argument @var{S} references a structure of type
+@code{gsl_annealing_simple_workspace_t}.
+
+@item
+when the function is invoked by @function{gsl_annealing_multibest_solve}
+the argument @var{S} references a structure of type
+@code{gsl_annealing_multibest_workspace_t};
+
+@item
+when the function is invoked by @function{gsl_annealing_manytries_solve}
+the argument @var{S} references a structure of type
+@code{gsl_annealing_manytries_workspace_t}.
+@end itemize
+
+The @var{configuration} parameters are the values in the @code{data}
+field of @code{gsl_annealing_configuration_t} structures.
+
+
+@deftypefun double gsl_annealing_energy_fun_t (void * @var{S}, void * @var{configuration})
+Must compute and return the energy value of @var{configuration}.
+@end deftypefun
+
+
+@deftypefun void gsl_annealing_step_fun_t (void * @var{S}, void * @var{configuration})
+Must use the data in @var{S} to transform @var{configuration} to a new value.
+@end deftypefun
+
+
+@deftypefun double gsl_annealing_metric_fun_t (void * @var{S}, void * @var{configuration_a}, void * @var{configuration_b})
+Must compute and return the distance between the two configurations. The
+metric should be such that: the order in which the configurations are
+handed to this function is not important.
+@end deftypefun
+
+
+@deftypefun void gsl_annealing_log_fun_t (void * @var{S})
+Invoked once before the first iteration and then at the end of each
+internal loop.
+@end deftypefun
+
+
+@deftypefun void gsl_annealing_copy_fun_t (void * @var{S}, void * @var{dst_configuration}, void * @var{src_configuration})
+Invoked to clone a configuration.
+
+It is responsibility of this function to free resources in
+@var{dst_configuration} before overwriting them with values from
+@var{src_configuration}.
+@end deftypefun
+
+
 @c ------------------------------------------------------------
 @node annealing basic
 @section Interface to the basic algorithm
-
-
-@subsection Data types
 
 
 @deftp {Struct Typedef} gsl_annealing_simple_workspace_t
@@ -349,40 +435,40 @@ restarting is useful to prevent the search to get lost at low
 temperature in a region with no interesting minima;
 
 restarting is optional: if we select @code{DBL_MIN} as value, it is
-never @code{restart_temperature > temperature} and the configuration is
+never @code{temperature < restart_temperature} and the configuration is
 never reset (@code{DBL_MIN} is defined in @file{float.h}, but any
 negative value will do);
 
 the value must be less than @code{temperature}, or the algorithm will
 restart at each iteration;
 
+@item int restart_flag
+initially set to @code{0} by @function{gsl_annealing_simple_solve}, it
+is set to @code{1} if/when the algorithm is restarted from the best
+configuration;
+
 @item double damping_factor
 the coefficient used to cool the temperature; it must be a number
 slightly above @code{1.0};
 
-@item void * configuration
-pointer to the @emph{current} configuration value; it can reference any
-type of data, it is accessed only by the user supplied functions;
+@item gsl_annealing_configuration_t current_configuration
+holds the @emph{current} configuration value; its @code{data} field must
+be initialised with a pointer to the start configuration;
 
-@item void * best_configuration
-pointer to a data area that will hold the @emph{best so far}
-configuration value; it can reference any type of data, it is accessed
-only by the user supplied functions; it must be initialised with an
+@item gsl_annealing_configuration_t best_configuration
+holds the @emph{best so far} configuration value; its @code{data} field
+must be initialised with a pointer to a memory block large enough to
+hold a configuration value; the memory block must be initialised with an
 invalid value that can be recognised by @code{copy_function};
 
-@item void * new_configuration
-pointer to a data area that will hold the @emph{new} configuration
-value; it can reference any type of data, it is accessed only by the
-user supplied functions; it must be initialised with an invalid value
-that can be recognised by @code{copy_function};
-
-@item double energy
-@itemx double best_energy
-@itemx double new_energy
-the energy values of the configurations;
+@item gsl_annealing_configuration_t new_configuration
+holds the @emph{new} configuration value; its @code{data} field must be
+initialised with a pointer to a memory block large enough to hold a
+configuration value; the memory block must be initialised with an
+invalid value that can be recognised by @code{copy_function};
 
 @item gsl_rng * numbers_generator
-the random number generator used to apply the Boltmann distribution
+the random number generator used to apply the Boltzmann distribution
 acceptance criterion; it can be used also to generate the random step;
 
 @item gsl_annealing_energy_fun_t * energy_function
@@ -408,41 +494,6 @@ functions.
 @end deftp
 
 
-In the following function types: when the function is invoked by
-@function{gsl_annealing_simple_solve} the argument @var{S} references a
-structure of type @code{gsl_annealing_simple_workspace_t}.
-
-
-@deftypefun double gsl_annealing_energy_fun_t (void * @var{S}, void * @var{configuration})
-Must compute and return the energy value for @var{configuration}.
-@end deftypefun
-
-
-@deftypefun void gsl_annealing_step_fun_t (void * @var{S}, void * @var{configuration})
-Must use the data in @var{S} to transform @var{configuration} to a new value.
-@end deftypefun
-
-
-@c @deftypefun double gsl_annealing_metric_fun_t (void * configuration_a, void * configuration_b);
-
-@c @end deftypefun
-
-
-@deftypefun void gsl_annealing_log_fun_t (void * @var{S})
-Invoked at the end of each internal loop.
-@end deftypefun
-
-
-@deftypefun void gsl_annealing_copy_fun_t (void * @var{S}, void * @var{dst_configuration}, void * @var{src_configuration})
-Invoked to clone a configuration. It is responsibility of this function
-to free resources in @var{dst_configuration} before overwriting them
-with values from @var{src_configuration}.
-@end deftypefun
-
-
-@subsection Functions
-
-
 @deftypefun void gsl_annealing_simple_solve (gsl_annealing_simple_workspace_t * @var{S})
 Does the search.
 
@@ -450,10 +501,10 @@ The structure referenced by @var{S} must be allocated and initialised by
 the user before invoking this function, and freed by the user after this
 function has returned.
 
-Space for @code{configuration}, @code{best_configuration} and
-@code{new_configuration} fields in @var{S} must be allocated by the user
-before invoking this function, and freed by the user after this function
-has returned.
+Space for the data referenced by the @code{current_configuration},
+@code{best_configuration} and @code{new_configuration} fields in @var{S}
+must be allocated by the user before invoking this function, and freed
+by the user after this function has returned.
 
 This function does no resource allocation, so it is perfectly all right
 if the user supplied functions use a dynamic wind mechanism, like
@@ -463,6 +514,425 @@ When this function returns: the best configuration found is in the
 @code{best_configuration} field.
 @end deftypefun
 
+
+@subsection Examples
+
+
+@noindent
+Find the minimum of @code{f(t) = -sin(t)/t}.
+
+@example
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <float.h>
+#include <gsl/gsl_rng.h>
+#include "gsl_annealing.h"
+
+
+static  gsl_annealing_energy_fun_t      energy_function;
+static  gsl_annealing_step_fun_t        step_function;
+static  gsl_annealing_log_fun_t         log_function;
+static  gsl_annealing_copy_fun_t        copy_function;
+
+/** ------------------------------------------------------------
+ ** Main.
+ ** ----------------------------------------------------------*/
+
+int
+main (void)
+@{
+  gsl_annealing_simple_workspace_t      S;
+  double        configurations[3];
+  double        max_step = 10.0;
+
+
+  printf("sinc minimisation with simulated annealing\n");
+
+  S.number_of_iterations_at_fixed_temperature = 10;
+  S.max_step_value              = &max_step;
+
+  S.temperature                 = 10.0;
+  S.minimum_temperature         = 1.0e-6;
+  S.restart_temperature         = DBL_MIN; /* do not restart */
+  S.boltzmann_constant          = 1.0;
+  S.damping_factor              = 1.005;
+
+  S.energy_function             = energy_function;
+  S.step_function               = step_function;
+  S.copy_function               = copy_function;
+  S.log_function                = log_function;
+
+  S.numbers_generator           = gsl_rng_alloc(gsl_rng_rand);
+  gsl_rng_set(S.numbers_generator, 15);
+
+  S.current_configuration.data  = &(configurations[0]);
+  S.best_configuration.data     = &(configurations[1]);
+  S.new_configuration.data      = &(configurations[2]);
+
+  configurations[0] = 100.0;
+
+  gsl_annealing_simple_solve(&S);
+
+  printf("final best solution: %f, expected 0.0\n",
+         configurations[1]);
+
+  gsl_rng_free(S.numbers_generator);
+  exit(EXIT_SUCCESS);
+@}
+
+/** ------------------------------------------------------------
+ ** Iteration functions.
+ ** ----------------------------------------------------------*/
+
+static double
+alea (gsl_annealing_simple_workspace_t * S)
+@{
+  double        max_step = *((double *)S->max_step_value);
+
+  return (2.0 * gsl_rng_uniform(S->numbers_generator) - 1.0) * max_step;
+@}
+
+/* ------------------------------------------------------------ */
+
+double
+energy_function (void * dummy, void * configuration)
+@{
+  double        C = *((double *)configuration);
+
+  return -sin(C)/C;
+@}
+void
+step_function (void * W, void * configuration)
+@{
+  gsl_annealing_simple_workspace_t * S = W;
+  double *      C = (double *)configuration;
+  double        c;
+
+  do c = *C + alea(S); while (fabs(c) > 120.0);
+  *C = c;
+@}
+void
+log_function (void * W)
+@{
+  gsl_annealing_simple_workspace_t * S = W;
+  double        current = *((double *)S->current_configuration.data);
+  double        best    = *((double *)S->best_configuration.data);
+
+  printf("current %f (energy %f), best %f (energy %f)\n",
+         current, S->current_configuration.energy,
+         best,    S->best_configuration.energy);
+@}
+
+/** ------------------------------------------------------------
+ ** Configuration handling functions.
+ ** ----------------------------------------------------------*/
+
+void
+copy_function (void * dummy,
+               void * dst_configuration, void * src_configuration)
+@{
+  double *      dst = dst_configuration;
+  double *      src = src_configuration;
+
+  *dst = *src;
+@}
+
+/* end of file */
+@end example
+
+
+
+@c ------------------------------------------------------------
+@node annealing multi
+@section Interface to the multi--best algorithm
+
+
+@noindent
+The multi--best algorithm works like the simple one, but keeps as result
+a number of best configurations. It allows a two step search:
+
+@enumerate
+@item
+find @code{N} promising configurations using @function{gsl_annealing_multibest_solve};
+
+@item
+explore the neighbourhood of each of the best configurations using
+@function{gsl_annealing_simple_solve};
+@end enumerate
+
+
+When using the multi--best algorithm there is no restart option.
+
+
+@deftp {Struct Typedef} gsl_annealing_multibest_workspace_t
+Holds all the data required to run a multi--best simulated annealing
+algorithm. It must be allocated and freed by the user code. Public
+fields:
+
+@table @code
+@item size_t number_of_iterations_at_fixed_temperature
+self explaining;
+
+@item size_t max_number_of_best_configurations
+maximum number of best configurations to register;
+
+@item size_t best_configurations_count
+number of best configurations currently registered; at the beginning of
+the search this field is set to @code{1}, to account that the start
+configuration is registered as best so far;
+
+@item void * max_step_value
+pointer to the value used to limit the ``distance'' between new
+configurations and the current configuration; it can reference any type
+of value, it is accessed only by the user supplied functions;
+
+@item double minimum_acceptance_distance
+when evaluating a new promising configuration: the vector of better
+configurations is split in two: better than the promising, worse than
+the promising; the promising configuration is accepted if its distance
+from the better configurations is greater than this value;
+
+@item double boltzmann_constant
+the constant used in the energy computation; it must be positive; when
+tuning the parameters for a search a good start value is @code{1.0};
+
+@item double temperature
+the initial value for the temperature;
+
+@item double minimum_temperature
+the minimum value for the temperature: when the value in the field
+@code{temperature} drops below this level the outer loop stops;
+
+@item double damping_factor
+the coefficient used to cool the temperature; it must be a number
+slightly above @code{1.0};
+
+@item gsl_annealing_configuration_t current_configuration
+holds the @emph{current} configuration value; its @code{data} field must
+be initialised with a pointer to the start configuration;
+
+@item gsl_annealing_configuration_t new_configuration
+holds the @emph{new} configuration value; its @code{data} field must be
+initialised with a pointer to a memory block large enough to hold a
+configuration value; the memory block must be initialised with an
+invalid value that can be recognised by @code{copy_function};
+
+@item gsl_annealing_configuration_t * best_configurations
+pointer to an array of @code{max_number_of_best_configurations}
+structures, allocated by the user, that will reference the @emph{best so
+far} configurations; the @code{data} fields of each structure must be
+initialised with a pointer to a memory block large enough to hold a
+configuration value; the memory block must be initialised with an
+invalid value that can be recognised by @code{copy_function};
+
+@item gsl_rng * numbers_generator
+the random number generator used to apply the Boltmann distribution
+acceptance criterion; it can be used also to generate the random step;
+
+@item gsl_annealing_energy_fun_t * energy_function
+the user supplied function used to compute the energy of a
+configuration;
+
+@item gsl_annealing_step_fun_t * step_function
+the user supplied function used to compute the @emph{new} configuration
+from the @emph{current} configuration;
+
+@item gsl_annealing_log_fun_t * log_function
+the user supplied function used to log the search path; it can be
+@code{NULL} if no logging is required;
+
+@item gsl_annealing_copy_fun_t * copy_function
+the user supplied function used to copy a configuration from an
+allocation space to another;
+
+@item gsl_annealing_metric_fun_t * metric_function
+the user supplied function used to compute the distance between two
+configurations;
+
+@item void * params
+this is a free field that can be used to hand data to the user supplied
+functions.
+@end table
+@end deftp
+
+
+@deftypefun void gsl_annealing_multibest_solve (gsl_annealing_multibest_workspace_t * @var{S})
+Does the search.
+
+The structure referenced by @var{S} must be allocated and initialised by
+the user before invoking this function, and freed by the user after this
+function has returned.
+
+Space for @code{current_configuration}, @code{new_configuration} and the
+@code{best_configurations} array in @var{S} must be allocated by the
+user before invoking this function, and freed by the user after this
+function has returned.
+
+This function does no resource allocation, so it is perfectly all right
+if the user supplied functions use a dynamic wind mechanism, like
+@function{setjmp} and @function{longjmp}, to report errors.
+
+When this function returns: the best configurations found are in the
+@code{best_configurations} array.
+@end deftypefun
+
+
+@subsection Examples
+
+
+@noindent
+Find 4 local minima of @code{f(t) = -sin(t)/t}.
+
+@example
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <unistd.h>
+#include <float.h>
+#include <gsl/gsl_rng.h>
+#include "gsl_annealing.h"
+
+
+static  gsl_annealing_energy_fun_t      energy_function;
+static  gsl_annealing_step_fun_t        step_function;
+static  gsl_annealing_metric_fun_t      metric_function;
+static  gsl_annealing_log_fun_t         log_function;
+static  gsl_annealing_copy_fun_t        copy_function;
+
+/** ------------------------------------------------------------
+ ** Main.
+ ** ----------------------------------------------------------*/
+
+int
+main (void)
+@{
+  gsl_annealing_multibest_workspace_t   S;
+  gsl_annealing_configuration_t         array[4];
+  double        configurations[2+4]; /* new, current and 4 best */
+  double        max_step = 10.0;
+  
+
+  printf("test_multi_sinc: multi-best sinc minimisation with simulated annealing\n");
+
+  S.number_of_iterations_at_fixed_temperature = 10;
+  S.max_step_value              = &max_step;
+  S.minimum_acceptance_distance = 2.0;
+
+  S.temperature                 = 10.0;
+  S.minimum_temperature         = 1.0e-6;
+  S.boltzmann_constant          = 1.0;
+  S.damping_factor              = 1.005;
+
+  S.energy_function             = energy_function;
+  S.step_function               = step_function;
+  S.copy_function               = copy_function;
+  S.log_function                = log_function;
+  S.metric_function             = metric_function;
+
+  S.numbers_generator           = gsl_rng_alloc(gsl_rng_rand);
+  gsl_rng_set(S.numbers_generator, 15);
+
+  S.max_number_of_best_configurations = 4;
+  S.current_configuration.data  = &(configurations[0]);
+  S.new_configuration.data      = &(configurations[1]);
+  S.best_configurations         = array;
+
+  array[0].data         = &(configurations[2]);
+  array[1].data         = &(configurations[3]);
+  array[2].data         = &(configurations[4]);
+  array[3].data         = &(configurations[5]);
+  configurations[0] = 100.0;
+
+  gsl_annealing_multibest_solve(&S);
+
+  printf("test_multi_sinc: found %u best solutions:",
+         S.best_configurations_count);
+  for (size_t i=0; i<S.best_configurations_count; ++i)
+    printf(" %.5f", *((double *)(array[i].data)));
+
+  gsl_rng_free(S.numbers_generator);
+  exit(EXIT_SUCCESS);
+@}
+
+/** ------------------------------------------------------------
+ ** Iteration functions.
+ ** ----------------------------------------------------------*/
+
+static double
+alea (gsl_annealing_multibest_workspace_t * S)
+@{
+  double        max_step = *((double *)S->max_step_value);
+
+  return (2.0 * gsl_rng_uniform(S->numbers_generator) - 1.0) * max_step;
+@}
+
+/* ------------------------------------------------------------ */
+
+double
+energy_function (void * dummy, void * configuration)
+@{
+  double        C = *((double *)configuration);
+
+  return -sin(C)/C;
+@}
+void
+step_function (void * W, void * configuration)
+@{
+  gsl_annealing_multibest_workspace_t * S = W;
+  double *      C = (double *)configuration;
+  double        c;
+
+  do c = *C + alea(S); while (fabs(c) > 120.0);
+  *C = c;
+@}
+double
+metric_function (void * dummy, void * configuration_a, void * configuration_b)
+@{
+  double        A = *((double *)configuration_a);
+  double        B = *((double *)configuration_b);
+
+  return fabs(A - B);
+@}
+void
+log_function (void * W)
+@{
+  gsl_annealing_multibest_workspace_t * S = W;
+  double        current = *((double *)S->current_configuration.data);
+
+
+  printf("current %5.5g (energy %.4f), worst best energy %.4f, best (%u):",
+         current, S->current_configuration.energy,
+         S->best_configurations[S->best_configurations_count-1].energy,
+         S->best_configurations_count);
+  for (size_t i=0; i<S->best_configurations_count; ++i)
+    printf(" %.5f", *((double *)(S->best_configurations[i].data)));
+  printf("\n");
+@}
+
+/** ------------------------------------------------------------
+ ** Configuration handling functions.
+ ** ----------------------------------------------------------*/
+
+void
+copy_function (void * dummy, void * dst_configuration, void * src_configuration)
+@{
+  double *      dst = dst_configuration;
+  double *      src = src_configuration;
+
+  *dst = *src;
+@}
+
+/* end of file */
+@end example
 
 @c ------------------------------------------------------------
 

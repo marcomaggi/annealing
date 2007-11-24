@@ -59,7 +59,7 @@ main (int argc, char ** argv)
 {
   gsl_annealing_simple_workspace_t	S;
   double	configurations[3];
-  double	max_step = 5.0;
+  double	max_step = 10.0;
   int		verbose_mode = 0;
   
 
@@ -71,7 +71,7 @@ main (int argc, char ** argv)
 	{
 	case 'h':
 	  fprintf(stderr, "usage: test_sinc [-v] [-h]\n");
-	  goto exit;
+	  exit(EXIT_SUCCESS);
 	case 'v':
 	  verbose_mode = 1;
 	  break;
@@ -85,25 +85,25 @@ main (int argc, char ** argv)
   printf("test_sinc: sinc minimisation with simulated annealing\n");
 
   S.number_of_iterations_at_fixed_temperature = 10;
-  S.max_step_value	= &max_step;
+  S.max_step_value		= &max_step;
 
-  S.temperature		= 0.02;
-  S.minimum_temperature	= 1.0e-6;
-  S.restart_temperature	= DBL_MIN; /* do not restart */
-  S.boltzmann_constant	= 1.0;
-  S.damping_factor	= 1.005;
+  S.temperature			= 10.0;
+  S.minimum_temperature		= 1.0e-6;
+  S.restart_temperature		= DBL_MIN; /* do not restart */
+  S.boltzmann_constant		= 1.0;
+  S.damping_factor		= 1.005;
 
-  S.energy_function	= energy_function;
-  S.step_function	= step_function;
-  S.copy_function	= copy_function;
-  S.log_function	= (verbose_mode)? log_function : NULL;
+  S.energy_function		= energy_function;
+  S.step_function		= step_function;
+  S.copy_function		= copy_function;
+  S.log_function		= (verbose_mode)? log_function : NULL;
 
-  S.numbers_generator	= gsl_rng_alloc(gsl_rng_rand);
+  S.numbers_generator		= gsl_rng_alloc(gsl_rng_rand);
   gsl_rng_set(S.numbers_generator, 15);
 
-  S.configuration	= &(configurations[0]);
-  S.best_configuration	= &(configurations[1]);
-  S.new_configuration	= &(configurations[2]);
+  S.current_configuration.data	= &(configurations[0]);
+  S.best_configuration.data	= &(configurations[1]);
+  S.new_configuration.data	= &(configurations[2]);
 
   configurations[0] = 100.0;
 
@@ -113,7 +113,6 @@ main (int argc, char ** argv)
   printf("------------------------------------------------------------\n\n");
 
   gsl_rng_free(S.numbers_generator);
- exit:
   exit(EXIT_SUCCESS);
 }
 
@@ -121,6 +120,16 @@ main (int argc, char ** argv)
 /** ------------------------------------------------------------
  ** Iteration functions.
  ** ----------------------------------------------------------*/
+
+static double
+alea (gsl_annealing_simple_workspace_t * S)
+{
+  double	max_step = *((double *)S->max_step_value);
+
+  return (2.0 * gsl_rng_uniform(S->numbers_generator) - 1.0) * max_step;
+}
+
+/* ------------------------------------------------------------ */
 
 double
 energy_function (void * dummy, void * configuration)
@@ -134,18 +143,21 @@ step_function (void * W, void * configuration)
 {
   gsl_annealing_simple_workspace_t * S = W;
   double *	C = (double *)configuration;
+  double	c;
 
-  *C += (2.0 * gsl_rng_uniform(S->numbers_generator) - 1.0) *
-    *((double *)S->max_step_value);
+  do c = *C + alea(S); while (fabs(c) > 120.0);
+  *C = c;
 }
 void
 log_function (void * W)
 {
   gsl_annealing_simple_workspace_t * S = W;
+  double	current = *((double *)S->current_configuration.data);
+  double	best    = *((double *)S->best_configuration.data);
 
   printf("current %f (energy %f), best %f (energy %f)\n",
-	 *((double *)S->configuration), energy_function(S, S->configuration),
-	 *((double *)S->best_configuration), energy_function(S, S->best_configuration));
+	 current, S->current_configuration.energy,
+	 best,    S->best_configuration.energy);
 }
 
 
