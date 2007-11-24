@@ -1,0 +1,14 @@
+			       Annealing
+			       =========
+
+
+* Modify  the  insert  sort  algorithms  in  "multibest_annealing.c"  to
+  discard a faraway configuration.
+
+
+
+### end of file
+# Local Variables:
+# mode: text
+# fill-column: 72
+# End:
