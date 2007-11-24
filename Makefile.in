@@ -19,13 +19,13 @@ PKG_ID		= $(PACKAGE_NAME)_$(PACKAGE_VERSION)
 
 RM		= @RM@ -fvr
 RM_SILENT	= @RM@ -fr
-
 MV		= @MV@
 TAR		= @TAR@
 MKDIR		= @MKDIR@ -p
 BZIP2		= @BZIP2@
 FIND		= @FIND@
 TLA		= @TLA@
+GPG		= @GPG@
 
 DIR_INSTALL_MODE  = 0755
 FILE_INSTALL_MODE = 0444
@@ -190,6 +190,7 @@ PACKAGE_ID_NOP	= $(shell tla parse-package-name --package-version $(TREE_VERSION
 TMPDIR			?= /tmp
 dist_ARCHIVE_TAR	= $(TMPDIR)/$(PKG_ID)_src.tar
 dist_ARCHIVE_BZ		= $(dist_ARCHIVE_TAR).bz2
+dist_ARCHIVE_NAME	= $(PKG_ID)_src.tar.bz2
 dist_ARCHIVE_STORE_DIR	= $(HOME)/share/gna.org/gee/annealing
 bindist_ARCHIVE		= $(PKG_ID)_bin.tar.gz
 bindist_BUILD_DIR	= $(TMPDIR)/annealing
@@ -217,14 +218,14 @@ dist:
 	@$(MV) -v $(dist_ARCHIVE_BZ) $(builddir)
 
 sign:
-	@gpg --verbose --default-key tungsteno --detach-sign \
-		--sign $(dist_ARCHIVE_BZ)
+	$(GPG) --verbose --default-key tungsteno --detach-sign \
+		--sign $(dist_ARCHIVE_NAME)
 
 store:
 	$(INSTALL_DIR) $(dist_ARCHIVE_STORE_DIR)
 	-cd $(dist_ARCHIVE_STORE_DIR) && \
-	$(RM) $(dist_ARCHIVE_BZ) $(dist_ARCHIVE_BZ).sig
-	$(INSTALL_FILE) $(dist_ARCHIVE_BZ) $(dist_ARCHIVE_BZ).sig \
+	$(RM) $(dist_ARCHIVE_NAME) $(dist_ARCHIVE_NAME).sig
+	$(INSTALL_FILE) $(dist_ARCHIVE_NAME) $(dist_ARCHIVE_NAME).sig \
 		$(dist_ARCHIVE_STORE_DIR)
 
 bindist:

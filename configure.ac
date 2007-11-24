@@ -27,6 +27,9 @@ AC_ARG_VAR([MV],[the mv program])
 AC_PATH_PROG([BZIP2],[bzip2],[false])
 AC_ARG_VAR([BZIP2],[the bzip2 program])
 
+AC_PATH_PROG([GPG],[gpg],[false])
+AC_ARG_VAR([GPG],[the GNU Privacy Guard program])
+
 AC_PATH_PROG([FIND],[find],[false])
 AC_PATH_PROG([GUILE_SNARF],[guile-snarf],[false])
 
