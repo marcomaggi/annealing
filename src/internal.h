@@ -1,11 +1,11 @@
 /*
-   Part of: annealing
-   Contents: outer iterations computation
-   Date: Sun Feb 25, 2007
+   Part of: Annealing
+   Contents: internal header file
+   Date: Sat Nov 24, 2007
    
    Abstract
    
-	Compute the number of outer iterations.
+   
    
    Copyright (c) 2007 Marco Maggi
    
@@ -25,34 +25,23 @@
    02111-1307, USA.
 */
 
-
-/** ------------------------------------------------------------
- ** Headers.
- ** ----------------------------------------------------------*/
 
+#ifndef INTERNAL_H
+#define INTERNAL_H 1
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 #include <stdio.h>
+#include <math.h>
 #include <stdlib.h>
+#include <string.h>
+#include <float.h>
+#include <assert.h>
 
-
-/** ------------------------------------------------------------
- ** Main.
- ** ----------------------------------------------------------*/
+#include <gsl/gsl_machine.h>
+#include <gsl/gsl_rng.h>
 
-int
-main (void)
-{
-  double initial = 100.0;
-  double minimum = 1.0;
-  double damping = 1.005;
-  size_t count   = 1;
-  double l;
-
-  for (l = initial; l >= minimum; l /= damping, ++count)
-    ;
-  printf("count from %.1f to %.1f with damping %.3f: %u\n",
-	 initial, minimum, damping, count);
-  exit(EXIT_SUCCESS);
-}
-
+#endif /* INTERNAL_H */
 
 /* end of file */

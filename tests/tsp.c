@@ -46,9 +46,6 @@ static	annealing_log_fun_t		log_function;
 static	annealing_copy_fun_t	copy_function;
 
 
-/* Why do I have to do this even if I have included "unistd.h"? */
-extern int getopt (int argc, char ** argv, const char * options);
-
 /* ------------------------------------------------------------ */
 
 #define NUM		12

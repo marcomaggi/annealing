@@ -1,11 +1,11 @@
 /*
    Part of: annealing
-   Contents: multibest annealing test with sinc(t) minimisation
-   Date: Mon Feb 26, 2007
+   Contents: annealing test with sinc(t) minimisation
+   Date: Thu Feb 22, 2007
    
    Abstract
    
-	Find the 4 local minima of 'f(t) = -sin(t)/t'.
+	Find the minimum of 'f(t) = -sin(t)/t'.
    
    Copyright (c) 2007 Marco Maggi
    
@@ -41,14 +41,10 @@
 
 static	annealing_energy_fun_t	energy_function;
 static	annealing_step_fun_t	step_function;
-static	annealing_metric_fun_t	metric_function;
-static	annealing_log_fun_t		log_function;
+static	annealing_log_fun_t	log_function;
 static	annealing_copy_fun_t	copy_function;
 
-
-/* Why do I have to do this even if I have included "unistd.h"? */
-extern int getopt (int argc, char ** argv, const char * options);
-
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -58,9 +54,8 @@ extern int getopt (int argc, char ** argv, const char * options);
 int
 main (int argc, char ** argv)
 {
-  annealing_multibest_workspace_t	S;
-  annealing_configuration_t		array[4];
-  double	configurations[2+4]; /* new, current and 4 best */
+  annealing_simple_workspace_t	S;
+  double	configurations[3];
   double	max_step = 10.0;
   int		verbose_mode = 0;
   
@@ -72,26 +67,26 @@ main (int argc, char ** argv)
       switch (c)
 	{
 	case 'h':
-	  fprintf(stderr, "usage: test_multi_sinc [-v] [-h]\n");
+	  fprintf(stderr, "usage: test_sinc [-v] [-h]\n");
 	  exit(EXIT_SUCCESS);
 	case 'v':
 	  verbose_mode = 1;
 	  break;
 	default:
-	  fprintf(stderr, "test_multi_sinc error: unknown option %c\n", c);
+	  fprintf(stderr, "test_sinc error: unknown option %c\n", c);
 	  exit(EXIT_FAILURE);
 	}
   }
 
   printf("\n------------------------------------------------------------\n");
-  printf("test_multi_sinc: multi-best sinc minimisation with simulated annealing\n");
+  printf("test_sinc: sinc minimisation with simulated annealing\n");
 
   S.number_of_iterations_at_fixed_temperature = 10;
   S.max_step_value		= &max_step;
-  S.minimum_acceptance_distance	= 2.0;
 
   S.temperature			= 10.0;
   S.minimum_temperature		= 1.0e-6;
+  S.restart_temperature		= DBL_MIN; /* do not restart */
   S.boltzmann_constant		= 1.0;
   S.damping_factor		= 1.005;
 
@@ -99,32 +94,20 @@ main (int argc, char ** argv)
   S.step_function		= step_function;
   S.copy_function		= copy_function;
   S.log_function		= (verbose_mode)? log_function : NULL;
-  S.metric_function		= metric_function;
 
   S.numbers_generator		= gsl_rng_alloc(gsl_rng_rand);
   gsl_rng_set(S.numbers_generator, 15);
 
-  S.max_number_of_best_configurations = 4;
   S.current_configuration.data	= &(configurations[0]);
-  S.new_configuration.data	= &(configurations[1]);
-  S.best_configurations		= array;
+  S.best_configuration.data	= &(configurations[1]);
+  S.new_configuration.data	= &(configurations[2]);
 
-  array[0].data		= &(configurations[2]);
-  array[1].data		= &(configurations[3]);
-  array[2].data		= &(configurations[4]);
-  array[3].data		= &(configurations[5]);
   configurations[0] = 100.0;
 
-  annealing_multibest_solve(&S);
+  annealing_simple_solve(&S);
 
-  printf("test_multi_sinc: found %u best solutions:",
-	 S.best_configurations_count);
-  for (size_t i=0; i<S.best_configurations_count; ++i)
-    {
-      double *	value = array[i].data;
-      printf(" %.5f", *value);
-    }
-  printf("\n------------------------------------------------------------\n\n");
+  printf("test_sinc: final best solution: %f, global 0.0\n", configurations[1]);
+  printf("------------------------------------------------------------\n\n");
 
   gsl_rng_free(S.numbers_generator);
   exit(EXIT_SUCCESS);
@@ -136,7 +119,7 @@ main (int argc, char ** argv)
  ** ----------------------------------------------------------*/
 
 static double
-alea (annealing_multibest_workspace_t * S)
+alea (annealing_simple_workspace_t * S)
 {
   double	max_step = *((double *)S->max_step_value);
 
@@ -146,7 +129,7 @@ alea (annealing_multibest_workspace_t * S)
 /* ------------------------------------------------------------ */
 
 double
-energy_function (void * dummy, void * configuration)
+energy_function (void * dummy ANNEALING_UNUSED, void * configuration)
 {
   double	C = *((double *)configuration);
 
@@ -155,38 +138,23 @@ energy_function (void * dummy, void * configuration)
 void
 step_function (void * W, void * configuration)
 {
-  annealing_multibest_workspace_t * S = W;
+  annealing_simple_workspace_t * S = W;
   double *	C = (double *)configuration;
   double	c;
 
   do c = *C + alea(S); while (fabs(c) > 120.0);
   *C = c;
 }
-double
-metric_function (void * dummy, void * configuration_a, void * configuration_b)
-{
-  double	A = *((double *)configuration_a);
-  double	B = *((double *)configuration_b);
-
-  return fabs(A - B);
-}
 void
 log_function (void * W)
 {
-  annealing_multibest_workspace_t * S = W;
+  annealing_simple_workspace_t * S = W;
   double	current = *((double *)S->current_configuration.data);
+  double	best    = *((double *)S->best_configuration.data);
 
-
-  printf("current %5.5g (energy %.4f), worst best energy %.4f, best (%u):",
+  printf("current %f (energy %f), best %f (energy %f)\n",
 	 current, S->current_configuration.energy,
-	 S->best_configurations[S->best_configurations_count-1].energy,
-	 S->best_configurations_count);
-  for (size_t i=0; i<S->best_configurations_count; ++i)
-    {
-      double *	value = S->best_configurations[i].data;
-      printf(" %.5f", *value);
-    }
-  printf("\n");
+	 best,    S->best_configuration.energy);
 }
 
 
@@ -195,7 +163,7 @@ log_function (void * W)
  ** ----------------------------------------------------------*/
 
 void
-copy_function (void * dummy, void * dst_configuration, void * src_configuration)
+copy_function (void * dummy ANNEALING_UNUSED, void * dst_configuration, void * src_configuration)
 {
   double *	dst = dst_configuration;
   double *	src = src_configuration;

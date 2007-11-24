@@ -1,4 +1,4 @@
-/* multibest_annealing.c
+/* basic_annealing.c
  * 
  * Copyright (C) 1996, 1997, 1998, 1999, 2000 Mark Galassi
  * Copyright (C) 2007 Marco Maggi
@@ -24,22 +24,13 @@
  ** Headers.
  ** ----------------------------------------------------------*/
 
-#include <config.h>
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#include <float.h>
-#include <assert.h>
-
-#include <gsl/gsl_machine.h>
-#include <gsl/gsl_rng.h>
-
+#include "internal.h"
 #define current_configuration		current
 #define new_configuration		new
-#define best_configurations		bests
+#define best_configuration		best
 #include "annealing.h"
 
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -81,119 +72,44 @@ double safe_exp (double x)
   }
 
 #define accept_new_as_current(S)	copy_configuration(S, current,	new)
-#define accept_new_as_best(S)		copy_configuration(S, bests[0],	new)
-#define set_current_to_best(S)		copy_configuration(S, current,	bests[0])
-#define set_best_to_current(S)		copy_configuration(S, bests[0],	current)
+#define accept_new_as_best(S)		copy_configuration(S, best,	new)
+#define set_current_to_best(S)		copy_configuration(S, current,	best)
+#define set_best_to_current(S)		copy_configuration(S, best,	current)
 #define set_new_to_current(S)		copy_configuration(S, new,	current)
 
 /* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
- ** Insert sort functions.
- ** ----------------------------------------------------------*/
-
-static int
-find_best_configuration_position (annealing_multibest_workspace_t * S)
-{
-  int	position;
-
-  assert(S->new.energy <= S->best_configurations[S->best_configurations_count-1].energy);
-  for (position=0; position<(int)S->best_configurations_count; ++position)
-    {
-      if (S->new.energy < S->bests[position].energy)
-	break;
-    }
-  for (int i=0; i<=position; ++i)
-    {
-      double	distance = S->metric_function(S, S->bests[i].data, S->new.data);
-
-      if (distance < S->minimum_acceptance_distance) return -1;
-    }
-  return position;
-}
-static void
-insert_new_at_best_configurations_position (annealing_multibest_workspace_t * S,
-					    int position)
-{
-  int	last;
-
-  /*
-    Example: before:
-
-	max_number_of_best_configurations = 5
-	best_configurations_count         = 3
-	position = 1
-
-	bests -> | c0 | c1 | c2 | empty | empty |
-    
-    after:
-
-	max_number_of_best_configurations = 5
-	best_configurations_count         = 4
-
-	bests -> | c0 | empty | c1 | c2 | empty |
-
-  */
-  last = (S->best_configurations_count == S->max_number_of_best_configurations)?
-    (S->best_configurations_count-2) : (S->best_configurations_count-1);
-
-  for (int i=last; i>=position; --i)
-    {
-      S->copy_function(S, S->bests[i+1].data, S->bests[i].data);
-      S->bests[i+1].energy = S->bests[i].energy;
-    }
-  if (S->best_configurations_count < S->max_number_of_best_configurations)
-    ++(S->best_configurations_count);
-  S->copy_function(S, S->bests[position].data, S->new.data);
-  S->bests[position].energy = S->new.energy;
-/*   printf("accepted %.5g (E = %.5f), in position %d; stack:", */
-/* 	 *((double *)(S->bests[position].data)), S->bests[position].energy, */
-/* 	 position); */
-/*   for (size_t i=0; i<S->best_configurations_count; ++i) */
-/*     printf(" %5g", *((double *)(S->bests[i].data))); */
-/*   printf("\n"); */
-}
-
-/* ------------------------------------------------------------ */
-
-
-/** ------------------------------------------------------------
- ** Multi-best algorithm.
+ ** Simple algorithm.
  ** ----------------------------------------------------------*/
 
 void 
-annealing_multibest_solve (annealing_multibest_workspace_t * S)
+annealing_simple_solve (annealing_simple_workspace_t * S)
 {
   assert(S->number_of_iterations_at_fixed_temperature > 0);
   assert(S->boltzmann_constant > 0.0);
   assert(S->temperature > 0.0 && S->minimum_temperature > 0.0);
+  assert(S->temperature > S->restart_temperature);
   assert(S->damping_factor > 1.0);
-  assert(S->copy_function && S->energy_function &&
-	 S->step_function && S->metric_function);
+  assert(S->copy_function && S->energy_function && S->step_function);
   assert(S->numbers_generator);
 
-
+  S->restart_flag = 0;
   compute_current_energy(S);
   set_best_to_current(S);
   set_new_to_current(S);
-  S->best_configurations_count = 1;
+
   if (S->log_function) S->log_function(S);
-  
+
   for (;;)
     {
       for (size_t i=0; i < S->number_of_iterations_at_fixed_temperature; ++i)
 	{
 	  take_step(S);
-	  if (S->new.energy <= S->bests[S->best_configurations_count-1].energy)
+	  if (S->new.energy <= S->best.energy)
 	    {
-	      int	position;
-
-	      position = find_best_configuration_position(S);
-	      if (0 <= position)
-		{
-		  insert_new_at_best_configurations_position(S, position);
-		}
+	      accept_new_as_best(S);
 	      accept_new_as_current(S);
 	    }
 	  else if ((S->new.energy <= S->current.energy) ||
@@ -206,9 +122,14 @@ annealing_multibest_solve (annealing_multibest_workspace_t * S)
 
       S->temperature /= S->damping_factor;
       if (S->temperature < S->minimum_temperature) break;
+      if (S->temperature < S->restart_temperature)
+	{
+	  set_current_to_best(S);
+	  S->restart_temperature = DBL_MIN;
+	  S->restart_flag = 1;
+	}
     }
-  /* The results are in 'S->best_configurations'. */
+  /* The result is in 'S->best'. */
 }
-
 
 /* end of file */

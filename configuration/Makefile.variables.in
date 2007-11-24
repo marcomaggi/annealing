@@ -1,0 +1,15 @@
+
+
+annealing_LIBRARY_ID                   = @annealing_LIBRARY_ID@
+annealing_INTERFACE_VERSION            = @annealing_INTERFACE_VERSION@
+annealing_INTERFACE_MAJOR_VERSION      = @annealing_INTERFACE_MAJOR_VERSION@
+annealing_INTERFACE_MINOR_VERSION      = @annealing_INTERFACE_MINOR_VERSION@
+annealing_SHARED_LIBRARY_NAME          = @annealing_SHARED_LIBRARY_NAME@
+annealing_STATIC_LIBRARY_NAME          = @annealing_STATIC_LIBRARY_NAME@
+
+annealing_stub_SHARED_LIBRARY_ID       = @annealing_stub_SHARED_LIBRARY_ID@
+annealing_stub_SHARED_LIBRARY_NAME     = @annealing_stub_SHARED_LIBRARY_NAME@
+annealing_stub_SHARED_LIBRARY_LINK_NAME= @annealing_stub_SHARED_LIBRARY_LINK_NAME@
+annealing_stub_SHARED_LIBRARY_LINK_ID  = @annealing_stub_SHARED_LIBRARY_LINK_ID@
+annealing_stub_STATIC_LIBRARY_ID       = @annealing_stub_STATIC_LIBRARY_ID@
+annealing_stub_STATIC_LIBRARY_NAME     = @annealing_stub_STATIC_LIBRARY_NAME@

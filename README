@@ -22,12 +22,6 @@ Annealing is a C language extension library for GSL, the GNU
 Scientific Library,  attempting a redesign  of the simulated
 annealing module.
 
-  The  code is a  reworking of  the files  "gsl_siman.h" and
-"siman.c"  from  the  GSL  1.9  distribution  (Thu  Feb  22,
-2007).  The TSP test  is a  reworking of  "siman_tsp.c". The
-documentation  is a reworking  of the  "Simulated Annealing"
-node in the GSL's Texinfo source.
-
   *NOTE* The  last time the  author bothered to  update this
 paragraph he had tested GSL 1.9. 
 
@@ -101,12 +95,18 @@ A. Credits
 Annealing was written by  Marco Maggi reworking code by Mark
 Galassi.
 
+  The  code is a  reworking of  the files  "gsl_siman.h" and
+"siman.c"  from  the  GSL  1.9  distribution  (Thu  Feb  22,
+2007).  The TSP test  is a  reworking of  "siman_tsp.c". The
+documentation  is a reworking  of the  "Simulated Annealing"
+node in the GSL's Texinfo source.
+
 
 B. Bugs
 -------
 
 Bug  reports  are appreciated:  register  them  at the  GNA!
-project site of GEE.
+project site of Annealing.
 
 
 C. Resources
@@ -116,10 +116,9 @@ The GNU Project software can be found here:
 
 		   <http://www.gnu.org/>
 
-the  latest version  of this  package  can be  found in  the
-dowload area of:
+the latest version of this package can be at:
 
-	       <http://gna.org/projects/gee/>
+	    <http://gna.org/projects/annealing/>
 
 
 ### end of file

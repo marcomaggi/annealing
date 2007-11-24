@@ -42,6 +42,19 @@
 
 __BEGIN_DECLS
 
+/* ------------------------------------------------------------ */
+
+#ifndef annealing_decl
+#  define annealing_decl		extern
+#endif
+
+#ifdef __GNUC__
+#define ANNEALING_UNUSED __attribute__ ((unused))
+#else
+#define ANNEALING_UNUSED
+#endif
+
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -56,12 +69,12 @@ typedef struct annealing_configuration_t {
 typedef double	annealing_energy_fun_t	(void * S, void * configuration);
 typedef void	annealing_step_fun_t	(void * S, void * configuration);
 typedef double	annealing_metric_fun_t	(void * S,
-						 void * configuration_a,
-						 void * configuration_b);
+					 void * configuration_a,
+					 void * configuration_b);
 typedef void	annealing_log_fun_t		(void * S);
 typedef void	annealing_copy_fun_t	(void * S,
-						 void * dst_configuration,
-						 void * src_configuration);
+					 void * dst_configuration,
+					 void * src_configuration);
 
 /* ------------------------------------------------------------ */
 
@@ -82,9 +95,9 @@ typedef struct annealing_simple_workspace_t {
   double	restart_temperature;
   int		restart_flag;
 
-  annealing_configuration_t		current_configuration;
-  annealing_configuration_t		new_configuration;
-  annealing_configuration_t		best_configuration;
+  annealing_configuration_t	current_configuration;
+  annealing_configuration_t	new_configuration;
+  annealing_configuration_t	best_configuration;
 
   gsl_rng *	numbers_generator;
 
@@ -113,8 +126,8 @@ typedef struct annealing_multibest_workspace_t {
   double	damping_factor;
   double	minimum_temperature;
 
-  annealing_configuration_t		current_configuration;
-  annealing_configuration_t		new_configuration;
+  annealing_configuration_t	current_configuration;
+  annealing_configuration_t	new_configuration;
   annealing_configuration_t *	best_configurations;
   size_t	max_number_of_best_configurations;
   size_t	best_configurations_count;
@@ -170,9 +183,9 @@ typedef struct annealing_manytries_workspace_t {
  ** Algorithms.
  ** ----------------------------------------------------------*/
 
-extern void annealing_simple_solve    (annealing_simple_workspace_t * S);
-extern void annealing_multibest_solve (annealing_multibest_workspace_t * S);
-extern void annealing_manytries_solve (annealing_manytries_workspace_t * S);
+annealing_decl void annealing_simple_solve    (annealing_simple_workspace_t * S);
+annealing_decl void annealing_multibest_solve (annealing_multibest_workspace_t * S);
+annealing_decl void annealing_manytries_solve (annealing_manytries_workspace_t * S);
 
 __END_DECLS
 

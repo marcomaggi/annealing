@@ -41,13 +41,10 @@
 
 static	annealing_energy_fun_t	energy_function;
 static	annealing_step_fun_t	step_function;
-static	annealing_log_fun_t		log_function;
+static	annealing_log_fun_t	log_function;
 static	annealing_copy_fun_t	copy_function;
 
-
-/* Why do I have to do this even if I have included "unistd.h"? */
-extern int getopt (int argc, char ** argv, const char * options);
-
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -134,7 +131,7 @@ alea (annealing_simple_workspace_t * S)
 /* ------------------------------------------------------------ */
 
 double
-energy_function (void * dummy, void * configuration)
+energy_function (void * dummy ANNEALING_UNUSED, void * configuration)
 {
   double *	C = configuration;
   double	X = C[0], Y = C[1];
@@ -171,7 +168,7 @@ log_function (void * W)
  ** ----------------------------------------------------------*/
 
 void
-copy_function (void * dummy, void * dst_configuration, void * src_configuration)
+copy_function (void * dummy ANNEALING_UNUSED, void * dst_configuration, void * src_configuration)
 {
   double *	dst = dst_configuration;
   double *	src = src_configuration;

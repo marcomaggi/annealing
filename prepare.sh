@@ -7,11 +7,14 @@ set -x
         autoheader
     fi)
 (cd ..
-    if test configure.ac -nt configure ; then
+    if test configure.ac -nt configure -o \
+        ../configuration/configure.ds -nt configure -o \
+        ../infrastructure/acmacros.m4 -nt configure
+        then
         autoconf
         autoheader
     fi)
 
-../configure "$@"
+../configure --enable-static CFLAGS="-O3 -g -march=i686 -mtune=i686" "$@"
 
 ### end of file

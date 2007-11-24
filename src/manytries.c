@@ -24,22 +24,13 @@
  ** Headers.
  ** ----------------------------------------------------------*/
 
-#include <config.h>
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#include <float.h>
-#include <assert.h>
-
-#include <gsl/gsl_machine.h>
-#include <gsl/gsl_rng.h>
-
+#include "internal.h"
 #define current_configuration		current
 #define new_configurations		news
 #define best_configuration		best
 #include "annealing.h"
 
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
