@@ -122,9 +122,9 @@ Documentation License''.
 
 Appendices
 
-* References::                  Bilbiography and references.
-* Package License::             GNU General Public License.
+* References::                  Bibliography and references.
 * Documentation License::       GNU Free Documentation License.
+* Package License::             GNU General Public License.
 * library version::             How to interpret the library version.
 
 Indexes
@@ -497,7 +497,7 @@ report the better configuration as result;
 go to 2.
 @end enumerate
 
-Additionally some algorithm allows restarting, between steps 4 and 5: if
+Additionally some algorithms allow restarting, between steps 4 and 5: if
 the new temperature is less than the selected restart value, discard the
 @emph{current} configuration replacing it with the @emph{best so far}.
 
@@ -1680,7 +1680,7 @@ copy_function (void * dummy, void * dst_configuration, void * src_configuration)
 
 @c ------------------------------------------------------------
 @node References
-@chapter Bilbiography and references
+@appendix Bibliography and references
 
 
 @noindent

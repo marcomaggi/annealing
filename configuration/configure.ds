@@ -16,6 +16,7 @@ DS_C_LANGUAGE_LIBRARY([annealing],[1],[0])
 # AC_CHECK_LIB(m,main,[],[AC_MSG_ERROR([unable to find library],1)])
 # AC_CHECK_LIB(gslcblas,main,[],[AC_MSG_ERROR([unable to find library],1)])
 # AC_CHECK_LIB(gsl,main,[],[AC_MSG_ERROR([unable to find library],1)])
+AX_PATH_GSL(1.9)
 
 DS_END
 

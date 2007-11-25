@@ -72,6 +72,10 @@ then do it:
     $ make test
     $ make install
 
+  Notice that, by default, only the shared library is built,
+the static library is not.  To  build it we have to give the
+"--enable-static" option to "configure".
+
   The Makefile supports  the DESTDIR environment variable to
 install files in a  temporary location, example: to see what
 will happen:
