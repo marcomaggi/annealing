@@ -107,6 +107,10 @@ module. This document describes version @version{}.
 The package is distributed under the terms of the @gnu{} General Public
 License (@gpl{}).
 
+Annealing is distributed at the @acronym{GNA!} site:
+
+@center @url{http://gna.org/projects/annealing}
+
 Copyright @copyright{}  @copyrightyears{}  by @authorname{}.
 
 Permission is granted to copy, distribute and/or modify this document

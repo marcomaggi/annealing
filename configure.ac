@@ -14,14 +14,14 @@
 # from "${ds_top_srcdir}/infrastructure/acmacros.m4".
 
 
-AC_INIT([annealing], [0.2a3])
+AC_INIT([annealing], [0.2a4])
 AC_PREREQ(2.60)
 
 AC_SUBST([PACKAGE_VERSION],[0.2.0])
 AC_DEFINE([PACKAGE_VERSION],["0.2.0"],[full package version])
 
-AC_SUBST([PACKAGE_XVERSION],[0.2a3])
-AC_DEFINE([PACKAGE_XVERSION],["0.2a3"],[full extended package version])
+AC_SUBST([PACKAGE_XVERSION],[0.2a4])
+AC_DEFINE([PACKAGE_XVERSION],["0.2a4"],[full extended package version])
 
 AC_SUBST([PACKAGE_VERSION_MAJOR],[0])
 AC_DEFINE([PACKAGE_VERSION_MAJOR],["0"],[package version major number])
@@ -29,8 +29,8 @@ AC_DEFINE([PACKAGE_VERSION_MAJOR],["0"],[package version major number])
 AC_SUBST([PACKAGE_VERSION_MINOR],[2])
 AC_DEFINE([PACKAGE_VERSION_MINOR],["2"],[package version minor number])
 
-AC_SUBST([PACKAGE_VERSION_PATCH],[3])
-AC_DEFINE([PACKAGE_VERSION_PATCH],["3"],[package version patch number])
+AC_SUBST([PACKAGE_VERSION_PATCH],[4])
+AC_DEFINE([PACKAGE_VERSION_PATCH],["4"],[package version patch number])
 
 AC_SUBST([PACKAGE_VERSION_MAJOR_MINOR],[0.2])
 AC_DEFINE([PACKAGE_VERSION_MAJOR_MINOR],["0.2"],[package version major.minor])
