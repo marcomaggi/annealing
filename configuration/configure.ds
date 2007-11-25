@@ -9,12 +9,14 @@ DS_SLACKWARE_PROGRAMS
 DS_C_LANGUAGE
 DS_C_LANGUAGE_COMMON_LIBRARY
 DS_C_LANGUAGE_LIBRARY([annealing],[1],[0])
-AC_CHECK_HEADER([gsl/gsl_errno.h],,[AC_MSG_ERROR([unable to find header],1)])
-AC_CHECK_HEADER([gsl/gsl_vector.h],,[AC_MSG_ERROR([unable to find header],1)])
-AC_CHECK_HEADER([gsl/gsl_matrix.h],,[AC_MSG_ERROR([unable to find header],1)])
-AC_CHECK_LIB(m,main,[],[AC_MSG_ERROR([unable to find library],1)])
-AC_CHECK_LIB(gslcblas,main,[],[AC_MSG_ERROR([unable to find library],1)])
-AC_CHECK_LIB(gsl,main,[],[AC_MSG_ERROR([unable to find library],1)])
+
+# AC_CHECK_HEADER([gsl/gsl_errno.h],,[AC_MSG_ERROR([unable to find header],1)])
+# AC_CHECK_HEADER([gsl/gsl_vector.h],,[AC_MSG_ERROR([unable to find header],1)])
+# AC_CHECK_HEADER([gsl/gsl_matrix.h],,[AC_MSG_ERROR([unable to find header],1)])
+# AC_CHECK_LIB(m,main,[],[AC_MSG_ERROR([unable to find library],1)])
+# AC_CHECK_LIB(gslcblas,main,[],[AC_MSG_ERROR([unable to find library],1)])
+# AC_CHECK_LIB(gsl,main,[],[AC_MSG_ERROR([unable to find library],1)])
+
 DS_END
 
 

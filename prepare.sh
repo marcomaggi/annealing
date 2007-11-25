@@ -15,6 +15,6 @@ set -x
         autoheader
     fi)
 
-../configure --enable-static CFLAGS="-O3 -g -march=i686 -mtune=i686" "$@"
+../configure CFLAGS="-O3 -g -march=i686 -mtune=i686" "$@"
 
 ### end of file

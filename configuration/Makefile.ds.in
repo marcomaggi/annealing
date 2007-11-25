@@ -3,19 +3,6 @@
 
 #page
 ## ------------------------------------------------------------
-## Global variables.
-## ------------------------------------------------------------
-
-# This is defined in "Makefile.library". Here we exclude '-Wcast-qual';
-# in this library we need to cast types to exclude the 'const'
-# qualifier.
-
-#C_WARNINGS := $(filter-out -Wcast-qual,$(C_WARNINGS))
-
-## ------------------------------------------------------------
-
-#page
-## ------------------------------------------------------------
 ## Library.
 ## ------------------------------------------------------------
 
@@ -47,6 +34,8 @@ $(eval $(call ds-c-test-programs,shared_tests,$(shared_tests_TARGETS),\
 
 ## ------------------------------------------------------------
 
+ifeq ($(strip $(ds_config_ENABLE_STATIC)),yes)
+
 static_tests_BUILDDIR		= $(builddir)/static-tests.d
 static_tests_CC_COMPILE		= $(CC) $(ALL_CFLAGS) -I$(annealing_SRCDIR) $(CFLAGS) $(CC_COMPILE_OUTPUT)
 static_tests_PREREQUISITES	= $(annealing_SRCDIR)/annealing.h
@@ -55,25 +44,37 @@ static_tests_test_programs_BUILDDIR = $(static_tests_BUILDDIR)
 $(eval $(call ds-c-sources-nop,static_tests,$(srcdir)/tests,*.c))
 $(eval $(call ds-c-test-programs,static_tests,$(static_tests_TARGETS),$(annealing_static_library_LIBRARY)))
 
+endif
+
 ## ------------------------------------------------------------
 
 shared_test_NAMES	= $(basename $(notdir $(shared_tests_SOURCES)))
-static_test_NAMES	= $(basename $(notdir $(static_tests_SOURCES)))
 
-.PHONY: test-shared test-static
+.PHONY: test-shared
 
 test-shared: shared_tests_test_programs-all
 	$(foreach f,$(shared_test_NAMES),\
 	LD_LIBRARY_PATH=$(annealing_shared_library_BUILDDIR) $(shared_tests_test_programs_BUILDDIR)/$(f);)
 
+test:		test-shared
+test-clean:	shared_tests_test_programs-clean
+
+## ------------------------------------------------------------
+
+ifeq ($(strip $(ds_config_ENABLE_STATIC)),yes)
+
+static_test_NAMES	= $(basename $(notdir $(static_tests_SOURCES)))
+
+.PHONY: test-static
+
 test-static: static_tests_test_programs-all
 	$(foreach f,$(static_test_NAMES),\
 	LD_LIBRARY_PATH=$(annealing_static_library_BUILDDIR) $(static_tests_test_programs_BUILDDIR)/$(f);)
 
-## ------------------------------------------------------------
+test:		test-static
+test-clean:	static_tests_test_programs-clean
 
-test: test-shared test-static
-test-clean: shared_tests_test_programs-clean static_tests_test_programs-clean
+endif
 
 ## ------------------------------------------------------------
 
