@@ -430,7 +430,7 @@ function ds-configure-ac-print-pkgconfig-meta-file () {
 
     if test -f "meta/${PKGCONFIG_META_FILE}.in" ; then
         verbose 'adding "%s" script as config file' "${PKGCONFIG_META_FILE}"
-        printf 'AC_CONFIG_FILES([meta.d/%s:meta/%s.in])\n' "${PKGCONFIG_META_FILE}"
+        printf 'AC_CONFIG_FILES([meta.d/%s:meta/%s.in])\n' "${PKGCONFIG_META_FILE}" "${PKGCONFIG_META_FILE}"
     else
         verbose '"meta/%s.in" script not found (not an error)' "${PKGCONFIG_META_FILE}"
     fi

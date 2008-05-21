@@ -1583,7 +1583,6 @@ main (int argc, char ** argv)
   
   printf("many-tries sinc minimisation with simulated annealing\n");
 
-  S.number_of_iterations_at_fixed_temperature = 10;
   S.max_step_value              = &max_step;
 
   S.temperature                 = 10.0;
