@@ -1527,7 +1527,7 @@ the user before invoking this function, and freed by the user after this
 function has returned.
 
 Space for the data referenced by the @code{current_configuration},
-@code{best_configuration} and @code{new_configuration} fields in @var{S}
+@code{best_configuration} and @code{new_configurations} fields in @var{S}
 must be allocated by the user before invoking this function, and freed
 by the user after this function has returned.
 
