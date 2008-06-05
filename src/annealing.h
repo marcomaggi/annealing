@@ -191,6 +191,18 @@ annealing_decl void annealing_simple_solve    (annealing_simple_workspace_t * S)
 annealing_decl void annealing_multibest_solve (annealing_multibest_workspace_t * S);
 annealing_decl void annealing_manytries_solve (annealing_manytries_workspace_t * S);
 
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Miscellaneous functions.
+ ** ----------------------------------------------------------*/
+
+annealing_decl const char *	annealing_version (void);
+annealing_decl int		annealing_library_major_version (void);
+annealing_decl int		annealing_library_minor_version (void);
+
+
 __END_DECLS
 
 #endif /* __ANNEALING_H__ */
