@@ -1,6 +1,6 @@
 /*
    Part of: annealing
-   Contents: methods definitions for sinc minimisation.
+   Contents: minimisation of sinc(t)
    Date: Thu Feb 22, 2007
    
    Abstract
@@ -29,25 +29,58 @@
 
 
 /** ------------------------------------------------------------
- ** Setup.
+ ** Headers.
  ** ----------------------------------------------------------*/
 
-#include "internal.h"
+#include "internal.hpp"
+#include "sinc.hpp"
 
 /* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
- ** Methods.
+ ** Main.
  ** ----------------------------------------------------------*/
 
-double
-Sinc_Minimisation::energy_function (void * configuration)
+int
+main (int argc, char ** argv)
 {
-  double	C = *((double *)configuration);
+  int			verbose_mode = 0;
+  Sinc_Minimisation	A = Sinc_Minimisation(100.0);
 
-  return -sin(C)/C;
+  {
+    int c;
+
+    while ((c = getopt(argc, argv, "hv")) != -1)
+      switch (c)
+	{
+	case 'h':
+	  fprintf(stderr, "usage: test_sinc [-v] [-h]\n");
+	  exit(EXIT_SUCCESS);
+	case 'v':
+	  verbose_mode = 1;
+	  break;
+	default:
+	  fprintf(stderr, "test_sinc error: unknown option %c\n", c);
+	  exit(EXIT_FAILURE);
+	}
+  }
+
+  std::cout << std::endl
+	    << "------------------------------------------------------------"
+	    << std::endl
+	    << "test_sinc: sinc minimisation with simulated annealing"
+	    << std::endl;
+
+  A.solve();
+
+  std::cout << "test_sinc: final best solution: " << A.best_estimation()
+	    << ", global 0.0"
+	    << std::endl
+	    << "------------------------------------------------------------"
+	    << std::endl << std::endl;
+
+  exit(EXIT_SUCCESS);
 }
-
 
 /* end of file */

@@ -10,7 +10,7 @@
 
 AC_INIT([cplusplus-project], [1.0])
 AC_PREREQ(2.60)
-AC_CONFIG_SRCDIR([./sinc.cxx])
+AC_CONFIG_SRCDIR([./src/main.cpp])
 
 AC_SYS_INTERPRETER
 AC_SYS_LARGEFILE

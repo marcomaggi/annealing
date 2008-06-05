@@ -1,11 +1,12 @@
 /*
    Part of: annealing
-   Contents: class definition for simple annealing wrapper
-   Date: Thu Jun  5, 2008
+   Contents: methods definitions for sinc minimisation.
+   Date: Thu Feb 22, 2007
    
    Abstract
    
-
+	Defines the methods required  to find the minimum of
+	'f(t) = -sin(t)/t'.
    
    Copyright (c) 2007, 2008 Marco Maggi
    
@@ -27,38 +28,28 @@
    
 */
 
-#ifndef SIMPLE_WRAPPER_HPP
-#define SIMPLE_WRAPPER_HPP
-
 
 /** ------------------------------------------------------------
- ** Basic simple annealing wrapper.
+ ** Setup.
  ** ----------------------------------------------------------*/
 
-class Annealing_Simple {
-protected:
-  annealing_simple_workspace_t *	S;
-
-public:
-  virtual double energy_function(void * configuration);
-  virtual void	step_function	(void * configuration);
-
-  virtual void	log_function	(void);
-  virtual void	copy_function	(void * dst_configuration,
-				 void * src_configuration);
-public:
-  Annealing_Simple (gsl_rng * numbers_generator);
-  Annealing_Simple (void);
-  ~Annealing_Simple (void);
-
-  void		solve (void);
-
-private:
-  void initialisation (gsl_rng * numbers_generator);
-};
+#include "internal.hpp"
+#include "sinc.hpp"
 
 /* ------------------------------------------------------------ */
 
-#endif
+
+/** ------------------------------------------------------------
+ ** Methods.
+ ** ----------------------------------------------------------*/
+
+double
+Sinc_Minimisation::energy_function (void * configuration)
+{
+  double	C = *((double *)configuration);
+
+  return -sin(C)/C;
+}
+
 
 /* end of file */

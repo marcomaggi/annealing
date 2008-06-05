@@ -1,13 +1,13 @@
 /*
    Part of: annealing
-   Contents: class definitions for sinc minimisation.
-   Date: Thu Feb 22, 2007
+   Contents: internal header file
+   Date: Thu Jun  5, 2008
    
    Abstract
    
-	Find the minimum of 'f(t) = -sin(t)/t'.
+	This header must be included in all the source file.
    
-   Copyright (c) 2007, 2008 Marco Maggi
+   Copyright (c) 2008 Marco Maggi
    
    This  program  is free  software:  you  can redistribute  it
    and/or modify it  under the terms of the  GNU General Public
@@ -27,24 +27,12 @@
    
 */
 
+#ifndef INTERNAL_HPP
+#define INTERNAL_HPP
 
-#ifndef SINC_HPP
-#define SINC_HPP
-
-
-/** ------------------------------------------------------------
- ** Class definition.
- ** ----------------------------------------------------------*/
-
-class Sinc_Minimisation : public Univariate_Minimisation {
-public:
-  Sinc_Minimisation (double first_guess, double max_step = 10.0) :
-    Univariate_Minimisation(double first_guess, double max_step) {}
-
-  double energy_function	(void * configuration);
-};
-
-/* ------------------------------------------------------------ */
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #endif
 

@@ -5,7 +5,8 @@
    
    Abstract
    
-
+	Defines the methods required to minimise a univariate
+	function.
    
    Copyright (c) 2007, 2008 Marco Maggi
    
@@ -32,7 +33,8 @@
  ** Setup.
  ** ----------------------------------------------------------*/
 
-#include "internal.h"
+#include "internal.hpp"
+#include "univariate_minimisation.hpp"
 
 /* ------------------------------------------------------------ */
 

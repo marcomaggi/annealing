@@ -5,7 +5,9 @@
    
    Abstract
    
-
+	Declares a class required to minimise a univariate
+	function.  It is a specialisation of the basic
+	simulated annealing wrapper.
    
    Copyright (c) 2007, 2008 Marco Maggi
    
@@ -30,6 +32,15 @@
 
 #ifndef UNIVARIATE_MINIMISATION_HPP
 #define UNIVARIATE_MINIMISATION_HPP
+
+
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
+
+#include "simple_wrapper.hpp"
+
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------

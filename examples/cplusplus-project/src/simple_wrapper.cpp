@@ -5,7 +5,8 @@
    
    Abstract
    
-
+	Declares   the  methods   of  the   basic  simulated
+	annealing algorithm from Annealing.
    
    Copyright (c) 2007, 2008 Marco Maggi
    
@@ -33,7 +34,8 @@
  ** Setup.
  ** ----------------------------------------------------------*/
 
-#include "internal.h"
+#include "internal.hpp"
+#include "simple_wrapper.hpp"
 
 /* ------------------------------------------------------------ */
 

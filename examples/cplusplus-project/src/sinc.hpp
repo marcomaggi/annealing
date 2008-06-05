@@ -1,11 +1,12 @@
 /*
    Part of: annealing
-   Contents: annealing test with sinc(t) minimisation
+   Contents: class definitions for sinc minimisation.
    Date: Thu Feb 22, 2007
    
    Abstract
    
-	Find the minimum of 'f(t) = -sin(t)/t'.
+	Defines a class to minimise 'f(t) = -sin(t)/t'.  It is
+	a specialisation of the univariate minimisation class.
    
    Copyright (c) 2007, 2008 Marco Maggi
    
@@ -27,57 +28,34 @@
    
 */
 
+
+#ifndef SINC_HPP
+#define SINC_HPP
+
 
 /** ------------------------------------------------------------
  ** Headers.
  ** ----------------------------------------------------------*/
 
-#include "internal.h"
+#include "univariate_minimisation.hpp"
 
 /* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
- ** Main.
+ ** Class definition.
  ** ----------------------------------------------------------*/
 
-int
-main (int argc, char ** argv)
-{
-  int			verbose_mode = 0;
-  Sinc_Minimisation	A = Sinc_Minimisation(100.0);
+class Sinc_Minimisation : public Univariate_Minimisation {
+public:
+  Sinc_Minimisation (double first_guess, double max_step = 10.0) :
+    Univariate_Minimisation(double first_guess, double max_step) {}
 
-  {
-    int c;
+  double energy_function	(void * configuration);
+};
 
-    while ((c = getopt(argc, argv, "hv")) != -1)
-      switch (c)
-	{
-	case 'h':
-	  fprintf(stderr, "usage: test_sinc [-v] [-h]\n");
-	  exit(EXIT_SUCCESS);
-	case 'v':
-	  verbose_mode = 1;
-	  break;
-	default:
-	  fprintf(stderr, "test_sinc error: unknown option %c\n", c);
-	  exit(EXIT_FAILURE);
-	}
-  }
+/* ------------------------------------------------------------ */
 
-  std::cout << std::endl
-	    << "\n------------------------------------------------------------" << std::endl;
-  printf("test_sinc: sinc minimisation with simulated annealing\n");
-
-  A.solve();
-
-  std::cout << "test_sinc: final best solution: " << A.best_estimation()
-	    << ", global 0.0"
-	    << std::endl
-	    << "------------------------------------------------------------"
-	    << std::endl << std::endl;
-
-  exit(EXIT_SUCCESS);
-}
+#endif
 
 /* end of file */

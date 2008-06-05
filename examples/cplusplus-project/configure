@@ -576,7 +576,7 @@ PACKAGE_VERSION='1.0'
 PACKAGE_STRING='cplusplus-project 1.0'
 PACKAGE_BUGREPORT=''
 
-ac_unique_file="./sinc.cxx"
+ac_unique_file="./src/main.cpp"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>

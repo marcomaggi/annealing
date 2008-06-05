@@ -106,9 +106,10 @@ LIBS		+= $(GSL_LIBS) $(ANNEALING_LIBS)
 ## Rules.
 ## ------------------------------------------------------------
 
-SOURCES		= $(wildcard $(srcdir)/*.cxx)
-OBJECTS		= $(notdir $(SOURCES:.cxx=.$(OBJEXT)))
-TARGETS		= $(OBJECTS:.$(OBJEXT)=)
+SOURCESDIR	= $(srcdir)/src
+SOURCES		= $(wildcard $(SOURCESDIR)/*.cpp)
+OBJECTS		= $(notdir $(SOURCES:.cpp=.$(OBJEXT)))
+TARGETS		= sinc
 CLEANFILES	= $(TARGETS) $(OBJECTS)
 
 .PHONY: all clean test
@@ -123,13 +124,15 @@ test: all
 
 ## ------------------------------------------------------------
 
-vpath	%.h		$(srcdir)
+vpath	%.hpp		$(SOURCESDIR)
 vpath	%.$(OBJEXT)	$(builddir)
 
-$(OBJECTS) : %.$(OBJEXT) : $(srcdir)/%.cxx
+$(filter-out main.$(OBJEXT),$(OBJECTS)): %.$(OBJEXT) : %.hpp
+
+$(OBJECTS) : %.$(OBJEXT) : $(SOURCESDIR)/%.cpp internal.hpp
 	$(CC_COMPILE) $(@) $(<)
 
-$(TARGETS) : % : %.$(OBJEXT)
+$(TARGETS) : $(OBJECTS)
 	$(CC_BUILD_PROGRAM) $(@) $(^)
 
 ## ------------------------------------------------------------
