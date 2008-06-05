@@ -32,13 +32,13 @@
  ** Headers.
  ** ----------------------------------------------------------*/
 
+#include <iostream>
+#include <cmath>
+
 extern "C" {
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <unistd.h>
-#include <float.h>
+#include <float.h>		/* for 'DBL_MIN' */
+#include <unistd.h>		/* for 'getopt()' */
 #include <gsl/gsl_rng.h>
 #include "annealing.h"
 
@@ -83,7 +83,8 @@ main (int argc, char ** argv)
 	}
   }
 
-  printf("\n------------------------------------------------------------\n");
+  std::cout << std::endl
+	    << "\n------------------------------------------------------------" << std::endl;
   printf("test_sinc: sinc minimisation with simulated annealing\n");
 
   S.number_of_iterations_at_fixed_temperature = 10;
@@ -112,12 +113,16 @@ main (int argc, char ** argv)
 
   annealing_simple_solve(&S);
 
-  printf("test_sinc: final best solution: %f, global 0.0\n", configurations[1]);
-  printf("------------------------------------------------------------\n\n");
+  std::cout << "test_sinc: final best solution: " configurations[1] ", global 0.0"
+	    << std::endl
+	    << "------------------------------------------------------------"
+	    << std::endl << std::endl;
 
   gsl_rng_free(S.numbers_generator);
   exit(EXIT_SUCCESS);
 }
+
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -162,6 +167,8 @@ log_function (void * W)
 	 current, S->current_configuration.energy,
 	 best,    S->best_configuration.energy);
 }
+
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------

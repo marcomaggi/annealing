@@ -186,13 +186,13 @@ module.
 The library is developed and tested under the Linux+@gnu{} system and
 officially it supports only the @gnu{} infrastructure: requires the
 @gnu{} C library and compiles fine with the @gnu{} C compiler
-(@code{-std=c99 -pedantic} switches). The building infrastructure
+(@code{-std=c99 -pedantic} switches).  The building infrastructure
 requires @gnu{} Make, @gnu{} Bash and the other common tools
 (@command{rm}, @command{mkdir}, @dots{}).
 
 Notice that Annealing's @api{} violates the @gsl{}'s Design Document;
 specifically the requirement of section 3.18: ``Algorithm
-decomposition''. Annealing uses callbacks everywhere, while the Document
+decomposition''.  Annealing uses callbacks everywhere, while the Document
 requires for the algorithm to be split into an initialise, iterate, test
 form.
 
@@ -210,8 +210,8 @@ In the following we assume that the library is installed under the
 
 A shell script is installed on the system to provide informations about
 version numbers and installation directories; it should be
-@file{/usr/local/bin/annealing-config}. Run @command{annealing-config} without
-arguments for the usage screen. An example of output for the important
+@file{/usr/local/bin/annealing-config}.  Run @command{annealing-config} without
+arguments for the usage screen.  An example of output for the important
 options is:
 
 @example
@@ -272,8 +272,8 @@ m4_include(annealing.m4)
 @end example
 
 @noindent
-in @file{aclocal.m4}. Notice that @gsl{} distributes its own Autoconf
-plug--in, a file named @file{gsl.m4}. The @file{annealing.m4} macro file
+in @file{aclocal.m4}.  Notice that @gsl{} distributes its own Autoconf
+plug--in, a file named @file{gsl.m4}.  The @file{annealing.m4} macro file
 defines a function that can be invoked with:
 
 @example
@@ -282,7 +282,7 @@ ANNEALING_LIBRARY(1,0)
 
 @noindent
 it finds and invokes @command{annealing-config} to acquire installation
-directories and library names. The macro accepts two arguments: the
+directories and library names.  The macro accepts two arguments: the
 major and minor interface version numbers that are needed (@ref{library
 version}); both of the arguments are optional, but it is recommended to
 specify them.
@@ -420,7 +420,7 @@ distribution version.
 Stochastic search techniques are used when the structure of a space is
 not well understood or is not smooth, so that techniques like Newton's
 method (which requires calculating Jacobian derivative matrices) cannot
-be used. In particular, these techniques are frequently used to solve
+be used.  In particular, these techniques are frequently used to solve
 combinatorial optimization problems, such as the traveling salesman
 problem.
 
@@ -440,10 +440,10 @@ taking a step is given by a Boltzmann distribution.
 
 
 @noindent
-Here is an explanation of the basic algorithm. The idea is to generate
+Here is an explanation of the basic algorithm.  The idea is to generate
 at random new configurations in the solution's space, and apply two
 criteria to decide if the a new configuration must be accepted or
-not. The criteria are: if lower energy accept, if upper energy accept
+not.  The criteria are: if lower energy accept, if upper energy accept
 with a probability from a Boltzmann distribution.
 
 It goes like this:
@@ -462,7 +462,7 @@ compute a @emph{new} configuration by taking a random step from the
 @emph{current} configuration;
 
 @item
-evaluate the @emph{new} configuration's energy:
+evaluate @emph{new} configuration's energy:
 
 @itemize
 @item
@@ -522,7 +522,7 @@ Notes:
 @item
 there are two nested loops: the outer does as many iterations as
 required to cool the temperature from the initial value to the minimum;
-the inner does a fixed number of iterations at the same temperature.
+the inner does a fixed number of iterations at the same temperature;
 
 @item
 at least one outer iteration is performed, so the number of outer
@@ -567,7 +567,7 @@ new_E - best_E > 0  => R \in [0, 1)
 
 @noindent
 with @code{R} near @code{1} when @code{k * T} is high, and near @code{0}
-when @code{k * T} is low.
+when @code{k * T} is low;
 
 @item
 during the first iterations: the temperature drops rapidly and its value
@@ -610,7 +610,7 @@ building a new configuration from an existent one cannot fail.
 
 
 @deftp {Struct Typedef} annealing_configuration_t
-A container for the configuration object. Public fields:
+A container for the configuration object.  Public fields:
 
 @table @code
 @item void * data
@@ -663,14 +663,14 @@ Must use the data in @var{S} to transform @var{configuration} to a new value.
 
 
 @deftypefun double annealing_metric_fun_t (void * @var{S}, void * @var{configuration_a}, void * @var{configuration_b})
-Must compute and return the distance between the two configurations. The
+Must compute and return the distance between the two configurations.  The
 metric should be such that: the order in which the configurations are
 handed to this function is not important.
 @end deftypefun
 
 
 @deftypefun void annealing_cooling_fun_t (void * @var{S})
-Invoked to cool the temperature. Must update the @code{temperature}
+Invoked to cool the temperature.  Must update the @code{temperature}
 field of the workspace structure.
 @end deftypefun
 
@@ -699,7 +699,7 @@ It is responsibility of this function to free resources in
 
 @deftp {Struct Typedef} annealing_simple_workspace_t
 Holds all the data required to run a basic simulated annealing
-algorithm. It must be allocated and freed by the user code. Public
+algorithm.  It must be allocated and freed by the user code. Public
 fields:
 
 @table @code
@@ -958,7 +958,7 @@ To understand this section you have to read @ref{annealing algorithm}
 first.
 
 The multi--best algorithm works like the simple one, but keeps as result
-a number of best configurations. It allows a two step search:
+a number of best configurations.  It allows a two step search:
 
 @enumerate
 @item
@@ -975,7 +975,7 @@ When using the multi--best algorithm there is no restart option.
 
 @deftp {Struct Typedef} annealing_multibest_workspace_t
 Holds all the data required to run a multi--best simulated annealing
-algorithm. It must be allocated and freed by the user code. Public
+algorithm.  It must be allocated and freed by the user code.  Public
 fields:
 
 @table @code
@@ -1260,7 +1260,7 @@ To understand this section you have to read @ref{annealing algorithm}
 first.
 
 The many--tries algorithm makes use of the Monte Carlo method to select
-the new configuration. The algorithm itself is very simple, but its
+the new configuration.  The algorithm itself is very simple, but its
 meaning is not immediate to understand if one does not know the
 Boltzmann distribution.
 
@@ -1270,7 +1270,7 @@ Boltzmann distribution.
 
 @noindent
 Let's consider a volume of gas composed by @code{N} particles at a
-temperature @code{T}. We can partition the particles in @code{I} sets,
+temperature @code{T}.  We can partition the particles in @code{I} sets,
 indexed by @code{i \in [1, I]}, such that the number of particles in the
 @code{i}--th set is @code{N_i} and:
 
@@ -1320,7 +1320,7 @@ which gives us the probability centred around the state @code{E_j}.
 
 @noindent
 Let's say that we have a gas with @code{I} possible states, for which we
-can compute the energies @code{E_i}, @code{i \in [1, I]}. Using the
+can compute the energies @code{E_i}, @code{i \in [1, I]}.  Using the
 Boltzmann distribution centred around a known level @code{E} having
 @code{N} particles:
 
@@ -1427,7 +1427,7 @@ possibility to select a higher energy configuration.
 
 @deftp {Struct Typedef} annealing_manytries_workspace_t
 Holds all the data required to run a many-tries simulated annealing
-algorithm. It must be allocated and freed by the user code. Public
+algorithm.  It must be allocated and freed by the user code.  Public
 fields:
 
 @table @code
@@ -1733,8 +1733,8 @@ Return an integer representing the interface minor number version.
 
 
 @noindent
-``Boltzmann distribution.'' Wikipedia, The Free Encyclopedia. 24 Jan
-2007, 14:52 UTC. Wikimedia Foundation, Inc. 26 Feb 2007
+``Boltzmann distribution.'' Wikipedia, The Free Encyclopedia.  24 Jan
+2007, 14:52 UTC.  Wikimedia Foundation, Inc. 26 Feb 2007
 @url{http://en.wikipedia.org/w/index.php?title=Boltzmann_distribution&oldid=102908405}.
 
 
@@ -1767,7 +1767,7 @@ and interface versions are independent.
 @noindent
 The package version tracks the development of the source code: every
 time the source code is modified the package version is
-incremented. There are three numbers: major, minor, patch level.
+incremented.  There are three numbers: major, minor, patch level.
 
 @table @code
 @item major
@@ -1825,13 +1825,13 @@ summary:
 
 @noindent
 The interface version changes only when the public interface of a
-library (public function prototypes and data types) is modified. There
+library (public function prototypes and data types) is modified.  There
 are two numbers: major and minor.
 
 @table @code
 @item major
 Establishes a set of: functions, data types, code behaviour that will
-not change until the next major number update. Code written for the
+not change until the next major number update.  Code written for the
 first release of the library with a major interface number (@code{1.0}),
 will work unchanged with all the libraries with the same major interface
 number (@code{1.1}, @code{1.2}, @dots{}); if it does not: it is a
@@ -1844,7 +1844,7 @@ with subsequent package versions with the same major interface number.
 
 @item minor
 Establishes a set of: functions, data types, code behaviour that will
-not change until the next major number update. This set is added to the
+not change until the next major number update.  This set is added to the
 set of the previous interface version.
 @end table
 
