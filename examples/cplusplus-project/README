@@ -21,7 +21,7 @@ C++ Project is an example project for the usage of Annealing
 and the GNU Scientific Library; it can be used as a starting
 point to use the two packages to do stuff.
 
-  *NOTE* I am very bad at C++, so the code is poor.
+  *NOTE* I plainly suck at C++, so the code is poor.
 
   *NOTE* The  last time the  author bothered to  update this
 paragraph he had tested GSL 1.11 and Annealing 0.2. 
