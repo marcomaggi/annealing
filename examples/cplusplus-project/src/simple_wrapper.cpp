@@ -36,18 +36,9 @@
 
 #include "internal.hpp"
 #include "simple_wrapper.hpp"
+#include <new>
 
-/* ------------------------------------------------------------ */
-
-
-/** ------------------------------------------------------------
- ** Module declarations.
- ** ----------------------------------------------------------*/
-
-static	annealing_energy_fun_t	energy_function_stub;
-static	annealing_step_fun_t	step_function_stub;
-static	annealing_log_fun_t	log_function_stub;
-static	annealing_copy_fun_t	copy_function_stub;
+using std::bad_alloc;
 
 /* ------------------------------------------------------------ */
 
@@ -58,23 +49,28 @@ static	annealing_copy_fun_t	copy_function_stub;
 
 Annealing_Simple::Annealing_Simple (gsl_rng * numbers_generator)
 {
-  S = new(struct annealing_simple_workspace_t);
   initialisation(numbers_generator);
 }
 Annealing_Simple::Annealing_Simple (void)
 {
   gsl_rng *		numbers_generator;
 
-  S = new(annealing_simple_workspace_t);
+  cout << "doing it" << endl;
+
   numbers_generator = gsl_rng_alloc(gsl_rng_rand);
-  gsl_rng_set(S->numbers_generator, 15);
+  if (NULL == numbers_generator)
+    {
+      throw(bad_alloc());
+    }
+  gsl_rng_set(numbers_generator, 15);
+
+  cout << "doing it" << endl;
 
   initialisation(numbers_generator);
 }
 Annealing_Simple::~Annealing_Simple (void)
 {
-  gsl_rng_free(S->numbers_generator);
-  delete S;
+  gsl_rng_free(S.numbers_generator);
 }
 
 /* ------------------------------------------------------------ */
@@ -82,23 +78,25 @@ Annealing_Simple::~Annealing_Simple (void)
 void
 Annealing_Simple::initialisation (gsl_rng * numbers_generator)
 {
-  S->energy_function	= energy_function_stub;
-  S->step_function	= step_function_stub;
+  cout << "doing it" << endl;
 
-  S->copy_function	= copy_function_stub;
-  S->log_function	= log_function_stub;
-  S->cooling_function	= NULL;
+  S.energy_function	= energy_function_stub;
+  S.step_function	= step_function_stub;
 
-  S->numbers_generator	= numbers_generator;
+  S.copy_function	= copy_function_stub;
+  S.log_function	= log_function_stub;
+  S.cooling_function	= NULL;
 
-  S->number_of_iterations_at_fixed_temperature = 10;
-  S->temperature		= 10.0;
-  S->minimum_temperature	= 1.0e-6;
-  S->restart_temperature	= DBL_MIN; /* do not restart */
-  S->boltzmann_constant		= 1.0;
-  S->damping_factor		= 1.005;
+  S.numbers_generator	= numbers_generator;
 
-  S->params = this;
+  S.number_of_iterations_at_fixed_temperature = 10;
+  S.temperature		= 10.0;
+  S.minimum_temperature	= 1.0e-6;
+  S.restart_temperature	= DBL_MIN; /* do not restart */
+  S.boltzmann_constant		= 1.0;
+  S.damping_factor		= 1.005;
+
+  S.params = this;
 }
 
 /* ------------------------------------------------------------ */
@@ -111,7 +109,7 @@ Annealing_Simple::initialisation (gsl_rng * numbers_generator)
 void
 Annealing_Simple::solve (void)
 {
-  annealing_simple_solve(S);
+  annealing_simple_solve(&S);
 }
 
 /* ------------------------------------------------------------ */
@@ -122,7 +120,7 @@ Annealing_Simple::solve (void)
  ** ----------------------------------------------------------*/
 
 double
-energy_function_stub (void * _S, void * configuration)
+Annealing_Simple::energy_function_stub (void * _S, void * configuration)
 {
   annealing_simple_workspace_t *	S = (annealing_simple_workspace_t *)_S;
   Annealing_Simple *			A = (Annealing_Simple *)(S->params);
@@ -130,7 +128,7 @@ energy_function_stub (void * _S, void * configuration)
   return A->energy_function(configuration);
 }
 void
-step_function_stub (void * _S, void * configuration)
+Annealing_Simple::step_function_stub (void * _S, void * configuration)
 {
   annealing_simple_workspace_t *	S = (annealing_simple_workspace_t *)_S;
   Annealing_Simple *			A = (Annealing_Simple *)(S->params);
@@ -141,7 +139,7 @@ step_function_stub (void * _S, void * configuration)
 /* ------------------------------------------------------------ */
 
 void
-log_function_stub (void * _S)
+Annealing_Simple::log_function_stub (void * _S)
 {
   annealing_simple_workspace_t *	S = (annealing_simple_workspace_t *)_S;
   Annealing_Simple *			A = (Annealing_Simple *)(S->params);
@@ -149,8 +147,8 @@ log_function_stub (void * _S)
   return A->log_function();
 }
 void
-copy_function_stub (void * _S,
-		    void * dst_configuration, void * src_configuration)
+Annealing_Simple::copy_function_stub (void * _S,
+				      void * dst_configuration, void * src_configuration)
 {
   annealing_simple_workspace_t *	S = (annealing_simple_workspace_t *)_S;
   Annealing_Simple *			A = (Annealing_Simple *)(S->params);

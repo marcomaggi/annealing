@@ -53,7 +53,11 @@ private:
   double	configurations[3];
   double	max_step;
 
+  void initialisation (double first_guess, double _max_step);
+
 protected:
+  virtual double energy_function(void * configuration) = 0;
+
   void	step_function		(void * configuration);
 
   void	log_function		(void);
@@ -62,6 +66,8 @@ protected:
 
 public:
   Univariate_Minimisation (double first_guess, double max_step);
+  Univariate_Minimisation (double first_guess, double _max_step,
+			   gsl_rng * numbers_generator);
 
   double	best_estimation (void);
 };

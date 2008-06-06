@@ -34,6 +34,9 @@
 #  include <config.h>
 #endif
 
+#include <iostream>
+using namespace std;
+
 #endif
 
 /* end of file */

@@ -1,14 +1,13 @@
 /*
    Part of: annealing
-   Contents: class definition for simple annealing wrapper
-   Date: Thu Jun  5, 2008
+   Contents: random numbers generator wrapper
+   Date: Fri Jun  6, 2008
    
    Abstract
    
-	Defines a virtual class that wraps the basic mechanism
-	of simple simulated annealing from Annealing.
+	Declares a wrapper for GSL's numbers generator.
    
-   Copyright (c) 2007, 2008 Marco Maggi
+   Copyright (c) 2008 Marco Maggi
    
    This  program  is free  software:  you  can redistribute  it
    and/or modify it  under the terms of the  GNU General Public
@@ -28,22 +27,21 @@
    
 */
 
-#ifndef SIMPLE_WRAPPER_HPP
-#define SIMPLE_WRAPPER_HPP
+#ifndef NUMBERS_GENERATOR_HPP
+#define NUMBERS_GENERATOR_HPP
 
 
 /** ------------------------------------------------------------
  ** Headers.
  ** ----------------------------------------------------------*/
 
-#include <cmath>
+#include <new>
+
+using std::bad_alloc;
 
 extern "C" {
 
-#include <float.h>		/* for 'DBL_MIN' */
-#include <unistd.h>		/* for 'getopt()' */
 #include <gsl/gsl_rng.h>
-#include "annealing.h"
 
 }
 
@@ -51,38 +49,36 @@ extern "C" {
 
 
 /** ------------------------------------------------------------
- ** Basic simple annealing wrapper.
+ ** Class.
  ** ----------------------------------------------------------*/
 
-class Annealing_Simple {
+class Numbers_Generator
+{
 private:
-  static	annealing_energy_fun_t	energy_function_stub;
-  static	annealing_step_fun_t	step_function_stub;
-  static	annealing_log_fun_t	log_function_stub;
-  static	annealing_copy_fun_t	copy_function_stub;
+  void initialise (const gsl_rng_type * type, unsigned long seed)
+    throw(bad_alloc);
 
 protected:
-  annealing_simple_workspace_t	S;
+  gsl_rng *	pointer;
 
 public:
-  virtual double energy_function(void * configuration) = 0;
-  virtual void	step_function	(void * configuration) = 0;
+  Numbers_Generator (const gsl_rng_type * type, unsigned long seed);
+  Numbers_Generator (const gsl_rng_type * type);
+  Numbers_Generator (unsigned long seed);
+  Numbers_Generator (void);
+  ~Numbers_Generator (void);
 
-  virtual void	log_function	(void) = 0;
-  virtual void	copy_function	(void * dst_configuration,
-				 void * src_configuration) = 0;
-public:
-  Annealing_Simple (gsl_rng * numbers_generator);
-  Annealing_Simple (void);
-  ~Annealing_Simple (void);
+  gsl_rng * get_pointer (void) { return pointer; }
 
-  void		solve (void);
+  unsigned long	sample_integer		(void);
+  unsigned long	sample_integer_in_range	(unsigned long exclusive_upper_limit);
 
-private:
-  void initialisation (gsl_rng * numbers_generator);
+  unsigned long	maximum_integer (void);
+  unsigned long	minimum_integer (void);
+
+  double	sample		(void);
+  double	sample_positive	(void);
 };
-
-/* ------------------------------------------------------------ */
 
 #endif
 

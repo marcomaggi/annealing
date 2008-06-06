@@ -48,8 +48,8 @@
 
 class Sinc_Minimisation : public Univariate_Minimisation {
 public:
-  Sinc_Minimisation (double first_guess, double max_step = 10.0) :
-    Univariate_Minimisation(double first_guess, double max_step) {}
+  Sinc_Minimisation (double first_guess, double _max_step = 10.0) :
+    Univariate_Minimisation(first_guess, _max_step) {}
 
   double energy_function	(void * configuration);
 };
