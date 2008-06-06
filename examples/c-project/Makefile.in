@@ -114,7 +114,7 @@ OBJECTS		= $(notdir $(SOURCES:.c=.$(OBJEXT)))
 TARGETS		= $(OBJECTS:.$(OBJEXT)=)
 CLEANFILES	= $(TARGETS) $(OBJECTS)
 
-.PHONY: all clean test
+.PHONY: all clean test test-verbose
 
 all: $(TARGETS)
 
@@ -123,6 +123,9 @@ clean:
 
 test: all
 	$(foreach f,$(TARGETS), ./$(f);)
+
+test-verbose: all
+	$(foreach f,$(TARGETS), ./$(f) -v;)
 
 ## ------------------------------------------------------------
 

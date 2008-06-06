@@ -71,16 +71,20 @@ main (int argc, char ** argv)
   cout << endl
        << "------------------------------------------------------------"
        << endl
-       << "test_sinc: sinc minimisation with simulated annealing"
+       << "sinc: sinc minimisation with simulated annealing"
        << endl;
 
   {
-    Sinc_Minimisation	A(100.0);
+    Annealing_Simple_Config		C;
+    Numbers_Generator			G;
+    Univariate_Minimisation_Config	P(100.0, 10.0);
+    Sinc_Minimisation			A(P, C, G);
       
 
+    A.set_logging(verbose_mode);
     A.solve();
 
-    cout << "test_sinc: final best solution: " << A.best_estimation()
+    cout << "sinc: final best solution: " << A.best_estimation()
 	 << ", global 0.0"
 	 << endl
 	 << "------------------------------------------------------------"

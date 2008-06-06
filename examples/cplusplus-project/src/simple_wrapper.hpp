@@ -37,6 +37,7 @@
  ** ----------------------------------------------------------*/
 
 #include <cmath>
+#include "numbers_generator.hpp"
 
 extern "C" {
 
@@ -54,32 +55,44 @@ extern "C" {
  ** Basic simple annealing wrapper.
  ** ----------------------------------------------------------*/
 
+class Annealing_Simple_Config {
+public:
+  size_t	number_of_iterations_at_fixed_temperature;
+  void *	max_step_value;
+
+  double	boltzmann_constant;
+  double	temperature;
+  double	damping_factor;
+  double	minimum_temperature;
+  double	restart_temperature;
+
+  Annealing_Simple_Config(void);
+};
+
 class Annealing_Simple {
 private:
-  static	annealing_energy_fun_t	energy_function_stub;
-  static	annealing_step_fun_t	step_function_stub;
-  static	annealing_log_fun_t	log_function_stub;
-  static	annealing_copy_fun_t	copy_function_stub;
+  bool				logging;
+
+  static annealing_energy_fun_t	energy_function_stub;
+  static annealing_step_fun_t	step_function_stub;
+  static annealing_log_fun_t	log_function_stub;
+  static annealing_copy_fun_t	copy_function_stub;
 
 protected:
   annealing_simple_workspace_t	S;
 
 public:
+  Annealing_Simple (Annealing_Simple_Config& C, Numbers_Generator& rnd);
+
   virtual double energy_function(void * configuration) = 0;
   virtual void	step_function	(void * configuration) = 0;
 
   virtual void	log_function	(void) = 0;
   virtual void	copy_function	(void * dst_configuration,
 				 void * src_configuration) = 0;
-public:
-  Annealing_Simple (gsl_rng * numbers_generator);
-  Annealing_Simple (void);
-  ~Annealing_Simple (void);
 
+  void		set_logging	(bool activate);
   void		solve (void);
-
-private:
-  void initialisation (gsl_rng * numbers_generator);
 };
 
 /* ------------------------------------------------------------ */

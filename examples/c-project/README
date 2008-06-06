@@ -69,6 +69,10 @@ then do it:
     $ make
     $ make test
 
+or:
+
+    $ make test-verbose
+
   This package only compiles a set of test programs, it does
 not produce things to install.
 

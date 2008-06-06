@@ -47,6 +47,19 @@
  ** Class definition.
  ** ----------------------------------------------------------*/
 
+class Univariate_Minimisation_Config
+{
+public:
+  double first_guess;
+  double max_step;
+  
+  Univariate_Minimisation_Config(double _first_guess, double _max_step)
+  {
+    first_guess	= _first_guess;
+    max_step	= _max_step;
+  }
+};
+
 class Univariate_Minimisation : public Annealing_Simple
 {
 private:
@@ -65,14 +78,12 @@ protected:
 				 void * src_configuration);
 
 public:
-  Univariate_Minimisation (double first_guess, double max_step);
-  Univariate_Minimisation (double first_guess, double _max_step,
-			   gsl_rng * numbers_generator);
+  Univariate_Minimisation (Univariate_Minimisation_Config& P,
+			   Annealing_Simple_Config& C,
+			   Numbers_Generator& rnd);
 
   double	best_estimation (void);
 };
-
-/* ------------------------------------------------------------ */
 
 
 #endif

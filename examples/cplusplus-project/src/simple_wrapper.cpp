@@ -36,9 +36,6 @@
 
 #include "internal.hpp"
 #include "simple_wrapper.hpp"
-#include <new>
-
-using std::bad_alloc;
 
 /* ------------------------------------------------------------ */
 
@@ -47,54 +44,33 @@ using std::bad_alloc;
  ** Constructors.
  ** ----------------------------------------------------------*/
 
-Annealing_Simple::Annealing_Simple (gsl_rng * numbers_generator)
+Annealing_Simple_Config::Annealing_Simple_Config(void)
 {
-  initialisation(numbers_generator);
-}
-Annealing_Simple::Annealing_Simple (void)
-{
-  gsl_rng *		numbers_generator;
-
-  cout << "doing it" << endl;
-
-  numbers_generator = gsl_rng_alloc(gsl_rng_rand);
-  if (NULL == numbers_generator)
-    {
-      throw(bad_alloc());
-    }
-  gsl_rng_set(numbers_generator, 15);
-
-  cout << "doing it" << endl;
-
-  initialisation(numbers_generator);
-}
-Annealing_Simple::~Annealing_Simple (void)
-{
-  gsl_rng_free(S.numbers_generator);
+  number_of_iterations_at_fixed_temperature = 10;
+  temperature			= 10.0;
+  minimum_temperature		= 1.0e-6;
+  restart_temperature		= DBL_MIN; /* do not restart */
+  boltzmann_constant		= 1.0;
+  damping_factor		= 1.005;
 }
 
-/* ------------------------------------------------------------ */
-
-void
-Annealing_Simple::initialisation (gsl_rng * numbers_generator)
+Annealing_Simple::Annealing_Simple (Annealing_Simple_Config& C, Numbers_Generator& rnd)
 {
-  cout << "doing it" << endl;
+  S.energy_function		= energy_function_stub;
+  S.step_function		= step_function_stub;
 
-  S.energy_function	= energy_function_stub;
-  S.step_function	= step_function_stub;
+  S.copy_function		= copy_function_stub;
+  S.log_function		= log_function_stub;
+  S.cooling_function		= NULL;
 
-  S.copy_function	= copy_function_stub;
-  S.log_function	= log_function_stub;
-  S.cooling_function	= NULL;
+  S.numbers_generator		= rnd.get_pointer();
 
-  S.numbers_generator	= numbers_generator;
-
-  S.number_of_iterations_at_fixed_temperature = 10;
-  S.temperature		= 10.0;
-  S.minimum_temperature	= 1.0e-6;
-  S.restart_temperature	= DBL_MIN; /* do not restart */
-  S.boltzmann_constant		= 1.0;
-  S.damping_factor		= 1.005;
+  S.number_of_iterations_at_fixed_temperature = C.number_of_iterations_at_fixed_temperature;
+  S.temperature			= C.temperature;
+  S.minimum_temperature		= C.minimum_temperature;
+  S.restart_temperature		= C.restart_temperature; /* do not restart */
+  S.boltzmann_constant		= C.boltzmann_constant;
+  S.damping_factor		= C.damping_factor;
 
   S.params = this;
 }
@@ -110,6 +86,11 @@ void
 Annealing_Simple::solve (void)
 {
   annealing_simple_solve(&S);
+}
+void
+Annealing_Simple::set_logging (bool active)
+{
+  logging = active;
 }
 
 /* ------------------------------------------------------------ */
@@ -144,7 +125,10 @@ Annealing_Simple::log_function_stub (void * _S)
   annealing_simple_workspace_t *	S = (annealing_simple_workspace_t *)_S;
   Annealing_Simple *			A = (Annealing_Simple *)(S->params);
 
-  return A->log_function();
+  if (A->logging)
+    {
+      return A->log_function();
+    }
 }
 void
 Annealing_Simple::copy_function_stub (void * _S,

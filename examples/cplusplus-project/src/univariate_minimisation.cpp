@@ -43,27 +43,20 @@
  ** Constructors.
  ** ----------------------------------------------------------*/
 
-void
-Univariate_Minimisation::initialisation (double first_guess, double _max_step)
+Univariate_Minimisation::Univariate_Minimisation (Univariate_Minimisation_Config& P,
+						  Annealing_Simple_Config& C,
+						  Numbers_Generator& rnd)
+  : Annealing_Simple (C, rnd)
 {
-  max_step = _max_step;
-
   S.max_step_value		= &max_step;
   S.current_configuration.data	= &(configurations[0]);
   S.best_configuration.data	= &(configurations[1]);
   S.new_configuration.data	= &(configurations[2]);
 
-  configurations[0] = first_guess;
-}
-Univariate_Minimisation::Univariate_Minimisation (double first_guess, double _max_step = 10.0)
-{
-  initialisation(first_guess, _max_step);
-}
-Univariate_Minimisation::Univariate_Minimisation (double first_guess, double _max_step,
-						  gsl_rng * numbers_generator)
-  : Annealing_Simple (numbers_generator)
-{
-  initialisation(first_guess, _max_step);
+  max_step			= P.max_step;
+  configurations[0]		= P.first_guess;
+  configurations[1]		= 0.0;
+  configurations[2]		= 0.0;
 }
 
 /* ------------------------------------------------------------ */
