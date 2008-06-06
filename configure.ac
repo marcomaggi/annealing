@@ -5,39 +5,37 @@
 #       sh ${ds_top_srcdir}/infrastructure/make-configure-ac.sh
 #
 # in the top source directory of this (sub)project. The script
-# makes use of GNU Arch to retrieve the project name and version
-# number, and does basic source tree inspection to find known
-# configuration files (for example under the "meta" directory).
+# makes use of GNU Arch or GIT to retrieve the project name and
+# version number, and does basic source tree inspection to find
+# known configuration files (for example under the "meta"
+# directory).
 #
 # The real GNU Autoconf configuration script is in "configure.ds",
 # which is loaded in this file. A set of macros is also loaded
 # from "${ds_top_srcdir}/infrastructure/acmacros.m4".
-
-
-AC_INIT([annealing], [0.2a4])
+AC_INIT([annealing],[0.3a12])
 AC_PREREQ(2.60)
 
-AC_SUBST([PACKAGE_VERSION],[0.2.0])
-AC_DEFINE([PACKAGE_VERSION],["0.2.0"],[full package version])
+AC_SUBST([PACKAGE_VERSION],[0.3.0])
+AC_DEFINE([PACKAGE_VERSION],["0.3.0"],[full package version])
 
-AC_SUBST([PACKAGE_XVERSION],[0.2a4])
-AC_DEFINE([PACKAGE_XVERSION],["0.2a4"],[full extended package version])
+AC_SUBST([PACKAGE_XVERSION],[0.3a12])
+AC_DEFINE([PACKAGE_XVERSION],["0.3a12"],[full extended package version])
 
 AC_SUBST([PACKAGE_VERSION_MAJOR],[0])
 AC_DEFINE([PACKAGE_VERSION_MAJOR],["0"],[package version major number])
 
-AC_SUBST([PACKAGE_VERSION_MINOR],[2])
-AC_DEFINE([PACKAGE_VERSION_MINOR],["2"],[package version minor number])
+AC_SUBST([PACKAGE_VERSION_MINOR],[3])
+AC_DEFINE([PACKAGE_VERSION_MINOR],["3"],[package version minor number])
 
-AC_SUBST([PACKAGE_VERSION_PATCH],[4])
-AC_DEFINE([PACKAGE_VERSION_PATCH],["4"],[package version patch number])
+AC_SUBST([PACKAGE_VERSION_PATCH],[12])
+AC_DEFINE([PACKAGE_VERSION_PATCH],["12"],[package version patch number])
 
-AC_SUBST([PACKAGE_VERSION_MAJOR_MINOR],[0.2])
-AC_DEFINE([PACKAGE_VERSION_MAJOR_MINOR],["0.2"],[package version major.minor])
+AC_SUBST([PACKAGE_VERSION_MAJOR_MINOR],[0.3])
+AC_DEFINE([PACKAGE_VERSION_MAJOR_MINOR],["0.3"],[package version major.minor])
 
 AC_SUBST([PACKAGE_NAME_LOWERCASE],[annealing])
 AC_DEFINE([PACKAGE_NAME_LOWERCASE],["annealing"],[package name in lower case chars])
-
 AC_CONFIG_AUX_DIR([infrastructure])
 m4_include([infrastructure/acmacros.m4])
 
