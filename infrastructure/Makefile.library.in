@@ -2268,6 +2268,7 @@ dist:
 	$$(TAR) \
 		--directory=$$(ds_top_srcdir) --create --file=- --dereference	\
 		--exclude=RCS                   --exclude=CVS                   \
+		--exclude=.git			--exclude=.gitignore		\
 		--exclude=archives              --exclude=\*.ps			\
 		--exclude=\*.dvi                --exclude=tmp			\
 		--exclude=\*.gz                 --exclude=\*.tar                \
