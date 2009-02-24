@@ -1,5 +1,6 @@
 
 			 Annealing
+			 =========
 
 
 Topics
@@ -22,7 +23,7 @@ Scientific Library,  attempting a redesign  of the simulated
 annealing module.
 
   *NOTE* The  last time the  author bothered to  update this
-paragraph he had tested GSL 1.9. 
+paragraph he had tested GSL 1.9.
 
   *NOTE* The author supports  only the GNU infrastructure on
 a Linux+GNU  system: GNU C  Compiler; GNU Make;  GNU command
@@ -32,23 +33,24 @@ line utilities like 'rm', 'tar' and 'gzip'; GNU arch.
 2. License
 ----------
 
+Copyright (c) 2007, 2009 Marco Maggi <marcomaggi@gna.org>.
 Copyright (C) 1996, 1997, 1998, 1999, 2000 Mark Galassi
-Copyright (c) 2007 Marco Maggi.
 
-This is free software  you can redistribute it and/or modify
-it  under the  terms of  the GNU  General Public  License as
-published by the Free Software Foundation; either version 2,
-or (at your option) any later version.
+This  program  is free  software:  you  can redistribute  it
+and/or modify it  under the terms of the  GNU General Public
+License as published by the Free Software Foundation, either
+version  3 of  the License,  or (at  your option)  any later
+version.
 
-This file is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY;  without even the implied warranty
-of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-the GNU General Public License for more details.
+This  program is  distributed in  the hope  that it  will be
+useful, but  WITHOUT ANY WARRANTY; without  even the implied
+warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
+PURPOSE.   See  the  GNU  General Public  License  for  more
+details.
 
 You should  have received a  copy of the GNU  General Public
-License along with this file; see the file COPYING.  If not,
-write to the Free Software Foundation, Inc., 59 Temple Place
-- Suite 330, Boston, MA 02111-1307, USA.
+License   along   with    this   program.    If   not,   see
+<http://www.gnu.org/licenses/>.
 
 
 3. Install
@@ -56,7 +58,7 @@ write to the Free Software Foundation, Inc., 59 Temple Place
 
 Do this:
 
-    $ cd annealing
+    $ cd annealing-0.4.0
     $ mkdir "=build"
     $ cd "=build"
 
@@ -89,14 +91,14 @@ to really do it:
 4. Usage
 --------
 
-Read the documentation in Info format. 
+Read the documentation in Info format.
 
 
 A. Credits
 ----------
 
 Annealing was written by  Marco Maggi reworking code by Mark
-Galassi.
+Galassi distributed in the GSL.
 
   The  code is a  reworking of  the files  "gsl_siman.h" and
 "siman.c"  from  the  GSL  1.9  distribution  (Thu  Feb  22,
@@ -127,4 +129,6 @@ the latest version of this package can be at:
 ### end of file
 # Local Variables:
 # mode: text
+# fill-column: 60
+# paragraph-start: "*"
 # End:

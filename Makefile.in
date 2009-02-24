@@ -1,6 +1,5 @@
-## Makefile.in --
-#
 # @configure_input@
+#
 
 srcdir		= @srcdir@
 builddir	= @builddir@
