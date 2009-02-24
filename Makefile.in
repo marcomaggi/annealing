@@ -2,30 +2,14 @@
 #
 # @configure_input@
 
-ds_config_DEV_ENABLED	= yes
-ds_config_ABI		= slackware
-#ds_slackware_PACKAGE_ARCHITECTURE = noarch
+srcdir		= @srcdir@
+builddir	= @builddir@
 
-include Makefile.library
-include Makefile.variables
-$(eval $(call ds-package-variables))
-$(eval $(call ds-common-programs))
-$(eval $(call ds-main-rules))
-$(eval $(call ds-tests))
-$(eval $(call ds-generic-documentation))
+include meta.d/makefiles/develstuff.make
+$(eval $(call ds-full-head))
 $(eval $(call ds-c-language))
-include Makefile.ds
-$(eval $(call ds-texinfo-documentation))
-$(eval $(call ds-uninstall-scripts))
-$(eval $(call ds-meta-scripts))
-$(eval $(call ds-autoconf))
-$(eval $(call ds-pkg-config))
-$(eval $(call ds-config-inspection-script))
-$(eval $(call ds-source-distribution))
-$(eval $(call ds-binary-distribution))
-$(eval $(call ds-slackware-distribution))
-$(eval $(call ds-end))
-
+include meta.d/makefiles/project.make
+$(eval $(call ds-full-tail))
 
 ### end of file
 # Local Variables:

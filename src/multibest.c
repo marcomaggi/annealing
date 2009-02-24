@@ -1,25 +1,21 @@
 /* multibest.c
- * 
+ *
+ * Copyright (C) 2007, 2009 Marco Maggi <marcomaggi@gna.org>
  * Copyright (C) 1996, 1997, 1998, 1999, 2000 Mark Galassi
- * Copyright (C) 2007 Marco Maggi
- * 
- * 
- * This  program  is free  software:  you  can redistribute  it
- * and/or modify it  under the terms of the  GNU General Public
- * License as published by the Free Software Foundation, either
- * version  3 of  the License,  or (at  your option)  any later
- * version.
- * 
- * This  program is  distributed in  the hope  that it  will be
- * useful, but  WITHOUT ANY WARRANTY; without  even the implied
- * warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
- * PURPOSE.   See  the  GNU  General Public  License  for  more
- * details.
- * 
- * You should  have received a  copy of the GNU  General Public
- * License   along   with    this   program.    If   not,   see
- * <http://www.gnu.org/licenses/>.
- * 
+ *
+ * This program is free software:  you can redistribute it and/or modify
+ * it under the terms of the  GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * This program is  distributed in the hope that it  will be useful, but
+ * WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
+ * MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
+ * General Public License for more details.
+ *
+ * You should  have received  a copy of  the GNU General  Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 
@@ -28,13 +24,10 @@
  ** Headers.
  ** ----------------------------------------------------------*/
 
-#include "internal.h"
 #define current_configuration		current
 #define new_configuration		new
 #define best_configurations		bests
-#include "annealing.h"
-
-/* ------------------------------------------------------------ */
+#include "internal.h"
 
 
 /** ------------------------------------------------------------
@@ -42,9 +35,9 @@
  ** ----------------------------------------------------------*/
 
 /* Avoid underflow errors for large uphill steps. */
-static inline 
+static inline
 double safe_exp (double x)
-{ 
+{
   return ((x < GSL_LOG_DBL_MIN) ? 0.0 : exp(x));
 }
 
@@ -80,8 +73,6 @@ double safe_exp (double x)
 #define set_current_to_best(S)		copy_configuration(S, current,	bests[0])
 #define set_best_to_current(S)		copy_configuration(S, bests[0],	current)
 #define set_new_to_current(S)		copy_configuration(S, new,	current)
-
-/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -121,7 +112,7 @@ insert_new_at_best_configurations_position (annealing_multibest_workspace_t * S,
 	position = 1
 
 	bests -> | c0 | c1 | c2 | empty | empty |
-    
+
     after:
 
 	max_number_of_best_configurations = 5
@@ -150,14 +141,12 @@ insert_new_at_best_configurations_position (annealing_multibest_workspace_t * S,
 /*   printf("\n"); */
 }
 
-/* ------------------------------------------------------------ */
-
 
 /** ------------------------------------------------------------
  ** Multi-best algorithm.
  ** ----------------------------------------------------------*/
 
-void 
+void
 annealing_multibest_solve (annealing_multibest_workspace_t * S)
 {
   assert(S->number_of_iterations_at_fixed_temperature > 0);
@@ -174,7 +163,7 @@ annealing_multibest_solve (annealing_multibest_workspace_t * S)
   set_new_to_current(S);
   S->best_configurations_count = 1;
   if (S->log_function) S->log_function(S);
-  
+
   for (;;)
     {
       for (size_t i=0; i < S->number_of_iterations_at_fixed_temperature; ++i)
