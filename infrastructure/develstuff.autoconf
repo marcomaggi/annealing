@@ -37,7 +37,8 @@ dnl Infrastructure setup.
 dnl --------------------------------------------------------------------
 
 AC_DEFUN_ONCE([DS_BEGIN],
-  [DS_FIND_INFRASTRUCTURE
+  [AC_SUBST([PKG_ID],[\${PACKAGE_NAME}_\${PACKAGE_VERSION}])
+   DS_FIND_INFRASTRUCTURE
    DS_FIND_CONFIGURATION
    AC_REQUIRE_AUX_FILE([develstuff.autoconf])
    AC_REQUIRE_AUX_FILE([develstuff.make])
@@ -79,6 +80,13 @@ AC_DEFUN([DS_DEFAULT_SECTIONS],
   [DS_INCLUDE_SECTION([BIN_RULES],[yes])
    DS_INCLUDE_SECTION([DOC_RULES],[yes])
    DS_INCLUDE_SECTION([DEV_RULES],[no])
+   DS_INCLUDE_SECTION([AUTOCONF_DIRS],[yes])
+   DS_INCLUDE_SECTION([DEVELSTUFF_DIRS],[yes])])
+
+AC_DEFUN([DS_DEFAULT_SECTIONS_DEV],
+  [DS_INCLUDE_SECTION([BIN_RULES],[yes])
+   DS_INCLUDE_SECTION([DOC_RULES],[yes])
+   DS_INCLUDE_SECTION([DEV_RULES],[yes])
    DS_INCLUDE_SECTION([AUTOCONF_DIRS],[yes])
    DS_INCLUDE_SECTION([DEVELSTUFF_DIRS],[yes])])
 
@@ -147,7 +155,8 @@ AC_DEFUN_ONCE([DS_PROGRAMS],
 dnl Notice that the directories are defined here so that they
 dnl are available in scripts like "package-config".
 AC_DEFUN_ONCE([DS_DIRECTORIES],
-   [AC_SUBST([pkgdatadir],[\${datadir}/\${PKG_DIR}])
+   [AC_SUBST([PKG_DIR],[\${PACKAGE_NAME}/\${PACKAGE_VERSION}])
+    AC_SUBST([pkgdatadir],[\${datadir}/\${PKG_DIR}])
     AC_SUBST([pkgdocdir],[\${docdir}/\${PKG_DIR}])
     AC_SUBST([pkgexampledir],[\${pkgdocdir}/examples])
     AC_SUBST([pkginfodir],[\${docdir}/\${PKG_DIR}])

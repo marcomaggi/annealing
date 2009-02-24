@@ -72,8 +72,8 @@ ds_config_COMPRESSOR		?= @GZIP@
 
 PACKAGE_NAME		= @PACKAGE_NAME@
 PACKAGE_VERSION		= @PACKAGE_VERSION@
-PKG_ID			?= $(PACKAGE_NAME)-$(PACKAGE_VERSION)
-PKG_DIR			?= $(PACKAGE_NAME)/$(PACKAGE_VERSION)
+PKG_ID			?= @PKG_ID@
+PKG_DIR			?= @PKG_DIR@
 
 #page
 ## ---------------------------------------------------------------------
@@ -214,6 +214,12 @@ echo-variable:
 
 echo-list-variable:
 	@$(foreach f,$($(VARIABLE)),echo $(f);)
+
+.PHONY: ds-upgrade-infrastructure
+
+ds-upgrade-infrastructure:
+	$(CP)	$(shell develstuff-config --pkgdatadir)/infrastructure/* \
+		$(infrastructuredir)
 
 # This  appears to  be ignored  by GNU  Make 3.81;  at least  it  is not
 # mentioned in the Info documentation.   But it was used in the makefile
@@ -383,7 +389,6 @@ endef
 
 define ds-full-tail
 $(eval $(call ds-texinfo-documentation))
-$(eval $(call ds-uninstall-scripts))
 $(eval $(call ds-meta-scripts))
 $(eval $(call ds-pkg-config))
 $(eval $(call ds-autoconf))
@@ -391,6 +396,7 @@ $(eval $(call ds-config-inspection-script))
 $(eval $(call ds-source-distribution))
 $(eval $(call ds-binary-distribution))
 $(eval $(call ds-slackware-distribution))
+$(eval $(call ds-uninstall-scripts))
 endef
 
 #page
@@ -515,9 +521,12 @@ $(2)-print-install-files-layout:	$(1)-print-install-files-layout
 $(2)-print-install-dirs-layout:		$(1)-print-install-dirs-layout
 $(2)-print-install-layout:		$(1)-print-install-layout
 
+# Special handling of "ds_uninstall_*" modules.
+ifneq (ds_uninstall,$$(patsubst ds_uninstall%,ds_uninstall,$(1)))
 $(2)-print-uninstall-files-script:	$(1)-print-uninstall-files-script
 $(2)-print-uninstall-dirs-script: 	$(1)-print-uninstall-dirs-script
 $(2)-print-uninstall-script:		$(1)-print-uninstall-script
+endif
 
 endef
 
@@ -1016,7 +1025,9 @@ $$(ds_uninstall_$(1)_PATHNAME):
 	@echo '# Do not run this script if you use a package management system like'	>>$$(@)
 	@echo '# the one of Slackware Linux.  Rely on that for package removal.'	>>$$(@)
 	@echo									>>$$(@)
-	@$(MAKE) --silent $(1)-print-uninstall-script >>$$(@)
+	@$(MAKE) --silent $(1)-print-uninstall-script				>>$$(@)
+# Special handling of uninstall scripts.
+	@$(MAKE) --silent ds_uninstall_$(1)-print-uninstall-script		>>$$(@)
 	@printf '\n### end of file\n' >>$$(@)
 	$$(call ds-echo,'## done.')
 
@@ -1267,8 +1278,8 @@ ifeq ($$(ds_config_ENABLE_SHARED),yes)
 
 $(1)_shared_library_BUILDDIR		?= $$(builddir)/libraries.d
 $(1)_shared_library_OBJECTS		?= $$($(1)_OBJECTS)
-$(1)_shared_library_ID			?= $(1)
-$(1)_shared_library_LINK_ID		?=
+$(1)_shared_library_ID			?= $$($(1)_LIBRARY_ID)
+$(1)_shared_library_LINK_ID		?= $$($(1)_LIBRARY_LINK_ID)
 $(1)_shared_library_MAIN_SECTION	?= bin
 
 $(1)_shared_library_NAME	= lib$$($(1)_shared_library_ID).so
@@ -1283,8 +1294,8 @@ $(1)_shared_library_TARGETS	= $$($(1)_shared_library_PATHNAME) $$($(1)_shared_li
 $(1)_shared_library_INSTLST	= $$($(1)_shared_library_PATHNAME)
 $(1)_shared_library_INSTDIR	?= $(libdir)
 
-$(1)_shared_library_CLEANFILES		+= $$($(1)_shared_library_TARGETS)
-$(1)_shared_library_REALCLEANFILES	+= $$($(1)_shared_library_CLEANFILES)
+$(1)_shared_library_MOSTLYCLEANFILES	+= $$($(1)_shared_library_TARGETS)
+$(1)_shared_library_CLEANFILES		+= $$($(1)_shared_library_MOSTLYCLEANFILES)
 
 $$(eval $$(call ds-module,$(1)_shared_library,$$($(1)_shared_library_MAIN_SECTION),LIB))
 
@@ -1326,27 +1337,12 @@ endef
 #page
 
 # $(1) - the identifier of the module
-define ds-c-library-preamble
-ucl_LIBRARY_ID			= @ucl_LIBRARY_ID@
-ucl_LIBRARY_LINK_ID		= @ucl_LIBRARY_LINK_ID@
-ucl_INTERFACE_VERSION		= @ucl_INTERFACE_VERSION@
-ucl_INTERFACE_MAJOR_VERSION	= @ucl_INTERFACE_MAJOR_VERSION@
-ucl_INTERFACE_MINOR_VERSION	= @ucl_INTERFACE_MINOR_VERSION@
-ucl_SHARED_LIBRARY_ID		= @ucl_SHARED_LIBRARY_ID@
-ucl_SHARED_LIBRARY_LINK_ID	= @ucl_SHARED_LIBRARY_LINK_ID@
-ucl_SHARED_LIBRARY_NAME		= @ucl_SHARED_LIBRARY_NAME@
-ucl_SHARED_LIBRARY_LINK_NAME	= @ucl_SHARED_LIBRARY_LINK_NAME@
-ucl_STATIC_LIBRARY_ID		= @ucl_STATIC_LIBRARY_ID@
-ucl_STATIC_LIBRARY_NAME		= @ucl_STATIC_LIBRARY_NAME@
-endef
-
-# $(1) - the identifier of the module
 define ds-c-static-library
 ifeq ($$(ds_config_ENABLE_STATIC),yes)
 
 $(1)_static_library_BUILDDIR		?= $$(builddir)/libraries.d
 $(1)_static_library_OBJECTS		?= $$($(1)_OBJECTS)
-$(1)_static_library_ID			?= $(1)
+$(1)_static_library_ID			?= $$($(1)_LIBRARY_ID)
 $(1)_static_library_MAIN_SECTION	?= dev
 
 $(1)_static_library_NAME	= lib$$($(1)_static_library_ID).a
@@ -1374,7 +1370,6 @@ endef
 # $(1) - the identifier of the module
 define ds-c-library
 $$(eval $$(call ds-c-sources,$(1)))
-$$(eval $$(call ds-c-library-preamble,$(1)))
 $$(eval $$(call ds-c-static-library,$(1)))
 $$(eval $$(call ds-c-shared-library,$(1)))
 endef

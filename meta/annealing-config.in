@@ -1,6 +1,6 @@
 #!@SHELL@
 # @PACKAGE_NAME_LOWERCASE@-config --
-# 
+#
 # Package configuration script.
 
 #page
@@ -10,9 +10,6 @@
 
 PACKAGE_NAME="@PACKAGE_NAME@"
 PACKAGE_VERSION="@PACKAGE_VERSION@"
-PACKAGE_VERSION_MAJOR_MINOR="@PACKAGE_VERSION_MAJOR_MINOR@"
-PACKAGE_XVERSION="@PACKAGE_XVERSION@"
-PACKAGE_NAME_LOWERCASE="@PACKAGE_NAME_LOWERCASE@"
 
 prefix="@prefix@"
 exec_prefix="@exec_prefix@"
@@ -31,7 +28,7 @@ sbindir="@sbindir@"
 sharedstatedir="@sharedstatedir@"
 sysconfdir="@sysconfdir@"
 
-PKG_DIR="@PKG_DIR@"
+PKG_DIR="${PACKAGE_NAME}/${PACKAGE_VERSION}"
 pkgdatadir="@pkgdatadir@"
 pkgdocdir="@pkgdocdir@"
 pkgexampledir="@pkgexampledir@"
@@ -40,8 +37,6 @@ pkgincludedir="@pkgincludedir@"
 pkglibdir="@pkglibdir@"
 pkglibexecdir="@pkglibexecdir@"
 pkgsysconfdir="@pkgsysconfdir@"
-
-## ------------------------------------------------------------
 
 #page
 ## ------------------------------------------------------------
@@ -52,17 +47,8 @@ case "$1" in
     --package-name)
 	echo "${PACKAGE_NAME}"
 	;;
-    --package-name-lowercase)
-	echo "${PACKAGE_NAME_LOWERCASE}"
-	;;
     --package-version)
 	echo "${PACKAGE_VERSION}"
-	;;
-    --package-version-majmin)
-	echo "${PACKAGE_VERSION_MAJOR_MINOR}"
-	;;
-    --package-xversion)
-	echo "${PACKAGE_XVERSION}"
 	;;
 
     ## ----------------------------------------
@@ -87,7 +73,7 @@ case "$1" in
     --static-library-name)
         # print the the static library file name
         echo "@annealing_STATIC_LIBRARY_NAME@"
-        ;;      
+        ;;
 
     ## ----------------------------------------
 
@@ -167,10 +153,7 @@ case "$1" in
 options:
 
     --package-name              print the package name
-    --package-name-lowercase    print the package name in lower case chars
     --package-version           print the full package version
-    --package-version-majmin    print the MAJOR.MINOR package version
-    --package-xversion          print the extended full package version
 
     --library-interface-version
                                 print the library interface version

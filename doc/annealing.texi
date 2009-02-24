@@ -1863,7 +1863,7 @@ library bug, please signal this to the author using the bug tracking
 system.
 
 The only exception to this rule is the wrong behaviour caused by bugs;
-code that relies on buggy behaviour of a package version may, not work
+code that relies on buggy behaviour of a package version may not work
 with subsequent package versions with the same major interface number.
 
 @item minor

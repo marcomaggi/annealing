@@ -715,6 +715,7 @@ pkginfodir
 pkgexampledir
 pkgdocdir
 pkgdatadir
+PKG_DIR
 DVIPS
 TEXI2PDF
 TAR
@@ -756,6 +757,7 @@ DS_INCLUDE_DOC_RULES
 DS_INCLUDE_BIN_RULES
 CONFIGURATIONDIR
 INFRASTRUCTUREDIR
+PKG_ID
 target_alias
 host_alias
 build_alias
@@ -1950,7 +1952,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-{ $as_echo "$as_me:$LINENO: checking infrastructure directory" >&5
+PKG_ID=\${PACKAGE_NAME}_\${PACKAGE_VERSION}
+
+   { $as_echo "$as_me:$LINENO: checking infrastructure directory" >&5
 $as_echo_n "checking infrastructure directory... " >&6; }
 if test "${develstuff_cv_INFRASTRUCTUREDIR+set}" = set; then
   $as_echo_n "(cached) " >&6
@@ -2099,13 +2103,13 @@ fi
 rm -f confcache
 DS_INCLUDE_BIN_RULES=yes
 
-DS_INCLUDE_DOC_RULES=yes
+   DS_INCLUDE_DOC_RULES=yes
 
-DS_INCLUDE_DEV_RULES=yes
+   DS_INCLUDE_DEV_RULES=yes
 
-DS_INCLUDE_AUTOCONF_DIRS=yes
+   DS_INCLUDE_AUTOCONF_DIRS=yes
 
-DS_INCLUDE_DEVELSTUFF_DIRS=yes
+   DS_INCLUDE_DEVELSTUFF_DIRS=yes
 
 { $as_echo "$as_me:$LINENO: checking rules for abi and abu shortcuts" >&5
 $as_echo_n "checking rules for abi and abu shortcuts... " >&6; }
@@ -3246,7 +3250,9 @@ $as_echo "$as_me: not updating unwritable cache $cache_file" >&6;}
   fi
 fi
 rm -f confcache
-pkgdatadir=\${datadir}/\${PKG_DIR}
+PKG_DIR=\${PACKAGE_NAME}/\${PACKAGE_VERSION}
+
+    pkgdatadir=\${datadir}/\${PKG_DIR}
 
     pkgdocdir=\${docdir}/\${PKG_DIR}
 
@@ -11444,9 +11450,9 @@ _ACEOF
 
 
 
-annealing_LIBRARY_ID=1.0
+annealing_LIBRARY_ID=annealing1.0
 
-   annealing_LIBRARY_LINK_ID=1
+   annealing_LIBRARY_LINK_ID=annealing1
 
    annealing_INTERFACE_VERSION=1.0
 
@@ -11456,7 +11462,7 @@ annealing_LIBRARY_ID=1.0
 
 
 cat >>confdefs.h <<\_ACEOF
-#define annealing_LIBRARY_ID 1.0
+#define annealing_LIBRARY_ID annealing1.0
 _ACEOF
 
 
