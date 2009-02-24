@@ -5,7 +5,9 @@
    
    Abstract
    
-   
+	Find the best fit against a vector of sample for the exponential
+	model: 'y(t)  = A *  exp(-lam * t)  + b', with  parameters: 'A',
+	'lam', 'b'.
    
    Copyright (c) 2007 Marco Maggi
    
@@ -35,17 +37,14 @@
 #include <math.h>
 #include <unistd.h>
 #include <gsl/gsl_rng.h>
-#include "gsl_annealing.h"
+#include "annealing.h"
 
 
-static	gsl_annealing_energy_fun_t	energy_function;
-static	gsl_annealing_step_fun_t	step_function;
-static	gsl_annealing_log_fun_t		log_function;
-static	gsl_annealing_copy_fun_t	copy_function;
+static	annealing_energy_fun_t	energy_function;
+static	annealing_step_fun_t	step_function;
+static	annealing_log_fun_t	log_function;
+static	annealing_copy_fun_t	copy_function;
 
-
-/* Why do I have to do this even if I have included "unistd.h"? */
-extern int getopt (int argc, char ** argv, const char * options);
 
 /* ------------------------------------------------------------ */
 
@@ -63,6 +62,12 @@ typedef struct fitting_data_t {
   double	observations[NUM];
 } fitting_data_t;
 
+typedef struct fitting_step_t {
+  double	A;
+  double	lambda;
+  double	b;
+} fitting_step_t;
+
 static const configuration_t original_params = { 5.0, 0.1, 7.0 };
 
 static void make_observations	(double * t, double * observations, size_t num);
@@ -79,10 +84,10 @@ static double y			(double t, const configuration_t * params);
 int
 main (int argc, char ** argv)
 {
-  gsl_annealing_simple_workspace_t	S;
+  annealing_simple_workspace_t	S;
   fitting_data_t	D;
+  fitting_step_t	max_step = { 1.0, 0.1, 1.0 };
   configuration_t	configurations[3];
-  double		max_step = 1.0;
   int			verbose_mode = 0;
   
 
@@ -93,13 +98,13 @@ main (int argc, char ** argv)
       switch (c)
 	{
 	case 'h':
-	  fprintf(stderr, "usage: test_sinxy [-v] [-h]\n");
+	  fprintf(stderr, "usage: test_fitting [-v] [-h]\n");
 	  goto exit;
 	case 'v':
 	  verbose_mode = 1;
 	  break;
 	default:
-	  fprintf(stderr, "test_sinxy error: unknown option %c\n", c);
+	  fprintf(stderr, "test_fitting error: unknown option %c\n", c);
 	  exit(EXIT_FAILURE);
 	}
   }
@@ -129,13 +134,14 @@ main (int argc, char ** argv)
     S.step_function		= step_function;
     S.copy_function		= copy_function;
     S.log_function		= (verbose_mode)? log_function : NULL;
+    S.cooling_function		= NULL;
 
     S.numbers_generator		= gsl_rng_alloc(gsl_rng_rand);
     gsl_rng_set(S.numbers_generator, 15);
 
-    S.configuration		= &(configurations[0]);
-    S.best_configuration	= &(configurations[1]);
-    S.new_configuration		= &(configurations[2]);
+    S.current_configuration.data= &(configurations[0]);
+    S.best_configuration.data	= &(configurations[1]);
+    S.new_configuration.data	= &(configurations[2]);
 
     /* start configuration */
     configurations[0].A		= 6.0;
@@ -145,9 +151,9 @@ main (int argc, char ** argv)
     S.params			= &D;
   }
 
-  gsl_annealing_simple_solve(&S);
+  annealing_simple_solve(&S);
 
-  printf("test_sinxy: final best solution: %f, %f, %f; originall: %g, %g, %g\n",
+  printf("test_fitting: final best solution: %f, %f, %f; original: %g, %g, %g\n",
 	 configurations[1].A, configurations[1].lambda, configurations[1].b,
 	 original_params.A, original_params.lambda, original_params.b);
   printf("------------------------------------------------------------\n\n");
@@ -163,17 +169,17 @@ main (int argc, char ** argv)
  ** ----------------------------------------------------------*/
 
 static double
-alea (gsl_annealing_simple_workspace_t * S)
+alea (annealing_simple_workspace_t * S, double max_step)
 {
-  return (2.0 * gsl_rng_uniform(S->numbers_generator) - 1.0) *
-    *((double *)S->max_step_value);
+  return (2.0 * gsl_rng_uniform(S->numbers_generator) - 1.0) * max_step;
 }
 
 /* ------------------------------------------------------------ */
 
 double
-energy_function (gsl_annealing_simple_workspace_t * S, void * configuration)
+energy_function (void * W, void * configuration)
 {
+  annealing_simple_workspace_t * S = W;
   configuration_t *	C = configuration;
   fitting_data_t *	D = S->params;
   double		norm = 0.0, delta;
@@ -186,23 +192,26 @@ energy_function (gsl_annealing_simple_workspace_t * S, void * configuration)
   return norm;
 }
 void
-step_function (gsl_annealing_simple_workspace_t * S, void * configuration)
+step_function (void * W, void * configuration)
 {
+  annealing_simple_workspace_t * S = W;
   configuration_t *	C = configuration;
+  fitting_step_t *	step = S->max_step_value;
 
-  C->A		+= alea(S);
-  C->lambda	+= alea(S) * 0.1;
-  C->b		+= alea(S);
+  C->A		+= alea(S, step->A);
+  C->lambda	+= alea(S, step->lambda);
+  C->b		+= alea(S, step->b);
 }
 void
-log_function (gsl_annealing_simple_workspace_t * S)
+log_function (void * W)
 {
-  configuration_t *	C = S->configuration;
-  configuration_t *	B = S->best_configuration;
+  annealing_simple_workspace_t * S = W;
+  configuration_t *	C = S->current_configuration.data;
+  configuration_t *	B = S->best_configuration.data;
 
   printf("current: %f, %f, %f (energy %f); best: %f, %f, %f (energy %f)\n",
-	 C->A, C->lambda, C->b, energy_function(S, S->configuration),
-	 B->A, B->lambda, B->b, energy_function(S, S->best_configuration));
+	 C->A, C->lambda, C->b, S->current_configuration.energy,
+	 B->A, B->lambda, B->b, S->best_configuration.energy);
 }
 
 /* ------------------------------------------------------------ */
@@ -213,8 +222,7 @@ log_function (gsl_annealing_simple_workspace_t * S)
  ** ----------------------------------------------------------*/
 
 void
-copy_function (gsl_annealing_simple_workspace_t	* dummy,
-	       void * dst_configuration, void * src_configuration)
+copy_function (void * dummy ANNEALING_UNUSED, void * dst_configuration, void * src_configuration)
 {
   configuration_t *	dst = dst_configuration;
   configuration_t *	src = src_configuration;

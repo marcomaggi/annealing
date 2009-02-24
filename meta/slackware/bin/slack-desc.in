@@ -1,0 +1,12 @@
+                        |-----handy-ruler-----------------------------------------------|
+@PACKAGE_NAME_LOWERCASE@: @PACKAGE_NAME@ @PACKAGE_XVERSION@
+@PACKAGE_NAME_LOWERCASE@:
+@PACKAGE_NAME_LOWERCASE@: Annealing is a C language extension library for GSL, the GNU
+@PACKAGE_NAME_LOWERCASE@: Scientific Library,  attempting a redesign  of the simulated
+@PACKAGE_NAME_LOWERCASE@: annealing module.
+@PACKAGE_NAME_LOWERCASE@: 
+@PACKAGE_NAME_LOWERCASE@:
+@PACKAGE_NAME_LOWERCASE@:
+@PACKAGE_NAME_LOWERCASE@:
+@PACKAGE_NAME_LOWERCASE@:
+@PACKAGE_NAME_LOWERCASE@:

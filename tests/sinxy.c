@@ -5,24 +5,27 @@
    
    Abstract
    
-   
+	Find the minimum of 'f(t) = -sin(sqrt(X*X + Y*Y))/(X*X + Y*Y)'.
    
    Copyright (c) 2007 Marco Maggi
    
-   This is free  software you can redistribute it  and/or modify it under
-   the terms of  the GNU General Public License as  published by the Free
-   Software Foundation; either  version 2, or (at your  option) any later
+   
+   This  program  is free  software:  you  can redistribute  it
+   and/or modify it  under the terms of the  GNU General Public
+   License as published by the Free Software Foundation, either
+   version  3 of  the License,  or (at  your option)  any later
    version.
    
-   This  file is  distributed in  the hope  that it  will be  useful, but
-   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
-   MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
-   General Public License for more details.
+   This  program is  distributed in  the hope  that it  will be
+   useful, but  WITHOUT ANY WARRANTY; without  even the implied
+   warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
+   PURPOSE.   See  the  GNU  General Public  License  for  more
+   details.
    
-   You  should have received  a copy  of the  GNU General  Public License
-   along with this file; see the file COPYING.  If not, write to the Free
-   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
-   02111-1307, USA.
+   You should  have received a  copy of the GNU  General Public
+   License   along   with    this   program.    If   not,   see
+   <http://www.gnu.org/licenses/>.
+   
 */
 
 
@@ -34,19 +37,17 @@
 #include <stdlib.h>
 #include <math.h>
 #include <unistd.h>
+#include <float.h>
 #include <gsl/gsl_rng.h>
-#include "gsl_annealing.h"
+#include "annealing.h"
 
 
-static	gsl_annealing_energy_fun_t	energy_function;
-static	gsl_annealing_step_fun_t	step_function;
-static	gsl_annealing_log_fun_t		log_function;
-static	gsl_annealing_copy_fun_t	copy_function;
+static	annealing_energy_fun_t	energy_function;
+static	annealing_step_fun_t	step_function;
+static	annealing_log_fun_t	log_function;
+static	annealing_copy_fun_t	copy_function;
 
-
-/* Why do I have to do this even if I have included "unistd.h"? */
-extern int getopt (int argc, char ** argv, const char * options);
-
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -56,9 +57,9 @@ extern int getopt (int argc, char ** argv, const char * options);
 int
 main (int argc, char ** argv)
 {
-  gsl_annealing_simple_workspace_t	S;
+  annealing_simple_workspace_t	S;
   double	configurations[3][2];
-  double	max_step = 10.0;
+  double	max_step = 100.0;
   int		verbose_mode = 0;
   
 
@@ -83,12 +84,12 @@ main (int argc, char ** argv)
   printf("\n------------------------------------------------------------\n");
   printf("test_sinxy: sinxy minimisation with simulated annealing\n");
 
-  S.number_of_iterations_at_fixed_temperature = 10;
+  S.number_of_iterations_at_fixed_temperature = 100;
   S.max_step_value	= &max_step;
 
-  S.temperature		= 10.0;
+  S.temperature		= 60.0;
   S.minimum_temperature	= 1.0e-6;
-  S.restart_temperature	= S.temperature; /* do not restart */
+  S.restart_temperature	= DBL_MIN; /* do not restart */
   S.boltzmann_constant	= 1.0;
   S.damping_factor	= 1.005;
 
@@ -96,18 +97,19 @@ main (int argc, char ** argv)
   S.step_function	= step_function;
   S.copy_function	= copy_function;
   S.log_function	= (verbose_mode)? log_function : NULL;
+  S.cooling_function	= NULL;
 
   S.numbers_generator	= gsl_rng_alloc(gsl_rng_rand);
   gsl_rng_set(S.numbers_generator, 15);
 
-  S.configuration	= &(configurations[0]);
-  S.best_configuration	= &(configurations[1]);
-  S.new_configuration	= &(configurations[2]);
+  S.current_configuration.data	= &(configurations[0]);
+  S.best_configuration.data	= &(configurations[1]);
+  S.new_configuration.data	= &(configurations[2]);
 
   configurations[0][0] = 15.0;
   configurations[0][1] = 15.0;
 
-  gsl_annealing_simple_solve(&S);
+  annealing_simple_solve(&S);
 
   printf("test_sinxy: final best solution: %f,%f; global 0.0,0.0\n",
 	 configurations[1][0], configurations[1][1]);
@@ -124,7 +126,7 @@ main (int argc, char ** argv)
  ** ----------------------------------------------------------*/
 
 static double
-alea (gsl_annealing_simple_workspace_t * S)
+alea (annealing_simple_workspace_t * S)
 {
   return (2.0 * gsl_rng_uniform(S->numbers_generator) - 1.0) *
     *((double *)S->max_step_value);
@@ -133,8 +135,7 @@ alea (gsl_annealing_simple_workspace_t * S)
 /* ------------------------------------------------------------ */
 
 double
-energy_function (gsl_annealing_simple_workspace_t * S,
-		 void * configuration)
+energy_function (void * dummy ANNEALING_UNUSED, void * configuration)
 {
   double *	C = configuration;
   double	X = C[0], Y = C[1];
@@ -142,22 +143,27 @@ energy_function (gsl_annealing_simple_workspace_t * S,
   return -sin(sqrt(X*X + Y*Y))/(X*X + Y*Y);
 }
 void
-step_function (gsl_annealing_simple_workspace_t * S, void * configuration)
+step_function (void * W, void * configuration)
 {
+  annealing_simple_workspace_t * S = W;
   double *	C = configuration;
+  double	c0, c1;
 
-  C[0] += alea(S);
-  C[1] += alea(S);
+  do c0 = C[0] + alea(S); while (fabs(c0) > 30.0);
+  C[0] = c0;
+  do c1 = C[1] + alea(S); while (fabs(c1) > 30.0);
+  C[1] = c1;
 }
 void
-log_function (gsl_annealing_simple_workspace_t * S)
+log_function (void * W)
 {
-  double *	C = S->configuration;
-  double *	B = S->best_configuration;
+  annealing_simple_workspace_t * S = W;
+  double *	C = S->current_configuration.data;
+  double *	B = S->best_configuration.data;
 
   printf("current %f,%f (energy %f), best %f,%f (energy %f)\n",
-	 C[0], C[1], energy_function(S, S->configuration),
-	 B[0], B[1], energy_function(S, S->best_configuration));
+	 C[0], C[1], S->current_configuration.energy,
+	 B[0], B[1], S->best_configuration.energy);
 }
 
 
@@ -166,8 +172,7 @@ log_function (gsl_annealing_simple_workspace_t * S)
  ** ----------------------------------------------------------*/
 
 void
-copy_function (gsl_annealing_simple_workspace_t	* dummy,
-	       void * dst_configuration, void * src_configuration)
+copy_function (void * dummy ANNEALING_UNUSED, void * dst_configuration, void * src_configuration)
 {
   double *	dst = dst_configuration;
   double *	src = src_configuration;

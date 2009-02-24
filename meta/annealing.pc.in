@@ -1,0 +1,50 @@
+PACKAGE_NAME=@PACKAGE_NAME@
+PACKAGE_VERSION=@PACKAGE_VERSION@
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+
+bindir=@bindir@
+datarootdir=@datarootdir@
+datadir=@datadir@
+docdir=${prefix}/doc
+includedir=@includedir@
+infodir=@infodir@
+libdir=@libdir@
+libexecdir=@libexecdir@
+localstatedir=@localstatedir@
+mandir=@mandir@
+sbindir=@sbindir@
+sharedstatedir=@sharedstatedir@
+sysconfdir=@sysconfdir@
+
+PKG_DIR=@PKG_DIR@
+pkgdatadir=@pkgdatadir@
+pkgdocdir=@pkgdocdir@
+pkgexampledir=@pkgexampledir@
+pkghtmldir=@pkghtmldir@
+pkgincludedir=@pkgincludedir@
+pkglibdir=@pkglibdir@
+pkglibexecdir=@pkglibexecdir@
+pkgsysconfdir=@pkgsysconfdir@
+
+library_interface_version=@annealing_INTERFACE_VERSION@
+library_interface_major_version=@annealing_INTERFACE_MAJOR_VERSION@
+library_interface_minor_version=@annealing_INTERFACE_MINOR_VERSION@
+library_id=@annealing_LIBRARY_ID@
+shared_library_name=@annealing_SHARED_LIBRARY_NAME@
+static_library_name=@annealing_STATIC_LIBRARY_NAME@
+
+## ------------------------------------------------------------
+
+Name: Annealing
+Description: GNU Scientific Library extension for simulated annealing
+Version: ${library_interface_version}
+Libs: -L${libdir} -l${library_id}
+Cflags: -I${pkgincludedir}
+Requires: gsl >= 1.9
+
+### end of file
+# Local Variables:
+# mode: script
+# End:
