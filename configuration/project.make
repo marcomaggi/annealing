@@ -16,40 +16,27 @@ LIBS		+= $(GSL_LIBS)
 ## Library.
 ## ------------------------------------------------------------
 
-annealing_LIBRARY_ID			= @annealing_LIBRARY_ID@
-annealing_LIBRARY_LINK_ID		= @annealing_LIBRARY_LINK_ID@
-annealing_INTERFACE_VERSION		= @annealing_INTERFACE_VERSION@
-annealing_INTERFACE_MAJOR_VERSION	= @annealing_INTERFACE_MAJOR_VERSION@
-annealing_INTERFACE_MINOR_VERSION	= @annealing_INTERFACE_MINOR_VERSION@
-annealing_SHARED_LIBRARY_ID		= @annealing_SHARED_LIBRARY_ID@
-annealing_SHARED_LIBRARY_LINK_ID	= @annealing_SHARED_LIBRARY_LINK_ID@
-annealing_SHARED_LIBRARY_NAME		= @annealing_SHARED_LIBRARY_NAME@
-annealing_SHARED_LIBRARY_LINK_NAME	= @annealing_SHARED_LIBRARY_LINK_NAME@
-annealing_STATIC_LIBRARY_ID		= @annealing_STATIC_LIBRARY_ID@
-annealing_STATIC_LIBRARY_NAME		= @annealing_STATIC_LIBRARY_NAME@
-
 annealing_PREREQUISITES	= internal.h annealing.h
 
-$(eval $(call ds-c-sources,annealing,$(srcdir)/src,*.c))
-$(eval $(call ds-c-shared-library,annealing,$(annealing_LIBRARY_ID),$(annealing_TARGETS)))
-$(eval $(call ds-c-static-library,annealing,$(annealing_LIBRARY_ID),$(annealing_TARGETS)))
-$(eval $(call ds-h-files-installer,annealing,$(srcdir)/src,annealing.h))
+$(eval $(call ds-c-library,annealing))
 
 #page
 ## ------------------------------------------------------------
 ## Tests with shared library.
 ## ------------------------------------------------------------
 
+# shared_tests_MAIN_SECTION	= nop
 # shared_tests_BUILDDIR		= $(builddir)/shared-tests.d
 # shared_tests_CC_COMPILE		= $(CC) $(ALL_CFLAGS) -I$(annealing_SRCDIR) $(CFLAGS) $(CC_COMPILE_OUTPUT)
 # shared_tests_PREREQUISITES	= $(annealing_SRCDIR)/annealing.h
-# shared_tests_test_programs_BUILDDIR = $(shared_tests_BUILDDIR)
 
-# $(eval $(call ds-c-sources-nop,shared_tests,$(srcdir)/tests,*.c))
-# $(eval $(call ds-c-test-programs,shared_tests,$(shared_tests_TARGETS),\
+# shared_tests_programs_MAIN_SECTION	= nop
+# shared_tests_programs_BUILDDIR		= $(shared_tests_BUILDDIR)
+
+# $(eval $(call ds-c-test-programs,shared))
 # 	-l$(annealing_LIBRARY_ID) -L$(annealing_shared_library_BUILDDIR)))
 
-# ## ------------------------------------------------------------
+## ------------------------------------------------------------
 
 # ifeq ($(strip $(ds_config_ENABLE_STATIC)),yes)
 
@@ -63,7 +50,7 @@ $(eval $(call ds-h-files-installer,annealing,$(srcdir)/src,annealing.h))
 
 # endif
 
-# ## ------------------------------------------------------------
+## ------------------------------------------------------------
 
 # shared_test_NAMES	= $(basename $(notdir $(shared_tests_SOURCES)))
 
@@ -95,10 +82,10 @@ $(eval $(call ds-h-files-installer,annealing,$(srcdir)/src,annealing.h))
 
 # ## ------------------------------------------------------------
 
-# #page
-# ## ------------------------------------------------------------
-# ## Miscelleous stuff.
-# ## ------------------------------------------------------------
+#page
+## ------------------------------------------------------------
+## Miscelleous stuff.
+## ------------------------------------------------------------
 
 # $(eval $(call ds-cc-build-program-no-libs,compute_iterations_program_CC_BUILD,\
 # 	-L$(builddir)/library.d -l$(annealing_LIBRARY_ID)))

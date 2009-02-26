@@ -5,13 +5,12 @@ dnl Date: Thu Dec 18, 2003
 dnl
 dnl Abstract
 dnl
-dnl     This is a library of GNU Autoconf macros that automate commont
-dnl     tasks in the configuration of a project.
+dnl     This is a library of GNU Autoconf macros that automate common
+dnl     tasks in the configuration of a project.  This library should be
+dnl     installed under the "infrastructure" subdirectory of a project's
+dnl     source tree, and loaded by putting:
 dnl
-dnl       This library should be installed under the "infrastructure"
-dnl     subdirectory of a project's source tree, and loaded by putting
-dnl
-dnl         m4_include(infrastructure/acmacros.m4)
+dnl         m4_include(infrastructure/develstuff.autoconf)
 dnl
 dnl     in the "aclocal.m4" file.
 dnl
@@ -76,24 +75,19 @@ AC_DEFUN_ONCE([DS_FIND_CONFIGURATION],
 AC_DEFUN([DS_INCLUDE_SECTION],
   [AC_SUBST([DS_INCLUDE_$1],[$2])])
 
-AC_DEFUN([DS_DEFAULT_SECTIONS],
+AC_DEFUN_ONCE([DS_DEFAULT_SECTIONS],
   [DS_INCLUDE_SECTION([BIN_RULES],[yes])
    DS_INCLUDE_SECTION([DOC_RULES],[yes])
    DS_INCLUDE_SECTION([DEV_RULES],[no])
    DS_INCLUDE_SECTION([AUTOCONF_DIRS],[yes])
    DS_INCLUDE_SECTION([DEVELSTUFF_DIRS],[yes])])
 
-AC_DEFUN([DS_DEFAULT_SECTIONS_DEV],
+AC_DEFUN_ONCE([DS_DEFAULT_SECTIONS_DEV],
   [DS_INCLUDE_SECTION([BIN_RULES],[yes])
    DS_INCLUDE_SECTION([DOC_RULES],[yes])
    DS_INCLUDE_SECTION([DEV_RULES],[yes])
    DS_INCLUDE_SECTION([AUTOCONF_DIRS],[yes])
    DS_INCLUDE_SECTION([DEVELSTUFF_DIRS],[yes])])
-
-dnl page
-dnl ------------------------------------------------------------
-dnl General macros.
-dnl ------------------------------------------------------------
 
 AC_DEFUN_ONCE([DS_OPTIONS],
   [DS_WITH_OPTION([DS_CONFIG_ABI],[abi],[direct],
@@ -126,6 +120,33 @@ AC_DEFUN_ONCE([DS_OPTIONS],
    DS_ENABLE_OPTION([DS_CONFIG_ENABLE_DOC_PS],[doc-ps],[no],
      [whether documentation in PS format will be installed],
      [enable installation of PS documentation])])
+
+dnl page
+dnl ------------------------------------------------------------
+dnl General macros.
+dnl ------------------------------------------------------------
+
+AC_DEFUN_ONCE([DS_SYSTEM_SETUP],
+  [AC_USE_SYSTEM_EXTENSIONS
+   AC_CANONICAL_BUILD
+   AC_CANONICAL_HOST
+   AC_CANONICAL_TARGET
+   AC_SYS_INTERPRETER
+   AC_SYS_LARGEFILE
+   AC_SYS_LONG_FILE_NAMES
+   AC_SYS_POSIX_TERMIOS
+   AC_CACHE_SAVE])
+
+AC_DEFUN_ONCE([DS_COMPILED_STUFF],
+  [DS_ENABLE_OPTION([ds_config_ENABLE_SHARED],[shared],[yes],
+     [whether shared libraries will be built],
+     [enable building shared libraries])
+   DS_ENABLE_OPTION([ds_config_ENABLE_STATIC],[static],[no],
+     [whether static libraries will be built],
+     [enable building static libraries])
+   DS_ENABLE_OPTION([ds_config_ENABLE_STRIP],[strip],[yes],
+     [whether executables and libraries will be stripped of debug symbols],
+     [strip debug symbols from executables and libraries])])
 
 AC_DEFUN_ONCE([DS_PROGRAMS],
   [AC_PROG_INSTALL
@@ -212,32 +233,46 @@ dnl --------------------------------------------------------------------
 dnl Compiled programs and libraries.
 dnl --------------------------------------------------------------------
 
-AC_DEFUN_ONCE([DS_COMPILED_STUFF],
-  [DS_ENABLE_OPTION([ds_config_ENABLE_STRIP],[strip],[yes],
-     [whether executables and libraries will be stripped of debug symbols],
-     [strip debug symbols from executables and libraries])])
+AC_DEFUN_ONCE([DS_C89_LANGUAGE_COMMON_SETUP],
+  [DS_P_C_LANGUAGE_COMMON_SETUP
+   DS_C89_LANGUAGE])
 
+AC_DEFUN_ONCE([DS_C99_LANGUAGE_COMMON_SETUP],
+  [DS_P_C_LANGUAGE_COMMON_SETUP
+   DS_C99_LANGUAGE])
 
-dnl page
-dnl ------------------------------------------------------------
-dnl C language macros.
-dnl ------------------------------------------------------------
+AC_DEFUN_ONCE([DS_P_C_LANGUAGE_COMMON_SETUP],
+  [DS_BEGIN
+   DS_DEFAULT_SECTIONS_DEV
+   DS_OPTIONS
+   DS_PROGRAMS
+   DS_DIRECTORIES
+   DS_PACKAGING
+   DS_COMPILED_STUFF
+   DS_SYSTEM_SETUP])
 
-AC_DEFUN_ONCE([DS_C_LANGUAGE_SYSTEM_SETUP],
-  [AC_USE_SYSTEM_EXTENSIONS
-   AC_SYS_INTERPRETER
-   AC_SYS_LARGEFILE
-   AC_SYS_LONG_FILE_NAMES
-   AC_CANONICAL_BUILD
-   AC_CANONICAL_HOST
-   AC_CANONICAL_TARGET])
+dnl --------------------------------------------------------------------
 
-AC_DEFUN_ONCE([DS_C_LANGUAGE],
-  [AC_REQUIRE([DS_COMPILED_STUFF])
-   AC_CONFIG_HEADERS([config.h])
-   AC_PROG_CC
+AC_DEFUN_ONCE([DS_C99_LANGUAGE],
+  [DS_PRE_C_LANGUAGE
    AC_PROG_CC_C99
-   AC_PROG_CC_C_O
+   DS_POST_C_LANGUAGE])
+
+AC_DEFUN_ONCE([DS_C89_LANGUAGE],
+  [DS_PRE_C_LANGUAGE
+   AC_PROG_CC_C89
+   DS_POST_C_LANGUAGE])
+
+AC_DEFUN_ONCE([DS_PRE_C_LANGUAGE],
+  [AC_CONFIG_HEADERS([config.h])
+   DS_ENABLE_OPTION([ds_config_ENABLE_GCC_WARNING],[gcc-warnings],[yes],
+     [whether the compiler is given options for GCC warnings],
+     [give GCC warning options to the compiler])
+   AC_PROG_CC
+   AC_SUBST([USING_GCC],[$GCC])])
+
+AC_DEFUN_ONCE([DS_POST_C_LANGUAGE],
+  [AC_PROG_CC_C_O
    AC_SUBST([NO_MINUS_C_MINUS_O])
    AC_PROG_CPP
    AC_PROG_RANLIB
@@ -266,16 +301,17 @@ AC_DEFUN_ONCE([DS_C_LANGUAGE],
    AC_C_INLINE
    AC_C_TYPEOF
    AC_C_RESTRICT
+   AC_C_STRINGIZE
    AC_C_VARARRAYS
    AC_C_VOLATILE
    AC_CHECK_TYPES([ptrdiff_t])
    AC_TYPE_SIZE_T
    AC_FUNC_MALLOC
    AC_CHECK_FUNCS([memmove memset strerror strchr])
-   AC_FUNC_ALLOCA
-   AC_SUBST([LDFLAGS_RPATH],['-Wl,-rpath,$(libdir)'])
    AC_CHECK_LIB([dl],[dlopen],[LDFLAGS_DL=-ldl])
    AC_SUBST(LDFLAGS_DL)])
+
+dnl --------------------------------------------------------------------
 
 AC_DEFUN_ONCE([DS_C_LANGUAGE_PTHREADS],
   [DS_ENABLE_OPTION([ds_config_ENABLE_PTHREADS],[pthreads],[no],
@@ -287,14 +323,6 @@ AC_DEFUN_ONCE([DS_C_LANGUAGE_PTHREADS],
      AC_DEFINE([_REENTRANT],[1],[attempt to turn on reentrant functions])
    }
    AC_CACHE_SAVE])
-
-AC_DEFUN_ONCE([DS_C_LANGUAGE_LIBRARIES],
-  [DS_ENABLE_OPTION([ds_config_ENABLE_SHARED],[shared],[yes],
-     [whether shared libraries will be built],
-     [enable building shared libraries])
-   DS_ENABLE_OPTION([ds_config_ENABLE_STATIC],[static],[no],
-     [whether static libraries will be built],
-     [enable building static libraries])])
 
 dnl 1 - VARIABLE_PREFIX
 dnl 2 - MAJOR_INTERFACE_VERSION
@@ -321,7 +349,21 @@ AC_DEFUN([DS_C_LANGUAGE_LIBRARY],
    AC_SUBST([$1_SHARED_LIBRARY_NAME])
    AC_SUBST([$1_SHARED_LIBRARY_LINK_NAME])
    AC_SUBST([$1_STATIC_LIBRARY_ID])
-   AC_SUBST([$1_STATIC_LIBRARY_NAME])])
+   AC_SUBST([$1_STATIC_LIBRARY_NAME])
+   mkdir -p meta.d/makefiles
+   echo "
+$1_LIBRARY_ID			= ${$1_LIBRARY_ID}
+$1_LIBRARY_LINK_ID		= ${$1_LIBRARY_LINK_ID}
+$1_INTERFACE_VERSION		= ${$1_INTERFACE_VERSION}
+$1_INTERFACE_MAJOR_VERSION	= ${$1_INTERFACE_MAJOR_VERSION}
+$1_INTERFACE_MINOR_VERSION	= ${$1_INTERFACE_MINOR_VERSION}
+$1_SHARED_LIBRARY_ID		= ${$1_SHARED_LIBRARY_ID}
+$1_SHARED_LIBRARY_LINK_ID	= ${$1_SHARED_LIBRARY_LINK_ID}
+$1_SHARED_LIBRARY_NAME		= ${$1_SHARED_LIBRARY_NAME}
+$1_SHARED_LIBRARY_LINK_NAME	= ${$1_SHARED_LIBRARY_LINK_NAME}
+$1_STATIC_LIBRARY_ID		= ${$1_STATIC_LIBRARY_ID}
+$1_STATIC_LIBRARY_NAME		= ${$1_STATIC_LIBRARY_NAME}
+   " >"meta.d/makefiles/$1-clib.make"])
 
 dnl page
 dnl --------------------------------------------------------------------
@@ -408,7 +450,7 @@ AC_DEFUN([DS_WITH_SAVED_VARIABLE],
    $2
    $1=${ds_private_$1}])
 
-AC_DEFUN([DS_CONFIG_FILES],
+AC_DEFUN_ONCE([DS_CONFIG_FILES],
   [AC_CONFIG_FILES([meta.d/makefiles/develstuff.make:${srcdir}/infrastructure/develstuff.make])
    AC_CONFIG_FILES([meta.d/makefiles/project.make:${srcdir}/configuration/project.make])
    AC_CONFIG_FILES([Makefile])])

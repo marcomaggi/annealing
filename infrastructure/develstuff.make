@@ -65,6 +65,12 @@ ds_config_VERBOSE_MESSAGES	?= yes
 #
 ds_config_COMPRESSOR		?= @GZIP@
 
+ds_config_ENABLE_STATIC		?= @ds_config_ENABLE_STATIC@
+ds_config_ENABLE_SHARED		?= @ds_config_ENABLE_SHARED@
+ds_config_ENABLE_STRIP		?= @ds_config_ENABLE_STRIP@
+ds_config_ENABLE_PTHREADS	?= @ds_config_ENABLE_PTHREADS@
+ds_config_ENABLE_GCC_WARNING	?= @ds_config_ENABLE_GCC_WARNING@
+
 #page
 ## --------------------------------------------------------------------
 ## Package variables.
@@ -117,8 +123,9 @@ endef
 
 ds_INCLUDED_RULES = \
 	$(if $(filter yes,$(ds_include_BIN_RULES)),bin) \
-	$(if $(filter yes,$(ds_include_DOC_RULES)),doc) \
-	$(if $(filter yes,$(ds_include_DEV_RULES)),dev)
+	$(if $(filter yes,$(ds_include_DEV_RULES)),dev) \
+	$(if $(filter yes,$(ds_include_DOC_RULES)),doc)
+
 
 .PHONY:	all						\
 	clean		mostlyclean			\
@@ -444,76 +451,101 @@ INSTALL_DATA	= $$(INSTALL) -p -m $$(INSTALL_DATA_MODE)
 endef
 
 #page
-## ---------------------------------------------------------------------
-## Source modules.
-## ---------------------------------------------------------------------
-
 define ds-module
 # $(1) - is the module identifier
-# $(2) - is the main section: bin, dev, doc, nop, test, or whatever
+# $(2) - is the ruleset: bin, dev, doc, nop, test, or whatever
 # $(3) - is the installation mode, second argument to 'ds-install-module'
 
-.PHONY: $$(addprefix $(1)-,	all clean mostlyclean				\
-				install preinstall install-body postinstall	\
-				uninstall uninstall-aux				\
-				\
-				print-install-files-layout			\
-				print-install-dirs-layout			\
-				print-install-layout				\
-				\
-				print-install-files-layout-aux			\
-				print-install-dirs-layout-aux			\
-				print-install-layout-aux			\
-				\
-				print-uninstall-files-script			\
-				print-uninstall-dirs-script			\
-				print-uninstall-script				\
-				\
-				print-uninstall-files-script-aux		\
-				print-uninstall-dirs-script-aux			\
-				print-uninstall-script-aux)
+$$(eval $$(call ds-module-no-install,$(1),$(2)))
+$$(eval $$(call ds-module-install-rules,$(1),$(2),$(3)))
+endef
+
+define ds-module-no-install
+# $(1) - is the module identifier
+# $(2) - is the ruleset: bin, dev, doc, nop, test, or whatever
+.PHONY: $$(addprefix $(1)-,all mostlyclean clean)
 
 $(1)-all: $$($(1)_TARGETS)
-$(1)-mostlyclean:			; -@$$(call ds-mostlyclean-files,$(1))
-$(1)-clean:				; -@$$(call ds-clean-files,$(1))
-$(1)-install:	$(1)-preinstall $(1)-install-body $(1)-postinstall
-$(1)-uninstall:	$(1)-uninstall-aux	; @$$(call ds-uninstall-module,$(1))
-$(1)-install-aux:
-$(1)-uninstall-aux:
-
-$(1)-preinstall:
-$(1)-install-body: ; @$$(call ds-install-module,$(1),$(if $(3),$(3),DATA))
-$(1)-postinstall:
-
-$(1)-print-install-files-layout:	$(1)-print-install-files-layout-aux
-	@$$(call ds-module-print-files-layout,$(1))
-$(1)-print-install-dirs-layout:		$(1)-print-install-dirs-layout-aux
-	@$$(call ds-module-print-dirs-layout,$(1))
-$(1)-print-install-layout:		$(1)-print-install-layout-aux
-	@$$(call ds-module-print-layout,$(1))
-
-$(1)-print-install-files-layout-aux:
-$(1)-print-install-dirs-layout-aux:
-$(1)-print-install-layout-aux:		$(1)-print-install-files-layout-aux \
-					$(1)-print-install-dirs-layout-aux
-
-$(1)-print-uninstall-files-script:	$(1)-print-uninstall-files-script-aux
-	@$$(call ds-module-print-uninstall-files-script,$(1))
-$(1)-print-uninstall-dirs-script:	$(1)-print-uninstall-dirs-script-aux
-	@$$(call ds-module-print-uninstall-dirs-script,$(1))
-$(1)-print-uninstall-script:		$(1)-print-uninstall-script-aux
-	@$$(call ds-module-print-uninstall-script,$(1))
-
-$(1)-print-uninstall-files-script-aux:
-$(1)-print-uninstall-dirs-script-aux:
-$(1)-print-uninstall-script-aux:	$(1)-print-uninstall-files-script-aux \
-					$(1)-print-uninstall-dirs-script-aux
-
-# ------------------------------------------------------------
+$(1)-mostlyclean:	; -@$$(call ds-mostlyclean-files,$(1))
+$(1)-clean:		; -@$$(call ds-clean-files,$(1))
 
 $(2):			$(1)-all
 $(2)-mostlyclean:	$(1)-mostlyclean
 $(2)-clean:		$(1)-clean
+endef
+
+define ds-module-install-rules
+# $(1) - is the module identifier
+# $(2) - is the ruleset: bin, dev, doc, nop, test, or whatever
+# $(3) - is the installation mode, second argument to 'ds-install-module'
+.PHONY: $$(addprefix $(1)-,install install-pre install-body install-post)
+
+$(1)-install:		$$(addprefix $(1)-install-,pre body post)
+$(1)-install-pre:
+$(1)-install-body:	; @$$(call ds-install-module,$(1),$$(if $(3),$(3),DATA))
+$(1)-install-post:
+
+.PHONY: $$(addprefix $(1)-,uninstall uninstall-pre uninstall-body uninstall-post)
+
+$(1)-uninstall:		$$(addprefix $(1)-uninstall-,pre body post)
+$(1)-uninstall-pre:
+$(1)-uninstall-body:	; @$$(call ds-uninstall-module,$(1))
+$(1)-uninstall-post:
+
+.PHONY: $$(addprefix $(1)-print-install-files-,layout layout-pre layout-body layout-post)
+
+$(1)-print-install-files-layout:	\
+	$$(addprefix $(1)-print-install-files-layout-,pre body post)
+$(1)-print-install-files-layout-pre:
+$(1)-print-install-files-layout-body: ; @$$(call ds-module-print-files-layout,$(1))
+$(1)-print-install-files-layout-post:
+
+.PHONY: $$(addprefix $(1)-print-install-dirs-,layout layout-pre layout-body layout-post)
+
+$(1)-print-install-dirs-layout:		\
+	$$(addprefix $(1)-print-install-dirs-layout-,pre body post)
+$(1)-print-install-dirs-layout-pre:
+$(1)-print-install-dirs-layout-body: ; @$$(call ds-module-print-dirs-layout,$(1))
+$(1)-print-install-dirs-layout-post:
+
+.PHONY: $$(addprefix $(1)-print-install-,layout layout-pre layout-body layout-post)
+
+$(1)-print-install-layout:	\
+	$$(addprefix $(1)-print-install-layout-,pre body post)
+$(1)-print-install-layout-pre:	\
+	$(1)-print-install-dirs-layout-pre  $(1)-print-install-files-layout-pre
+$(1)-print-install-layout-body:	\
+	$(1)-print-install-dirs-layout-body $(1)-print-install-files-layout-body
+$(1)-print-install-layout-post:	\
+	$(1)-print-install-dirs-layout-post $(1)-print-install-files-layout-post
+
+.PHONY: $$(addprefix $(1)-print-uninstall-files-,script script-pre script-body script-post)
+
+$(1)-print-uninstall-files-script:	\
+	$$(addprefix $(1)-print-uninstall-files-script,pre body post)
+$(1)-print-uninstall-files-script-pre:
+$(1)-print-uninstall-files-script-body: ; @$$(call ds-module-print-uninstall-files-script,$(1))
+$(1)-print-uninstall-files-script-post:
+
+.PHONY: $$(addprefix $(1)-print-uninstall-dirs-,script script-pre script-body script-post)
+
+$(1)-print-uninstall-dirs-script:	\
+	$$(addprefix $(1)-print-uninstall-dirs-script, pre body post)
+$(1)-print-uninstall-dirs-script-pre:
+$(1)-print-uninstall-dirs-script-body: ; @$$(call ds-module-print-uninstall-dirs-script,$(1))
+$(1)-print-uninstall-dirs-script-post:
+
+.PHONY: $$(addprefix $(1)-print-uninstall-,script script-pre script-body script-post)
+
+$(1)-print-uninstall-script:	\
+	$$(addprefix $(1)-print-uninstall-script-, pre body post)
+$(1)-print-uninstall-script-pre:	\
+	$(1)-print-uninstall-files-script-pre  $(1)-print-uninstall-dirs-script-pre
+$(1)-print-uninstall-script-body:	\
+	$(1)-print-uninstall-files-script-body $(1)-print-uninstall-dirs-script-body
+$(1)-print-uninstall-script-post:	\
+	$(1)-print-uninstall-files-script-post $(1)-print-uninstall-dirs-script-post
+
 $(2)-install:		$(1)-install
 $(2)-uninstall:		$(1)-uninstall
 
@@ -527,21 +559,6 @@ $(2)-print-uninstall-files-script:	$(1)-print-uninstall-files-script
 $(2)-print-uninstall-dirs-script: 	$(1)-print-uninstall-dirs-script
 $(2)-print-uninstall-script:		$(1)-print-uninstall-script
 endif
-
-endef
-
-define ds-module-no-install
-# $(1) - is the module identifier
-# $(2) - is the main section: bin, dev, doc, nop, test, or whatever
-.PHONY: $$(addprefix $(1)-,all mostlyclean clean)
-
-$(1)-all: $$($(1)_TARGETS)
-$(1)-mostlyclean:	; -@$$(call ds-mostlyclean-files,$(1))
-$(1)-clean:		; -@$$(call ds-clean-files,$(1))
-
-$(2):			$(1)-all
-$(2)-mostlyclean:	$(1)-mostlyclean
-$(2)-clean:		$(1)-clean
 endef
 
 #page
@@ -1159,191 +1176,184 @@ example-mostlyclean:	examples-mostlyclean
 endef
 
 #page
-
 define ds-c-language
-
-ds_config_ENABLE_STATIC	?= @ds_config_ENABLE_STATIC@
-ds_config_ENABLE_SHARED	?= @ds_config_ENABLE_SHARED@
-ds_config_ENABLE_STRIP	?= yes
 
 CC			= @CC@
 CPP			= @CPP@
 AR			= @AR@ rc
 RANLIB			= @RANLIB@
+ifeq ($$(ds_config_ENABLE_STRIP),yes)
 STRIP			= @STRIP@
+else
+STRIP			= :
+endif
 GDB			= @GDB@
 
-DEFS			?= @DEFS@
-INCLUDES		= -I. -I$$(srcdir)
-CPPFLAGS		?= @CPPFLAGS@ $$(DEFS) $$(INCLUDES)
+CPPFLAGS		?= @CPPFLAGS@
+CFLAGS			?= @CFLAGS@
+LIBS			?= @LIBS@
+LDFLAGS			?= @LDFLAGS@
 
-# Notice  that '-std=c99'  is appended  to  'CC' by  the Autoconf  macro
-# 'AC_PROG_CC_C99'.
-C_DEFAULT		?= -pipe
-C_WARNINGS		?= -Wall -W -Wextra -pedantic			\
+DEFS			= @DEFS@
+LDFLAGS_RPATH		= -Wl,-rpath,$(libdir)
+LDFLAGS_DL		= @LDFLAGS_DL@
+
+ifeq ($(ds_config_ENABLE_GCC_WARNING),yes)
+GCC_WARNINGS		= -Wall -W -Wextra -pedantic			\
 			   -Wmissing-prototypes				\
 			   -Wpointer-arith -Wcast-qual -Wcast-align	\
 			   -Wwrite-strings -Wnested-externs		\
 			   -Wstrict-prototypes -Wshadow -fno-common
+endif
 
-CCFLAGS			?= $$(C_DEFAULT) $$(C_WARNINGS)
-CFLAGS			?= @CFLAGS@
-LIBS			?= @LIBS@
-LDFLAGS			?= @LDFLAGS@
-LDFLAGS_RPATH		?= @LDFLAGS_RPATH@
-LDFLAGS_DL		?= @LDFLAGS_DL@
-OBJEXT			= @OBJEXT@
+ifeq (@USING_GCC@,yes)
+GCC_PIPE		= -pipe
+GCC_SHARED		= -shared -fPIC
+endif
+
 CC_COMPILE_OUTPUT	?= $$(if @NO_MINUS_C_MINUS_O@,-o,-c -o)
-CC_BUILD_OUTPUT		?= -o
+CC_LINK_OUTPUT		?= -o
 
 endef
 
-#page
+define ds-cxx-language
+CXX			?= @CXX@
+CXXFLAGS		?= @CXXFLAGS@
+endef
 
-# $(1) - the identifier of the module
-# $(2) - a list of linker options
+#page
 define ds-cc-compile
 $(1)_CC_COMPILE_ENV		?=
-$(1)_CC_COMPILE_MORE_FLAGS	?=
-$(1)_CC_COMPILE_FLAGS		?= $$(CPPFLAGS) $$(CCFLAGS) $(2) $$(CFLAGS) $$($(1)_CC_COMPILE_MORE_FLAGS)
-$(1)_CC_COMPILE			?= $$($(1)_CC_COMPILE_ENV) $$(CC) $$($(1)_CC_COMPILE_FLAGS) $$(CC_COMPILE_OUTPUT)
+$(1)_CC_COMPILE_CC		?= $$(CC) $$(GCC_PIPE)
+$(1)_CC_COMPILE_INCLUDES	?=
+$(1)_CC_COMPILE_CPPFLAGS	?= $$(DEFS) $$(CPPFLAGS)
+$(1)_CC_COMPILE_CFLAGS		?= $$(GCC_WARNINGS) $$(CFLAGS)
+$(1)_CC_COMPILE_MORE		?=
+$(1)_CC_COMPILE			?= $$($(1)_CC_COMPILE_ENV)	\
+				$$($(1)_CC_COMPILE_CC)		\
+				$$($(1)_CC_COMPILE_INCLUDES)	\
+				$$($(1)_CC_COMPILE_CPPFLAGS)	\
+				$$($(1)_CC_COMPILE_CFLAGS)	\
+				$$($(1)_CC_COMPILE_MORE)	\
+				$$(CC_COMPILE_OUTPUT)
 endef
 
-# $(1) - the identifier of the module
-# $(2) - a list of linker options
-define ds-cc-build-program
-$(1)_CC_BUILD_PROGRAM_ENV	?=
-$(1)_CC_BUILD_PROGRAM_LIBS	?= $$(LDFLAGS) $$(LIBS)
-$(1)_CC_BUILD_PROGRAM_FLAGS	?= $$(C_DEFAULT) $(2) $$(CFLAGS)
-$(1)_CC_BUILD_PROGRAM_PRE	?=
-$(1)_CC_BUILD_PROGRAM_POST	?=
-$(1)_CC_BUILD_PROGRAM		?= $$($(1)_CC_BUILD_PROGRAM_ENV) $$(CC) \
-					$$($(1)_CC_BUILD_PROGRAM_FLAGS) $$($(1)_CC_BUILD_PROGRAM_LIBS) \
-					$$(CC_BUILD_OUTPUT) $$(@) \
-					$$($(1)_CC_BUILD_PROGRAM_PRE) $$(^) $$($(1)_CC_BUILD_PROGRAM_POST)
+define ds-cc-link-program
+$(1)_CC_PROGRAM_ENV		?=
+$(1)_CC_PROGRAM_CC		?= $$(CC) $$(GCC_PIPE)
+$(1)_CC_PROGRAM_LDFLAGS		?= $$(LDFLAGS)
+$(1)_CC_PROGRAM_LIBS		?= $$(LIBS)
+$(1)_CC_PROGRAM_PRE		?=
+$(1)_CC_PROGRAM_POST		?=
+$(1)_CC_PROGRAM			?= $$($(1)_CC_PROGRAM_ENV)	\
+				$$($(1)_CC_PROGRAM_CC)		\
+				$$($(1)_CC_PROGRAM_LDFLAGS)	\
+				$$($(1)_CC_PROGRAM_PRE)		\
+				$$($(1)_CC_PROGRAM_LIBS)	\
+				$$(CC_LINK_OUTPUT) $$(@) $$(^)	\
+				$$($(1)_CC_PROGRAM_POST)
 endef
 
-# $(1) - the identifier of the module
-# $(2) - a list of linker options
-define ds-cc-build-shared-library
-$(1)_CC_BUILD_SHARED_LIBRARY_ENV	?=
-$(1)_CC_BUILD_SHARED_LIBRARY_LIBS	?= $$(LDFLAGS) $$(LIBS)
-$(1)_CC_BUILD_SHARED_LIBRARY_FLAGS	?= $$(C_DEFAULT) -fPIC -shared $(2) $$(CFLAGS)
-$(1)_CC_BUILD_SHARED_LIBRARY_PRE	?=
-$(1)_CC_BUILD_SHARED_LIBRARY_POST	?=
-$(1)_CC_BUILD_SHARED_LIBRARY		?= $$($(1)_CC_BUILD_SHARED_LIBRARY_ENV) $$(CC) \
-					$$($(1)_CC_BUILD_SHARED_LIBRARY_FLAGS) $$($(1)_CC_BUILD_SHARED_LIBRARY_LIBS) \
-					$$(CC_BUILD_OUTPUT) $$(@) \
-					$$($(1)_CC_BUILD_SHARED_LIBRARY_PRE) $$(^) $$($(1)_CC_BUILD_SHARED_LIBRARY_POST)
+define ds-cc-link-shared-library
+$(1)_CC_SHLIB_ENV		?=
+$(1)_CC_SHLIB_CC		?= $$(CC) $$(GCC_PIPE) $$(GCC_SHARED)
+$(1)_CC_SHLIB_LDFLAGS		?= $$(LDFLAGS)
+$(1)_CC_SHLIB_LIBS		?= $$(LIBS)
+$(1)_CC_SHLIB_PRE		?=
+$(1)_CC_SHLIB_POST		?=
+$(1)_CC_SHLIB			?= $$($(1)_CC_SHLIB_ENV)	\
+				$$($(1)_CC_SHLIB_CC)		\
+				$$($(1)_CC_SHLIB_LDFLAGS)	\
+				$$($(1)_CC_SHLIB_PRE)		\
+				$$($(1)_CC_SHLIB_LIBS)		\
+				$$(CC_LINK_OUTPUT) $$(@) $$(^)	\
+				$$($(1)_CC_SHLIB_POST)
 endef
 
 #page
-
-# $(1) - the identifier of the module
 define ds-c-sources
+$(1)_RULESET		?= bin
 $(1)_SRCDIR		?= $$(srcdir)/src
 $(1)_BUILDDIR		?= $$(builddir)/objects.d
 $(1)_PATTERNS		?= *.c
 $(1)_PREREQUISITES	?=
-$(1)_MAIN_SECTION	?= bin
 
 $$(eval $$(call ds-srcdir,$(1),$$($(1)_SRCDIR)))
 $$(eval $$(call ds-builddir,$(1),$$($(1)_BUILDDIR)))
 
 vpath	%.h		$$($(1)_SRCDIR)
-vpath	%.$$(OBJEXT)	$$($(1)_BUILDDIR)
+vpath	%.@OBJEXT@	$$($(1)_BUILDDIR)
 
-$$(eval $$(call ds-cc-compile,$(1),-I$$($(1)_SRCDIR)))
+$(1)_CC_COMPILE_INCLUDES+= -I$$(builddir) -I$$($(1)_SRCDIR)
+$$(eval $$(call ds-cc-compile,$(1)))
 
-$(1)_SOURCES	= $$(call ds-glob,$(1),$$(if $$($(1)_PATTERNS),$$($(1)_PATTERNS),*.c))
-$(1)_OBJECTS	= $$(call ds-replace-dir,$$($(1)_BUILDDIR),$$($(1)_SOURCES:.c=.$$(OBJEXT)))
+$(1)_SOURCES	= $$(call ds-glob,$(1),$$($(1)_PATTERNS))
+$(1)_TARGETS	= $$(call ds-replace-dir,$$($(1)_BUILDDIR),$$($(1)_SOURCES:.c=.@OBJEXT@))
 
-# This is needed because it is the interface to 'ds-module-no-install'
-$(1)_TARGETS	+= $$($(1)_OBJECTS)
+$$(eval $$(call ds-default-clean-files-variables,$(1)))
+$$(eval $$(call ds-module-no-install,$(1),$$($(1)_RULESET)))
 
-$(1)_CLEANFILES		+= $$($(1)_TARGETS)
-$(1)_REALCLEANFILES	+= $$($(1)_CLEANFILES)
-
-$$(eval $$(call ds-module-no-install,$(1),$$($(1)_MAIN_SECTION)))
-
-$$($(1)_OBJECTS) : $$($(1)_BUILDDIR)/%.$$(OBJEXT) : $$($(1)_SRCDIR)/%.c $$($(1)_PREREQUISITES)
+$$($(1)_TARGETS) : $$($(1)_BUILDDIR)/%.@OBJEXT@ : $$($(1)_SRCDIR)/%.c $$($(1)_PREREQUISITES)
 	$$($(1)_CC_COMPILE) $$(@) $$(<)
 endef
 
 #page
-
-# $(1) - the identifier of the module
 define ds-c-shared-library
 ifeq ($$(ds_config_ENABLE_SHARED),yes)
 
-$(1)_shared_library_BUILDDIR		?= $$(builddir)/libraries.d
-$(1)_shared_library_OBJECTS		?= $$($(1)_OBJECTS)
-$(1)_shared_library_ID			?= $$($(1)_LIBRARY_ID)
-$(1)_shared_library_LINK_ID		?= $$($(1)_LIBRARY_LINK_ID)
-$(1)_shared_library_MAIN_SECTION	?= bin
+$(1)_shlib_RULESET	?= bin
+$(1)_shlib_BUILDDIR	?= $$(builddir)/libraries.d
+$(1)_shlib_OBJECTS	?= $$($(1)_TARGETS)
 
-$(1)_shared_library_NAME	= lib$$($(1)_shared_library_ID).so
-$(1)_shared_library_PATHNAME	= $$($(1)_shared_library_BUILDDIR)/$$($(1)_shared_library_NAME)
-$(1)_shared_library_LINK_NAME	= lib$$($(1)_shared_library_LINK_ID).so
-$(1)_shared_library_LINK_PATHNAME = $$($(1)_shared_library_BUILDDIR)/$$($(1)_shared_library_LINK_NAME)
+$$(eval $$(call ds-builddir,$(1)_shlib,$$($(1)_shlib_BUILDDIR)))
 
-$$(eval $$(call ds-cc-build-shared-library,$(1)_shared_library))
-$$(eval $$(call ds-builddir,$(1)_shared_library,$$($(1)_shared_library_BUILDDIR)))
+$(1)_shlib_NAME		= $$($(1)_SHARED_LIBRARY_NAME)
+$(1)_shlib_PATHNAME	= $$($(1)_shlib_BUILDDIR)/$$($(1)_shlib_NAME)
+$(1)_shlib_LINK_NAME	= $$($(1)_SHARED_LIBRARY_LINK_NAME)
+$(1)_shlib_LINK_PATHNAME= $$($(1)_shlib_BUILDDIR)/$$($(1)_shlib_LINK_NAME)
 
-$(1)_shared_library_TARGETS	= $$($(1)_shared_library_PATHNAME) $$($(1)_shared_library_LINK_PATHNAME)
-$(1)_shared_library_INSTLST	= $$($(1)_shared_library_PATHNAME)
-$(1)_shared_library_INSTDIR	?= $(libdir)
+$(1)_shlib_TARGETS	= $$($(1)_shlib_PATHNAME) $$($(1)_shlib_LINK_PATHNAME)
+$(1)_shlib_INSTLST	= $$($(1)_shlib_PATHNAME)
+$(1)_shlib_INSTDIR	?= $(libdir)
 
-$(1)_shared_library_MOSTLYCLEANFILES	+= $$($(1)_shared_library_TARGETS)
-$(1)_shared_library_CLEANFILES		+= $$($(1)_shared_library_MOSTLYCLEANFILES)
+$$(eval $$(call ds-cc-link-shared-library,$(1)_shlib))
+$$(eval $$(call ds-default-clean-files-variables,$(1)_shlib))
+$$(eval $$(call ds-module,$(1)_shlib,$$($(1)_shlib_RULESET),LIB))
 
-$$(eval $$(call ds-module,$(1)_shared_library,$$($(1)_shared_library_MAIN_SECTION),LIB))
-
-$$($(1)_shared_library_PATHNAME) : $$($(1)_shared_library_OBJECTS)
+$$($(1)_shlib_PATHNAME) : $$($(1)_shlib_OBJECTS)
 	$$(call ds-echo,'## ---------------------------------------------------------------------')
-	$$(call ds-echo,'## Building shared library $$($(1)_shared_library_NAME)')
-	$$($(1)_shared_library_CC_BUILD_SHARED_LIBRARY)
-ifeq ($$(ds_config_ENABLE_STRIP),yes)
+	$$(call ds-echo,'## Building shared library $$($(1)_shlib_NAME)')
+	$$($(1)_shlib_CC_SHLIB)
 	$$(STRIP) $$(@)
-endif
-ifneq ($$(strip $$($(1)_shared_library_LINK_ID)),)
-	cd $$($(1)_shared_library_BUILDDIR);\
-	test -L $$($(1)_shared_library_LINK_NAME) || \
-	$$(SYMLINK) $$($(1)_shared_library_NAME) $$($(1)_shared_library_LINK_NAME)
-endif # $(1)_shared_library_LINK_ID = ""
+	cd $$($(1)_shlib_BUILDDIR);\
+	test -L $$($(1)_shlib_LINK_NAME) || \
+	$$(SYMLINK) $$($(1)_shlib_NAME) $$($(1)_shlib_LINK_NAME)
 	$$(call ds-echo,'## done.')
 
-## ---------------------------------------------------------------------
+$(1)_shlib-install-post:
+	$$(call ds-install-directory,$(1)_shlib)
+	cd $$(DESTDIR)$$($(1)_shlib_INSTDIR) ; \
+	$$(SYMLINK) $$($(1)_shlib_NAME) $$($(1)_shlib_LINK_NAME)
 
-ifneq ($$(strip $$($(1)_shared_library_LINK_ID)),)
-$(1)_shared_library-install-aux:
-	$$(call ds-install-directory,$(1)_shared_library)
-	cd $$(DESTDIR)$$($(1)_shared_library_INSTDIR) ; \
-	$$(SYMLINK) $$($(1)_shared_library_NAME) $$($(1)_shared_library_LINK_NAME)
+$(1)_shlib-uninstall-post:
+	$$(RM_FILE) $$(DESTDIR)$$(libdir)/$$($(1)_shlib_LINK_NAME)
 
-$(1)_shared_library-uninstall-aux:
-	$$(RM_FILE) $$(DESTDIR)$$(libdir)/$$($(1)_shared_library_LINK_NAME)
+$(1)_shlib-print-install-files-layout-post:
+	@echo $$($(1)_shlib_INSTDIR)/$$($(1)_shlib_LINK_NAME)
 
-$(1)_shared_library-print-install-files-layout-aux:
-	@echo $$($(1)_shared_library_INSTDIR)/$$($(1)_shared_library_LINK_NAME)
-
-$(1)_shared_library-print-uninstall-files-script-aux:
-	@echo $$(RM_FILE) $$($(1)_shared_library_INSTDIR)/$$($(1)_shared_library_LINK_NAME)
-
-endif # $(1)_shared_library_LINK_ID = ""
+$(1)_shlib-print-uninstall-files-script-post:
+	@echo $$(RM_FILE) $$($(1)_shlib_INSTDIR)/$$($(1)_shlib_LINK_NAME)
 endif # ds_config_ENABLE_SHARED = yes
 endef
 
 #page
-
-# $(1) - the identifier of the module
 define ds-c-static-library
 ifeq ($$(ds_config_ENABLE_STATIC),yes)
 
 $(1)_static_library_BUILDDIR		?= $$(builddir)/libraries.d
-$(1)_static_library_OBJECTS		?= $$($(1)_OBJECTS)
+$(1)_static_library_OBJECTS		?= $$($(1)_TARGETS)
 $(1)_static_library_ID			?= $$($(1)_LIBRARY_ID)
-$(1)_static_library_MAIN_SECTION	?= dev
+$(1)_static_library_RULESET	?= dev
 
 $(1)_static_library_NAME	= lib$$($(1)_static_library_ID).a
 $(1)_static_library_PATHNAME	= $$($(1)_static_library_BUILDDIR)/$$($(1)_static_library_NAME)
@@ -1355,7 +1365,7 @@ $(1)_static_library_INSTLST	= $$($(1)_static_library_TARGETS)
 $(1)_static_library_INSTDIR	?= $(libdir)
 
 $$(eval $$(call ds-default-clean-files-variables,$(1)_static_library))
-$$(eval $$(call ds-module,$(1)_static_library,$$($(1)_static_library_MAIN_SECTION),LIB))
+$$(eval $$(call ds-module,$(1)_static_library,$$($(1)_static_library_RULESET),LIB))
 
 $$($(1)_static_library_PATHNAME) : $$($(1)_static_library_OBJECTS)
 	$$(call ds-echo,'## ---------------------------------------------------------------------')
@@ -1367,27 +1377,18 @@ $$($(1)_static_library_PATHNAME) : $$($(1)_static_library_OBJECTS)
 endif # ds_config_ENABLE_STATIC = yes
 endef
 
-# $(1) - the identifier of the module
-define ds-c-library
-$$(eval $$(call ds-c-sources,$(1)))
-$$(eval $$(call ds-c-static-library,$(1)))
-$$(eval $$(call ds-c-shared-library,$(1)))
-endef
-
 #page
-
-# $(1) - the identifier of the module
 define ds-c-single-program
-$(1)_program_BUILDDIR		?= $$(builddir)/programs.d
-$(1)_program_OBJECTS		?= $$($(1)_OBJECTS)
-$(1)_program_PREFIX		?=
-$(1)_program_ENV		?=
-$(1)_program_MAIN_SECTION	?= bin
+$(1)_program_BUILDDIR	?= $$(builddir)/programs.d
+$(1)_program_OBJECTS	?= $$($(1)_TARGETS)
+$(1)_program_PREFIX	?=
+$(1)_program_ENV	?=
+$(1)_program_RULESET	?= bin
 
 $(1)_program_NAME	= $$($(1)_program_PREFIX)$(2)
 $(1)_program_PATHNAME	= $$($(1)_program_BUILDDIR)/$$($(1)_program_NAME)
 
-$$(eval $$(call ds-cc-build-program,$(1)_program))
+$$(eval $$(call ds-cc-link-program,$(1)_program))
 $$(eval $$(call ds-builddir,$(1)_program,$$(if $$($(1)_program_BUILDDIR),$$($(1)_program_BUILDDIR),$$(builddir)/programs.d)))
 
 $(1)_program_TARGETS	+= $$($(1)_program_PATHNAME)
@@ -1395,13 +1396,11 @@ $(1)_program_INSTLST	= $$($(1)_program_PATHNAME)
 $(1)_program_INSTDIR	?= $(pkglibexecdir)
 
 $$(eval $$(call ds-default-clean-files-variables,$(1)_program))
-$$(eval $$(call ds-module,$(1)_program,$$($(1)_program_MAIN_SECTION),LIB))
+$$(eval $$(call ds-module,$(1)_program,$$($(1)_program_RULESET),LIB))
 
 $$($(1)_program_PATHNAME) : $$($(1)_program_OBJECTS)
-	$$($(1)_program_CC_BUILD_PROGRAM)
-ifeq ($$(ds_config_ENABLE_STRIP),yes)
+	$$($(1)_program_CC_PROGRAM)
 	$$(STRIP) $$(@)
-endif
 
 .PHONY: run-$(1)
 
@@ -1417,24 +1416,24 @@ define ds-c-single-program-no-install
 # $(1) is the identifier of the module
 # $(2) is the name of the program
 $(1)_program_BUILDDIR		?= $$(builddir)/programs.d
-$(1)_program_OBJECTS		?= $$($(1)_OBJECTS)
+$(1)_program_OBJECTS		?= $$($(1)_TARGETS)
 $(1)_program_PREFIX		?=
 $(1)_program_ENV		?=
-$(1)_program_MAIN_SECTION	?= bin
+$(1)_program_RULESET	?= bin
 
 $(1)_program_NAME	= $$($(1)_program_PREFIX)$(2)
 $(1)_program_PATHNAME	= $$($(1)_program_BUILDDIR)/$$($(1)_program_NAME)
 
 $$(eval $$(call ds-builddir,$(1)_program,$$($(1)_program_BUILDDIR)))
-$$(eval $$(call ds-cc-build-program,$(1)_program))
+$$(eval $$(call ds-cc-link-program,$(1)_program))
 
 $(1)_program_TARGETS	= $$($(1)_program_PATHNAME)
 
 $$(eval $$(call ds-default-clean-files-variables,$(1)_program))
-$$(eval $$(call ds-module-no-install,$(1)_program,$$($(1)_program_MAIN_SECTION)))
+$$(eval $$(call ds-module-no-install,$(1)_program,$$($(1)_program_RULESET)))
 
 $$($(1)_program_PATHNAME) : $$($(1)_program_OBJECTS)
-	$$($(1)_program_CC_BUILD_PROGRAM)
+	$$($(1)_program_CC_PROGRAM)
 ifeq ($$(ds_config_ENABLE_STRIP),yes)
 	$$(STRIP) $$(@)
 endif
@@ -1446,34 +1445,30 @@ run-$(1): $(1)_program-all
 endef
 
 #page
-
-# $(1) - the identifier of the module
 define ds-c-programs
-$(1)_programs_SRCDIR		?= $$($(1)_BUILDDIR)
-$(1)_programs_BUILDDIR		?= $$(builddir)/programs.d
-$(1)_programs_OBJECTS		?= $$($(1)_OBJECTS)
-$(1)_programs_PREFIX		?=
-$(1)_programs_ENV		?=
-$(1)_programs_MAIN_SECTION	?= bin
+$(1)_programs_SRCDIR	?= $$($(1)_BUILDDIR)
+$(1)_programs_BUILDDIR	?= $$(builddir)/programs.d
+$(1)_programs_OBJECTS	?= $$($(1)_TARGETS)
+$(1)_programs_PREFIX	?=
+$(1)_programs_ENV	?=
+$(1)_programs_RULESET	?= bin
 
-$(1)_programs_NAMES	= $$(addprefix $$($(1)_programs_PREFIX),$$(notdir $$($(1)_programs_OBJECTS:.$(OBJEXT)=)))
+$(1)_programs_NAMES	= $$(addprefix $$($(1)_programs_PREFIX),$$(notdir $$($(1)_programs_OBJECTS:.@OBJEXT@=)))
 $(1)_programs_PATHNAMES	= $$(addprefix $$($(1)_programs_BUILDDIR)/,$$($(1)_programs_NAMES))
 
 $$(eval $$(call ds-builddir,$(1)_programs,$$($(1)_programs_BUILDDIR)))
-$$(eval $$(call ds-cc-build-program,$(1)_programs))
+$$(eval $$(call ds-cc-link-program,$(1)_programs))
 
 $(1)_programs_TARGETS	= $$($(1)_programs_PATHNAMES)
 $(1)_programs_INSTLST	= $$($(1)_programs_PATHNAMES)
 $(1)_programs_INSTDIR	?= $(pkglibexecdir)
 
 $$(eval $$(call ds-default-clean-files-variables,$(1)_programs))
-$$(eval $$(call ds-module,$(1)_programs,$$($(1)_programs_MAIN_SECTION)))
+$$(eval $$(call ds-module,$(1)_programs,$$($(1)_programs_RULESET)))
 
-$$($(1)_programs_PATHNAMES) : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% : $$($(1)_programs_SRCDIR)/%.$(OBJEXT)
-	$$($(1)_programs_CC_BUILD_PROGRAM)
-ifeq ($$(ds_config_ENABLE_STRIP),yes)
+$$($(1)_programs_PATHNAMES) : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% : $$($(1)_programs_SRCDIR)/%.@OBJEXT@
+	$$($(1)_programs_CC_PROGRAM)
 	$$(STRIP) $$(@)
-endif
 
 .PHONY: run-$(1) $$(addprefix run-,$$($(1)_programs_NAMES))
 
@@ -1484,34 +1479,29 @@ $$(addprefix run-,$$($(1)_programs_NAMES)): run-% : $$($(1)_programs_BUILDDIR)/%
 
 endef
 
-## ---------------------------------------------------------------------
-
+#page
 define ds-c-programs-no-install
-
-# $(1) is the identifier of the module
 $(1)_programs_SRCDIR		?= $$($(1)_BUILDDIR)
-$(1)_programs_OBJECTS		?= $$($(1)_OBJECTS)
+$(1)_programs_OBJECTS		?= $$($(1)_TARGETS)
 $(1)_programs_BUILDDIR		?= $$(builddir)/programs.d
 $(1)_programs_PREFIX		?=
 $(1)_programs_ENV		?=
-$(1)_programs_MAIN_SECTION	?= bin
+$(1)_programs_RULESET	?= bin
 
-$(1)_programs_NAMES	= $$(addprefix $$($(1)_programs_PREFIX),$$(notdir $$($(1)_programs_OBJECTS:.$(OBJEXT)=)))
+$(1)_programs_NAMES	= $$(addprefix $$($(1)_programs_PREFIX),$$(notdir $$($(1)_programs_OBJECTS:.@OBJEXT@=)))
 $(1)_programs_PATHNAMES	= $$(addprefix $$($(1)_programs_BUILDDIR)/,$$($(1)_programs_NAMES))
 
 $$(eval $$(call ds-builddir,$(1)_programs,$$($(1)_programs_BUILDDIR)))
-$$(eval $$(call ds-cc-build-program,$(1)_programs))
+$$(eval $$(call ds-cc-link-program,$(1)_programs))
 
 $(1)_programs_TARGETS	= $$($(1)_programs_PATHNAMES)
 
 $$(eval $$(call ds-default-clean-files-variables,$(1)_programs))
-$$(eval $$(call ds-module-no-install,$(1)_programs,$$($(1)_programs_MAIN_SECTION)))
+$$(eval $$(call ds-module-no-install,$(1)_programs,$$($(1)_programs_RULESET)))
 
-$$($(1)_programs_PATHNAMES) : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% : $$($(1)_programs_SRCDIR)/%.$(OBJEXT)
-	$$($(1)_programs_CC_BUILD_PROGRAM)
-ifeq ($$(ds_config_ENABLE_STRIP),yes)
+$$($(1)_programs_PATHNAMES) : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% : $$($(1)_programs_SRCDIR)/%.@OBJEXT@
+	$$($(1)_programs_CC_PROGRAM)
 	$$(STRIP) $$(@)
-endif
 
 .PHONY: run-$(1) $$(addprefix run-,$$($(1)_programs_NAMES))
 
@@ -1523,59 +1513,48 @@ $$(addprefix run-,$$($(1)_programs_NAMES)): run-% : $$($(1)_programs_BUILDDIR)/%
 endef
 
 #page
-
-# $(1) - the identifier of the module
 define ds-c-example-programs
-$(1)_examples_SRCDIR		?= $$(srcdir)/examples
-$(1)_examples_BUILDDIR		?= $$(builddir)/examples.d
-$(1)_examples_MAIN_SECTION	?= examples
-
+$(1)_examples_RULESET	?= examples
+$(1)_examples_SRCDIR	?= $$(srcdir)/examples
+$(1)_examples_BUILDDIR	?= $$(builddir)/examples.d
 $$(eval $$(call ds-c-sources,$(1)_examples))
-
-$(1)_examples_programs_BUILDDIR		?= $$($(1)_examples_BUILDDIR)
-$(1)_examples_programs_MAIN_SECTION	= examples
-
+$(1)_examples_programs_BUILDDIR	?= $$($(1)_examples_BUILDDIR)
+$(1)_examples_programs_RULESET	= examples
 $$(eval $$(call ds-c-programs-no-install,$(1)_examples))
-
 endef
 
-#page
-
-# $(1) - is the identifier of the module
 define ds-c-test-programs
-$(1)_tests_SRCDIR		?= $$(srcdir)/tests
-$(1)_tests_BUILDDIR		?= $$(builddir)/tests.d
-$(1)_tests_MAIN_SECTION		?= test
-
+$(1)_tests_RULESET	?= test
+$(1)_tests_SRCDIR	?= $$(srcdir)/tests
+$(1)_tests_BUILDDIR	?= $$(builddir)/tests.d
 $$(eval $$(call ds-c-sources,$(1)_tests))
-
-$(1)_tests_programs_BUILDDIR		?= $$($(1)_tests_BUILDDIR)
-$(1)_tests_programs_MAIN_SECTION	?= test
-
+$(1)_tests_programs_BUILDDIR	?= $$($(1)_tests_BUILDDIR)
+$(1)_tests_programs_RULESET	?= test
 $$(eval $$(call ds-c-programs-no-install,$(1)_tests))
-
-$$($(1)_tests_programs_MAIN_SECTION): run-$(1)_tests
-
+$$($(1)_tests_programs_RULESET): run-$(1)_tests
 endef
 
-#page
-
-# $(1) - the identifier of the module
-# $(2) - the source directory
-# $(3) - patterns to select the header files
 define ds-h-files-installer
-$(1)_c_headers_SRCDIR		?= $(2)
-$(1)_c_headers_PATTERNS		?= $(3)
-$(1)_c_headers_MAIN_SECTION	?= dev
-
+$(1)_c_headers_RULESET	?= dev
+$(1)_c_headers_SRCDIR	?= $(2)
+$(1)_c_headers_PATTERNS	?= $(3)
 $$(eval $$(call ds-srcdir,$(1),$$($(1)_c_headers_SRCDIR)))
-
 $(1)_c_headers_INSTLST	= \
 	$$(call ds-glob,$(1),$$(if $$($(1)_c_headers_PATTERNS),$$($(1)_c_headers_PATTERNS),*.h))
 $(1)_c_headers_INSTDIR	?= $$(pkgincludedir)
+$$(eval $$(call ds-module,$(1)_c_headers,$$($(1)_c_headers_RULESET)))
+endef
 
-$$(eval $$(call ds-module,$(1)_c_headers,$$($(1)_c_headers_MAIN_SECTION)))
+define ds-c-library
+include meta.d/makefiles/$(1)-clib.make
+$$(eval $$(call ds-c-sources,$(1)))
+$$(eval $$(call ds-c-shared-library,$(1)))
+$$(eval $$(call ds-c-static-library,$(1)))
+endef
 
+define ds-c-library-extended
+$$(eval $$(call ds-c-library,$(1)))
+$$(eval $$(call ds-h-files-installer,$(1)))
 endef
 
 #page

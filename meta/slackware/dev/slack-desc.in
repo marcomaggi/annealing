@@ -1,12 +1,12 @@
-                            |-----handy-ruler-----------------------------------------------|
-@PACKAGE_NAME_LOWERCASE@-dev: @PACKAGE_NAME@ @PACKAGE_XVERSION@ development
-@PACKAGE_NAME_LOWERCASE@-dev:
-@PACKAGE_NAME_LOWERCASE@-dev: This package holds the development files of Annealing,
-@PACKAGE_NAME_LOWERCASE@-dev: a C language extension to GSL.
-@PACKAGE_NAME_LOWERCASE@-dev: 
-@PACKAGE_NAME_LOWERCASE@-dev: 
-@PACKAGE_NAME_LOWERCASE@-dev:
-@PACKAGE_NAME_LOWERCASE@-dev:
-@PACKAGE_NAME_LOWERCASE@-dev:
-@PACKAGE_NAME_LOWERCASE@-dev:
-@PACKAGE_NAME_LOWERCASE@-dev:
+                   |-----handy-ruler-----------------------------------------------|
+@PACKAGE_NAME@-dev: @PACKAGE_NAME@ @PACKAGE_VERSION@ development
+@PACKAGE_NAME@-dev:
+@PACKAGE_NAME@-dev: This package holds the development files of Annealing,
+@PACKAGE_NAME@-dev: a C language extension to GSL.
+@PACKAGE_NAME@-dev:
+@PACKAGE_NAME@-dev:
+@PACKAGE_NAME@-dev:
+@PACKAGE_NAME@-dev:
+@PACKAGE_NAME@-dev:
+@PACKAGE_NAME@-dev:
+@PACKAGE_NAME@-dev:

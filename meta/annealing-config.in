@@ -1,5 +1,5 @@
 #!@SHELL@
-# @PACKAGE_NAME_LOWERCASE@-config --
+# @PACKAGE_NAME@-config --
 #
 # Package configuration script.
 
@@ -149,7 +149,7 @@ case "$1" in
 	echo "${pkgsysconfdir}"
 	;;
     *)
-	echo 'usage: @PACKAGE_NAME_LOWERCASE@-config OPTION
+	echo 'usage: @PACKAGE_NAME@-config OPTION
 options:
 
     --package-name              print the package name
