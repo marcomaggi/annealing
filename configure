@@ -648,7 +648,6 @@ annealing_SHARED_LIBRARY_ID
 annealing_INTERFACE_MINOR_VERSION
 annealing_INTERFACE_MAJOR_VERSION
 annealing_INTERFACE_VERSION
-annealing_LIBRARY_LINK_ID
 annealing_LIBRARY_ID
 LDFLAGS_DL
 LIBOBJS
@@ -680,6 +679,7 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
+ds_config_ENABLE_SHLIB_SYMLINK
 ds_config_ENABLE_STRIP
 ds_config_ENABLE_STATIC
 ds_config_ENABLE_SHARED
@@ -801,6 +801,7 @@ enable_slackware_prefix_tools
 enable_shared
 enable_static
 enable_strip
+enable_shlib_symlink
 enable_largefile
 enable_gcc_warnings
 enable_assert
@@ -1470,6 +1471,8 @@ Optional Features:
   --enable-static         enable building static libraries (default: no)
   --enable-strip          strip debug symbols from executables and libraries
                           (default: yes)
+  --enable-shlib-symlink  create symbolic links to shared libraries (default:
+                          yes)
   --disable-largefile     omit support for large files
   --enable-gcc-warnings   give GCC warning options to the compiler (default:
                           yes)
@@ -3671,7 +3674,7 @@ fi
    { $as_echo "$as_me:$LINENO: result: $DS_CONFIG_ABI" >&5
 $as_echo "$DS_CONFIG_ABI" >&6; }
 
-  { $as_echo "$as_me:$LINENO: checking whether abi and abu rules will use sudo" >&5
+   { $as_echo "$as_me:$LINENO: checking whether abi and abu rules will use sudo" >&5
 $as_echo_n "checking whether abi and abu rules will use sudo... " >&6; }
    # Check whether --enable-use-sudo was given.
 if test "${enable_use_sudo+set}" = set; then
@@ -3683,7 +3686,7 @@ fi
    { $as_echo "$as_me:$LINENO: result: $DS_CONFIG_USE_SUDO" >&5
 $as_echo "$DS_CONFIG_USE_SUDO" >&6; }
 
-  { $as_echo "$as_me:$LINENO: checking whether Slackware packages will be created with root as file owner" >&5
+   { $as_echo "$as_me:$LINENO: checking whether Slackware packages will be created with root as file owner" >&5
 $as_echo_n "checking whether Slackware packages will be created with root as file owner... " >&6; }
    # Check whether --enable-slackware-chown was given.
 if test "${enable_slackware_chown+set}" = set; then
@@ -3695,7 +3698,7 @@ fi
    { $as_echo "$as_me:$LINENO: result: $DS_CONFIG_SLACKWARE_CHOWN" >&5
 $as_echo "$DS_CONFIG_SLACKWARE_CHOWN" >&6; }
 
-  { $as_echo "$as_me:$LINENO: checking whether installation directories will have package version component" >&5
+   { $as_echo "$as_me:$LINENO: checking whether installation directories will have package version component" >&5
 $as_echo_n "checking whether installation directories will have package version component... " >&6; }
    # Check whether --enable-versioned-layout was given.
 if test "${enable_versioned_layout+set}" = set; then
@@ -5208,6 +5211,18 @@ fi
 
    { $as_echo "$as_me:$LINENO: result: $ds_config_ENABLE_STRIP" >&5
 $as_echo "$ds_config_ENABLE_STRIP" >&6; }
+
+   { $as_echo "$as_me:$LINENO: checking whether symbolic links to shared libraries will be created" >&5
+$as_echo_n "checking whether symbolic links to shared libraries will be created... " >&6; }
+   # Check whether --enable-shlib-symlink was given.
+if test "${enable_shlib_symlink+set}" = set; then
+  enableval=$enable_shlib_symlink; if test "$enableval" = yes ; then ds_config_ENABLE_SHLIB_SYMLINK=yes ; else ds_config_ENABLE_SHLIB_SYMLINK=no ; fi
+else
+  ds_config_ENABLE_SHLIB_SYMLINK=yes
+fi
+
+   { $as_echo "$as_me:$LINENO: result: $ds_config_ENABLE_SHLIB_SYMLINK" >&5
+$as_echo "$ds_config_ENABLE_SHLIB_SYMLINK" >&6; }
 
 
   if test "${ac_cv_header_minix_config_h+set}" = set; then
@@ -11206,8 +11221,6 @@ fi
 
 annealing_LIBRARY_ID=annealing1.1
 
-   annealing_LIBRARY_LINK_ID=annealing1
-
    annealing_INTERFACE_VERSION=1.1
 
    annealing_INTERFACE_MAJOR_VERSION=1
@@ -11235,7 +11248,7 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
    annealing_SHARED_LIBRARY_ID=${annealing_LIBRARY_ID}
-   annealing_SHARED_LIBRARY_LINK_ID=${annealing_LIBRARY_LINK_ID}
+   annealing_SHARED_LIBRARY_LINK_ID=annealing1
    annealing_SHARED_LIBRARY_NAME=lib${annealing_SHARED_LIBRARY_ID}.so
    annealing_SHARED_LIBRARY_LINK_NAME=lib${annealing_SHARED_LIBRARY_LINK_ID}.so
    annealing_STATIC_LIBRARY_ID=${annealing_LIBRARY_ID}
@@ -11248,17 +11261,16 @@ _ACEOF
 
    mkdir -p meta.d/makefiles
    echo "
-annealing_LIBRARY_ID			= ${annealing_LIBRARY_ID}
-annealing_LIBRARY_LINK_ID		= ${annealing_LIBRARY_LINK_ID}
-annealing_INTERFACE_VERSION		= ${annealing_INTERFACE_VERSION}
-annealing_INTERFACE_MAJOR_VERSION	= ${annealing_INTERFACE_MAJOR_VERSION}
-annealing_INTERFACE_MINOR_VERSION	= ${annealing_INTERFACE_MINOR_VERSION}
-annealing_SHARED_LIBRARY_ID		= ${annealing_SHARED_LIBRARY_ID}
-annealing_SHARED_LIBRARY_LINK_ID	= ${annealing_SHARED_LIBRARY_LINK_ID}
-annealing_SHARED_LIBRARY_NAME		= ${annealing_SHARED_LIBRARY_NAME}
-annealing_SHARED_LIBRARY_LINK_NAME	= ${annealing_SHARED_LIBRARY_LINK_NAME}
-annealing_STATIC_LIBRARY_ID		= ${annealing_STATIC_LIBRARY_ID}
-annealing_STATIC_LIBRARY_NAME		= ${annealing_STATIC_LIBRARY_NAME}
+annealing_LIBRARY_ID			?= ${annealing_LIBRARY_ID}
+annealing_INTERFACE_VERSION		?= ${annealing_INTERFACE_VERSION}
+annealing_INTERFACE_MAJOR_VERSION	?= ${annealing_INTERFACE_MAJOR_VERSION}
+annealing_INTERFACE_MINOR_VERSION	?= ${annealing_INTERFACE_MINOR_VERSION}
+annealing_SHARED_LIBRARY_ID		?= ${annealing_SHARED_LIBRARY_ID}
+annealing_SHARED_LIBRARY_LINK_ID	?= ${annealing_SHARED_LIBRARY_LINK_ID}
+annealing_SHARED_LIBRARY_NAME		?= ${annealing_SHARED_LIBRARY_NAME}
+annealing_SHARED_LIBRARY_LINK_NAME	?= ${annealing_SHARED_LIBRARY_LINK_NAME}
+annealing_STATIC_LIBRARY_ID		?= ${annealing_STATIC_LIBRARY_ID}
+annealing_STATIC_LIBRARY_NAME		?= ${annealing_STATIC_LIBRARY_NAME}
    " >"meta.d/makefiles/annealing-clib.make"
 
 

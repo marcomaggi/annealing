@@ -39,7 +39,11 @@ ds_include_DEV_RULES		= @DS_INCLUDE_DEV_RULES@
 ds_include_AUTOCONF_DIRS	= @DS_INCLUDE_AUTOCONF_DIRS@
 ds_include_DEVELSTUFF_DIRS	= @DS_INCLUDE_DEVELSTUFF_DIRS@
 
+ds_config_ABI			?= @DS_CONFIG_ABI@
+ds_config_USE_SUDO		?= @DS_CONFIG_USE_SUDO@
+ds_config_SLACKWARE_CHOWN	?= @DS_CONFIG_SLACKWARE_CHOWN@
 ds_config_VERSIONED_LAYOUT	?= @DS_CONFIG_VERSIONED_LAYOUT@
+ds_config_VERBOSE_MESSAGES	?= yes
 
 ds_config_ENABLE_DOC		?= @DS_CONFIG_ENABLE_DOC@
 ds_config_ENABLE_DOC_INFO	?= @DS_CONFIG_ENABLE_DOC_INFO@
@@ -49,11 +53,6 @@ ds_config_ENABLE_DOC_PDF	?= @DS_CONFIG_ENABLE_DOC_PDF@
 ds_config_ENABLE_DOC_PS		?= @DS_CONFIG_ENABLE_DOC_PS@
 
 ds_config_ENABLE_STRIP		?= @DS_CONFIG_ENABLE_STRIP@
-
-ds_config_ABI			?= @DS_CONFIG_ABI@
-ds_config_USE_SUDO		?= @DS_CONFIG_ABI_SUDO@
-ds_config_SLACKWARE_CHOWN	?= @DS_CONFIG_SLACKWARE_CHOWN@
-ds_config_VERBOSE_MESSAGES	?= yes
 
 # Compressor  to be  used when  creating a  tarball; it  is used  by the
 # binary distribution rules.  Supported values:
@@ -70,6 +69,7 @@ ds_config_ENABLE_SHARED		?= @ds_config_ENABLE_SHARED@
 ds_config_ENABLE_STRIP		?= @ds_config_ENABLE_STRIP@
 ds_config_ENABLE_PTHREADS	?= @ds_config_ENABLE_PTHREADS@
 ds_config_ENABLE_GCC_WARNING	?= @ds_config_ENABLE_GCC_WARNING@
+ds_config_ENABLE_SHLIB_SYMLINK	?= @ds_config_ENABLE_SHLIB_SYMLINK@
 
 #page
 ## --------------------------------------------------------------------
@@ -1325,11 +1325,14 @@ $$($(1)_shlib_PATHNAME) : $$($(1)_shlib_OBJECTS)
 	$$(call ds-echo,'## Building shared library $$($(1)_shlib_NAME)')
 	$$($(1)_shlib_CC_SHLIB)
 	$$(STRIP) $$(@)
+ifeq ($$(ds_config_ENABLE_SHLIB_SYMLINK),yes)
 	cd $$($(1)_shlib_BUILDDIR);\
 	test -L $$($(1)_shlib_LINK_NAME) || \
 	$$(SYMLINK) $$($(1)_shlib_NAME) $$($(1)_shlib_LINK_NAME)
+endif
 	$$(call ds-echo,'## done.')
 
+ifeq ($$(ds_config_ENABLE_SHLIB_SYMLINK),yes)
 $(1)_shlib-install-post:
 	$$(call ds-install-directory,$(1)_shlib)
 	cd $$(DESTDIR)$$($(1)_shlib_INSTDIR) ; \
@@ -1343,6 +1346,7 @@ $(1)_shlib-print-install-files-layout-post:
 
 $(1)_shlib-print-uninstall-files-script-post:
 	@echo $$(RM_FILE) $$($(1)_shlib_INSTDIR)/$$($(1)_shlib_LINK_NAME)
+endif # ds_config_ENABLE_SHLIB_SYMLINK = yes
 endif # ds_config_ENABLE_SHARED = yes
 endef
 
@@ -1350,30 +1354,28 @@ endef
 define ds-c-static-library
 ifeq ($$(ds_config_ENABLE_STATIC),yes)
 
-$(1)_static_library_BUILDDIR		?= $$(builddir)/libraries.d
-$(1)_static_library_OBJECTS		?= $$($(1)_TARGETS)
-$(1)_static_library_ID			?= $$($(1)_LIBRARY_ID)
-$(1)_static_library_RULESET	?= dev
+$(1)_stlib_RULESET	?= dev
+$(1)_stlib_BUILDDIR	?= $$(builddir)/libraries.d
+$(1)_stlib_OBJECTS	?= $$($(1)_TARGETS)
 
-$(1)_static_library_NAME	= lib$$($(1)_static_library_ID).a
-$(1)_static_library_PATHNAME	= $$($(1)_static_library_BUILDDIR)/$$($(1)_static_library_NAME)
+$$(eval $$(call ds-builddir,$(1)_stlib,$$($(1)_stlib_BUILDDIR)))
 
-$$(eval $$(call ds-builddir,$(1)_static_library,$$($(1)_static_library_BUILDDIR)))
+$(1)_stlib_NAME		= $$($(1)_STATIC_LIBRARY_NAME)
+$(1)_stlib_PATHNAME	= $$($(1)_stlib_BUILDDIR)/$$($(1)_stlib_NAME)
 
-$(1)_static_library_TARGETS	= $$($(1)_static_library_PATHNAME)
-$(1)_static_library_INSTLST	= $$($(1)_static_library_TARGETS)
-$(1)_static_library_INSTDIR	?= $(libdir)
+$(1)_stlib_TARGETS	= $$($(1)_stlib_PATHNAME)
+$(1)_stlib_INSTLST	= $$($(1)_stlib_TARGETS)
+$(1)_stlib_INSTDIR	?= $(libdir)
 
-$$(eval $$(call ds-default-clean-files-variables,$(1)_static_library))
-$$(eval $$(call ds-module,$(1)_static_library,$$($(1)_static_library_RULESET),LIB))
+$$(eval $$(call ds-default-clean-files-variables,$(1)_stlib))
+$$(eval $$(call ds-module,$(1)_stlib,$$($(1)_stlib_RULESET),LIB))
 
-$$($(1)_static_library_PATHNAME) : $$($(1)_static_library_OBJECTS)
+$$($(1)_stlib_PATHNAME) : $$($(1)_stlib_OBJECTS)
 	$$(call ds-echo,'## ---------------------------------------------------------------------')
-	$$(call ds-echo,'## Building static library $$($(1)_static_library_NAME)')
+	$$(call ds-echo,'## Building static library $$($(1)_stlib_NAME)')
 	$$(AR) $$(@) $$(^)
 	-($$(RANLIB) $$(@) || true) >/dev/null 2>&1
 	$$(call ds-echo,'## done.')
-
 endif # ds_config_ENABLE_STATIC = yes
 endef
 
@@ -1408,18 +1410,15 @@ run-$(1): $(1)_program-all
 	$$($(1)_program_ENV) $$($(1)_program_PATHNAME)
 endef
 
-
-## ---------------------------------------------------------------------
-
+#page
 define ds-c-single-program-no-install
-
 # $(1) is the identifier of the module
 # $(2) is the name of the program
-$(1)_program_BUILDDIR		?= $$(builddir)/programs.d
-$(1)_program_OBJECTS		?= $$($(1)_TARGETS)
-$(1)_program_PREFIX		?=
-$(1)_program_ENV		?=
 $(1)_program_RULESET	?= bin
+$(1)_program_BUILDDIR	?= $$(builddir)/programs.d
+$(1)_program_OBJECTS	?= $$($(1)_TARGETS)
+$(1)_program_PREFIX	?=
+$(1)_program_ENV	?=
 
 $(1)_program_NAME	= $$($(1)_program_PREFIX)$(2)
 $(1)_program_PATHNAME	= $$($(1)_program_BUILDDIR)/$$($(1)_program_NAME)
@@ -1446,12 +1445,12 @@ endef
 
 #page
 define ds-c-programs
+$(1)_programs_RULESET	?= bin
 $(1)_programs_SRCDIR	?= $$($(1)_BUILDDIR)
 $(1)_programs_BUILDDIR	?= $$(builddir)/programs.d
 $(1)_programs_OBJECTS	?= $$($(1)_TARGETS)
 $(1)_programs_PREFIX	?=
 $(1)_programs_ENV	?=
-$(1)_programs_RULESET	?= bin
 
 $(1)_programs_NAMES	= $$(addprefix $$($(1)_programs_PREFIX),$$(notdir $$($(1)_programs_OBJECTS:.@OBJEXT@=)))
 $(1)_programs_PATHNAMES	= $$(addprefix $$($(1)_programs_BUILDDIR)/,$$($(1)_programs_NAMES))
@@ -1481,12 +1480,12 @@ endef
 
 #page
 define ds-c-programs-no-install
-$(1)_programs_SRCDIR		?= $$($(1)_BUILDDIR)
-$(1)_programs_OBJECTS		?= $$($(1)_TARGETS)
-$(1)_programs_BUILDDIR		?= $$(builddir)/programs.d
-$(1)_programs_PREFIX		?=
-$(1)_programs_ENV		?=
 $(1)_programs_RULESET	?= bin
+$(1)_programs_SRCDIR	?= $$($(1)_BUILDDIR)
+$(1)_programs_OBJECTS	?= $$($(1)_TARGETS)
+$(1)_programs_BUILDDIR	?= $$(builddir)/programs.d
+$(1)_programs_PREFIX	?=
+$(1)_programs_ENV	?=
 
 $(1)_programs_NAMES	= $$(addprefix $$($(1)_programs_PREFIX),$$(notdir $$($(1)_programs_OBJECTS:.@OBJEXT@=)))
 $(1)_programs_PATHNAMES	= $$(addprefix $$($(1)_programs_BUILDDIR)/,$$($(1)_programs_NAMES))

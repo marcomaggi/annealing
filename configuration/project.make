@@ -1,24 +1,20 @@
-# Makefile.ds --
-
-#page
-## ------------------------------------------------------------
-## Global variables.
-## ------------------------------------------------------------
-
-GSL_CFLAGS	= @GSL_CFLAGS@
-GSL_LIBS	= @GSL_LIBS@
-
-CPPFLAGS	+= $(GSL_CFLAGS)
-LIBS		+= $(GSL_LIBS)
+# @configure_input@
+#
 
 #page
 ## ------------------------------------------------------------
 ## Library.
 ## ------------------------------------------------------------
 
-annealing_PREREQUISITES	= internal.h annealing.h
+GSL_CFLAGS			= @GSL_CFLAGS@
+GSL_LIBS			= @GSL_LIBS@
 
-$(eval $(call ds-c-library,annealing))
+annealing_PREREQUISITES		= internal.h annealing.h
+annealing_CC_COMPILE_CPPFLAGS	= $(DEFS) $(CPPFLAGS) $(GSL_CFLAGS)
+annealing_CC_SHLIB_LIBS		= $(LIBS) $(GSL_LIBS)
+annealing_c_headers_PATTERNS	= annealing.h
+
+$(eval $(call ds-c-library-extended,annealing))
 
 #page
 ## ------------------------------------------------------------

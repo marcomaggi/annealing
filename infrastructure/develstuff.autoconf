@@ -36,6 +36,22 @@ dnl Infrastructure setup.
 dnl --------------------------------------------------------------------
 
 AC_DEFUN_ONCE([DS_BEGIN],
+  [DS_PREAMBLE
+   DS_DEFAULT_SECTIONS
+   DS_OPTIONS
+   DS_DIRECTORIES
+   DS_PROGRAMS
+   DS_PACKAGING])
+
+AC_DEFUN_ONCE([DS_BEGIN_DEV],
+  [DS_PREAMBLE
+   DS_DEFAULT_SECTIONS_DEV
+   DS_OPTIONS
+   DS_DIRECTORIES
+   DS_PROGRAMS
+   DS_PACKAGING])
+
+AC_DEFUN_ONCE([DS_PREAMBLE],
   [AC_SUBST([PKG_ID],[\${PACKAGE_NAME}_\${PACKAGE_VERSION}])
    DS_FIND_INFRASTRUCTURE
    DS_FIND_CONFIGURATION
@@ -93,13 +109,13 @@ AC_DEFUN_ONCE([DS_OPTIONS],
   [DS_WITH_OPTION([DS_CONFIG_ABI],[abi],[direct],
      [rules for abi and abu shortcuts],
      [select rules for abi and abu shortcuts])
-  DS_ENABLE_OPTION([DS_CONFIG_USE_SUDO],[use-sudo],[no],
+   DS_ENABLE_OPTION([DS_CONFIG_USE_SUDO],[use-sudo],[no],
      [whether abi and abu rules will use sudo],
      [enable use of sudo when invoking abi and abu rules])
-  DS_ENABLE_OPTION([DS_CONFIG_SLACKWARE_CHOWN],[slackware-chown],[yes],
+   DS_ENABLE_OPTION([DS_CONFIG_SLACKWARE_CHOWN],[slackware-chown],[yes],
      [whether Slackware packages will be created with root as file owner],
      [enable creation of Slackware packages with root as file owner])
-  DS_ENABLE_OPTION([DS_CONFIG_VERSIONED_LAYOUT],[versioned-layout],[yes],
+   DS_ENABLE_OPTION([DS_CONFIG_VERSIONED_LAYOUT],[versioned-layout],[yes],
      [whether installation directories will have package version component],
      [enable installation directories with package version component])
    DS_ENABLE_OPTION([DS_CONFIG_ENABLE_DOC],[doc],[yes],
@@ -146,7 +162,10 @@ AC_DEFUN_ONCE([DS_COMPILED_STUFF],
      [enable building static libraries])
    DS_ENABLE_OPTION([ds_config_ENABLE_STRIP],[strip],[yes],
      [whether executables and libraries will be stripped of debug symbols],
-     [strip debug symbols from executables and libraries])])
+     [strip debug symbols from executables and libraries])
+   DS_ENABLE_OPTION([ds_config_ENABLE_SHLIB_SYMLINK],[shlib-symlink],[yes],
+     [whether symbolic links to shared libraries will be created],
+     [create symbolic links to shared libraries])])
 
 AC_DEFUN_ONCE([DS_PROGRAMS],
   [AC_PROG_INSTALL
@@ -242,7 +261,7 @@ AC_DEFUN_ONCE([DS_C99_LANGUAGE_COMMON_SETUP],
    DS_C99_LANGUAGE])
 
 AC_DEFUN_ONCE([DS_P_C_LANGUAGE_COMMON_SETUP],
-  [DS_BEGIN
+  [DS_PREAMBLE
    DS_DEFAULT_SECTIONS_DEV
    DS_OPTIONS
    DS_PROGRAMS
@@ -330,7 +349,6 @@ dnl 3 - MINOR_INTERFACE_VERSION
 dnl 4 - LIBRARY_NAME
 AC_DEFUN([DS_C_LANGUAGE_LIBRARY],
   [AC_SUBST([$1_LIBRARY_ID],[$4$2.$3])
-   AC_SUBST([$1_LIBRARY_LINK_ID],[$4$2])
    AC_SUBST([$1_INTERFACE_VERSION],[$2.$3])
    AC_SUBST([$1_INTERFACE_MAJOR_VERSION],[$2])
    AC_SUBST([$1_INTERFACE_MINOR_VERSION],[$3])
@@ -339,7 +357,7 @@ AC_DEFUN([DS_C_LANGUAGE_LIBRARY],
    AC_DEFINE([$1_INTERFACE_MAJOR_VERSION],[$2],[library interface major version])
    AC_DEFINE([$1_INTERFACE_MINOR_VERSION],[$3],[library interface minor version])
    $1_SHARED_LIBRARY_ID=${$1_LIBRARY_ID}
-   $1_SHARED_LIBRARY_LINK_ID=${$1_LIBRARY_LINK_ID}
+   $1_SHARED_LIBRARY_LINK_ID=$4$2
    $1_SHARED_LIBRARY_NAME=lib${$1_SHARED_LIBRARY_ID}.so
    $1_SHARED_LIBRARY_LINK_NAME=lib${$1_SHARED_LIBRARY_LINK_ID}.so
    $1_STATIC_LIBRARY_ID=${$1_LIBRARY_ID}
@@ -352,17 +370,16 @@ AC_DEFUN([DS_C_LANGUAGE_LIBRARY],
    AC_SUBST([$1_STATIC_LIBRARY_NAME])
    mkdir -p meta.d/makefiles
    echo "
-$1_LIBRARY_ID			= ${$1_LIBRARY_ID}
-$1_LIBRARY_LINK_ID		= ${$1_LIBRARY_LINK_ID}
-$1_INTERFACE_VERSION		= ${$1_INTERFACE_VERSION}
-$1_INTERFACE_MAJOR_VERSION	= ${$1_INTERFACE_MAJOR_VERSION}
-$1_INTERFACE_MINOR_VERSION	= ${$1_INTERFACE_MINOR_VERSION}
-$1_SHARED_LIBRARY_ID		= ${$1_SHARED_LIBRARY_ID}
-$1_SHARED_LIBRARY_LINK_ID	= ${$1_SHARED_LIBRARY_LINK_ID}
-$1_SHARED_LIBRARY_NAME		= ${$1_SHARED_LIBRARY_NAME}
-$1_SHARED_LIBRARY_LINK_NAME	= ${$1_SHARED_LIBRARY_LINK_NAME}
-$1_STATIC_LIBRARY_ID		= ${$1_STATIC_LIBRARY_ID}
-$1_STATIC_LIBRARY_NAME		= ${$1_STATIC_LIBRARY_NAME}
+$1_LIBRARY_ID			?= ${$1_LIBRARY_ID}
+$1_INTERFACE_VERSION		?= ${$1_INTERFACE_VERSION}
+$1_INTERFACE_MAJOR_VERSION	?= ${$1_INTERFACE_MAJOR_VERSION}
+$1_INTERFACE_MINOR_VERSION	?= ${$1_INTERFACE_MINOR_VERSION}
+$1_SHARED_LIBRARY_ID		?= ${$1_SHARED_LIBRARY_ID}
+$1_SHARED_LIBRARY_LINK_ID	?= ${$1_SHARED_LIBRARY_LINK_ID}
+$1_SHARED_LIBRARY_NAME		?= ${$1_SHARED_LIBRARY_NAME}
+$1_SHARED_LIBRARY_LINK_NAME	?= ${$1_SHARED_LIBRARY_LINK_NAME}
+$1_STATIC_LIBRARY_ID		?= ${$1_STATIC_LIBRARY_ID}
+$1_STATIC_LIBRARY_NAME		?= ${$1_STATIC_LIBRARY_NAME}
    " >"meta.d/makefiles/$1-clib.make"])
 
 dnl page
