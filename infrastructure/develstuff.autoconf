@@ -112,9 +112,6 @@ AC_DEFUN_ONCE([DS_OPTIONS],
    DS_ENABLE_OPTION([DS_CONFIG_USE_SUDO],[use-sudo],[no],
      [whether abi and abu rules will use sudo],
      [enable use of sudo when invoking abi and abu rules])
-   DS_ENABLE_OPTION([DS_CONFIG_SLACKWARE_CHOWN],[slackware-chown],[yes],
-     [whether Slackware packages will be created with root as file owner],
-     [enable creation of Slackware packages with root as file owner])
    DS_ENABLE_OPTION([DS_CONFIG_VERSIONED_LAYOUT],[versioned-layout],[yes],
      [whether installation directories will have package version component],
      [enable installation directories with package version component])
@@ -218,7 +215,13 @@ AC_DEFUN_ONCE([DS_PACKAGING],
   [DS_PACKAGING_SLACKWARE])
 
 AC_DEFUN_ONCE([DS_PACKAGING_SLACKWARE],
-  [DS_ENABLE_OPTION([ds_config_slackware_USE_PREFIX_TOOLS],
+  [DS_ENABLE_OPTION([DS_CONFIG_SLACKWARE_CHOWN],[slackware-chown],[yes],
+     [whether Slackware packages will be created with root as file owner],
+     [enable creation of Slackware packages with root as file owner])
+  DS_ENABLE_OPTION([DS_CONFIG_SLACKWARE_LINKADD],[slackware-linkadd],[yes],
+     [whether symbolic links in Slackware packages will be created by doinst.sh],
+     [enable creation of symboliclinks in Slackware packages by doinst.sh])
+  DS_ENABLE_OPTION([DS_CONFIG_SLACKWARE_USE_PREFIX_TOOLS],
      [slackware-prefix-tools],[no],
      [whether Slackware tools under installation prefix will be used for local packages],
      [use Slackware tools under installation prefix for local packages])
@@ -233,7 +236,7 @@ AC_DEFUN_ONCE([DS_PACKAGING_SLACKWARE],
       DS_PROGRAM([ds_slackware_UPGRADEPKG_PROGRAM],
         [upgradepkg],[the Slackware package upgrader])])
    DS_WITH_SAVED_VARIABLE([PATH],
-     [if test "${ds_config_slackware_USE_PREFIX_TOOLS}" = yes ; then
+     [if test "${DS_CONFIG_SLACKWARE_USE_PREFIX_TOOLS}" = yes ; then
          PATH=${prefix}/sbin:${PATH}
       else
          PATH=/sbin:${PATH}
@@ -348,39 +351,31 @@ dnl 2 - MAJOR_INTERFACE_VERSION
 dnl 3 - MINOR_INTERFACE_VERSION
 dnl 4 - LIBRARY_NAME
 AC_DEFUN([DS_C_LANGUAGE_LIBRARY],
-  [AC_SUBST([$1_LIBRARY_ID],[$4$2.$3])
-   AC_SUBST([$1_INTERFACE_VERSION],[$2.$3])
-   AC_SUBST([$1_INTERFACE_MAJOR_VERSION],[$2])
-   AC_SUBST([$1_INTERFACE_MINOR_VERSION],[$3])
-   AC_DEFINE([$1_LIBRARY_ID],[$4$2.$3],[the library identifier])
+  [AC_DEFINE([$1_LIBRARY_ID],[$4$2.$3],[the library identifier])
    AC_DEFINE([$1_INTERFACE_VERSION],[$2.$3],[library interface version])
    AC_DEFINE([$1_INTERFACE_MAJOR_VERSION],[$2],[library interface major version])
    AC_DEFINE([$1_INTERFACE_MINOR_VERSION],[$3],[library interface minor version])
-   $1_SHARED_LIBRARY_ID=${$1_LIBRARY_ID}
-   $1_SHARED_LIBRARY_LINK_ID=$4$2
-   $1_SHARED_LIBRARY_NAME=lib${$1_SHARED_LIBRARY_ID}.so
-   $1_SHARED_LIBRARY_LINK_NAME=lib${$1_SHARED_LIBRARY_LINK_ID}.so
-   $1_STATIC_LIBRARY_ID=${$1_LIBRARY_ID}
-   $1_STATIC_LIBRARY_NAME=lib${$1_STATIC_LIBRARY_ID}.a
-   AC_SUBST([$1_SHARED_LIBRARY_ID])
-   AC_SUBST([$1_SHARED_LIBRARY_LINK_ID])
-   AC_SUBST([$1_SHARED_LIBRARY_NAME])
-   AC_SUBST([$1_SHARED_LIBRARY_LINK_NAME])
-   AC_SUBST([$1_STATIC_LIBRARY_ID])
-   AC_SUBST([$1_STATIC_LIBRARY_NAME])
-   mkdir -p meta.d/makefiles
-   echo "
-$1_LIBRARY_ID			?= ${$1_LIBRARY_ID}
-$1_INTERFACE_VERSION		?= ${$1_INTERFACE_VERSION}
-$1_INTERFACE_MAJOR_VERSION	?= ${$1_INTERFACE_MAJOR_VERSION}
-$1_INTERFACE_MINOR_VERSION	?= ${$1_INTERFACE_MINOR_VERSION}
-$1_SHARED_LIBRARY_ID		?= ${$1_SHARED_LIBRARY_ID}
-$1_SHARED_LIBRARY_LINK_ID	?= ${$1_SHARED_LIBRARY_LINK_ID}
-$1_SHARED_LIBRARY_NAME		?= ${$1_SHARED_LIBRARY_NAME}
-$1_SHARED_LIBRARY_LINK_NAME	?= ${$1_SHARED_LIBRARY_LINK_NAME}
-$1_STATIC_LIBRARY_ID		?= ${$1_STATIC_LIBRARY_ID}
-$1_STATIC_LIBRARY_NAME		?= ${$1_STATIC_LIBRARY_NAME}
-   " >"meta.d/makefiles/$1-clib.make"])
+   AC_SUBST([$1_INTERFACE_VERSION],[$2.$3])
+   AC_SUBST([$1_INTERFACE_MAJOR_VERSION],[$2])
+   AC_SUBST([$1_INTERFACE_MINOR_VERSION],[$3])
+   AC_SUBST([$1_LIBRARY_ID],[$4$2.$3])
+   AC_CONFIG_COMMANDS([$1-clib],
+     [mkdir -p "${ac_top_build_prefix}./meta.d/makefiles"
+      echo "# Variables for the $1 library.
+
+$1_LIBRARY_ID			?= $4$2.$3
+$1_INTERFACE_VERSION		?= $2.$3
+$1_INTERFACE_MAJOR_VERSION	?= $2
+$1_INTERFACE_MINOR_VERSION	?= $3
+$1_SHARED_LIBRARY_ID		?= \$($1_LIBRARY_ID)
+$1_SHARED_LIBRARY_LINK_ID	?= $4$2
+$1_SHARED_LIBRARY_NAME		?= lib\$($1_SHARED_LIBRARY_ID).so
+$1_SHARED_LIBRARY_LINK_NAME	?= lib\$($1_SHARED_LIBRARY_LINK_ID).so
+$1_STATIC_LIBRARY_ID		?= \$($1_LIBRARY_ID)
+$1_STATIC_LIBRARY_NAME		?= lib\$($1_STATIC_LIBRARY_ID).a
+
+### end of file
+" >"${ac_top_build_prefix}./meta.d/makefiles/$1-clib.make"])])
 
 dnl page
 dnl --------------------------------------------------------------------

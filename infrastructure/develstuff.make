@@ -41,9 +41,12 @@ ds_include_DEVELSTUFF_DIRS	= @DS_INCLUDE_DEVELSTUFF_DIRS@
 
 ds_config_ABI			?= @DS_CONFIG_ABI@
 ds_config_USE_SUDO		?= @DS_CONFIG_USE_SUDO@
-ds_config_SLACKWARE_CHOWN	?= @DS_CONFIG_SLACKWARE_CHOWN@
 ds_config_VERSIONED_LAYOUT	?= @DS_CONFIG_VERSIONED_LAYOUT@
 ds_config_VERBOSE_MESSAGES	?= yes
+
+ds_config_SLACKWARE_CHOWN		?= @DS_CONFIG_SLACKWARE_CHOWN@
+ds_config_SLACKWARE_LINKADD		?= @DS_CONFIG_SLACKWARE_LINKADD@
+ds_config_SLACKWARE_USE_PREFIX_TOOLS	?= @DS_CONFIG_SLACKWARE_USE_PREFIX_TOOLS@
 
 ds_config_ENABLE_DOC		?= @DS_CONFIG_ENABLE_DOC@
 ds_config_ENABLE_DOC_INFO	?= @DS_CONFIG_ENABLE_DOC_INFO@
@@ -52,7 +55,12 @@ ds_config_ENABLE_DOC_DVI	?= @DS_CONFIG_ENABLE_DOC_DVI@
 ds_config_ENABLE_DOC_PDF	?= @DS_CONFIG_ENABLE_DOC_PDF@
 ds_config_ENABLE_DOC_PS		?= @DS_CONFIG_ENABLE_DOC_PS@
 
-ds_config_ENABLE_STRIP		?= @DS_CONFIG_ENABLE_STRIP@
+ds_config_ENABLE_STATIC		?= @ds_config_ENABLE_STATIC@
+ds_config_ENABLE_SHARED		?= @ds_config_ENABLE_SHARED@
+ds_config_ENABLE_STRIP		?= @ds_config_ENABLE_STRIP@
+ds_config_ENABLE_PTHREADS	?= @ds_config_ENABLE_PTHREADS@
+ds_config_ENABLE_GCC_WARNING	?= @ds_config_ENABLE_GCC_WARNING@
+ds_config_ENABLE_SHLIB_SYMLINK	?= @ds_config_ENABLE_SHLIB_SYMLINK@
 
 # Compressor  to be  used when  creating a  tarball; it  is used  by the
 # binary distribution rules.  Supported values:
@@ -63,13 +71,6 @@ ds_config_ENABLE_STRIP		?= @DS_CONFIG_ENABLE_STRIP@
 # if a different value is set, the compressor will default to 'gzip'.
 #
 ds_config_COMPRESSOR		?= @GZIP@
-
-ds_config_ENABLE_STATIC		?= @ds_config_ENABLE_STATIC@
-ds_config_ENABLE_SHARED		?= @ds_config_ENABLE_SHARED@
-ds_config_ENABLE_STRIP		?= @ds_config_ENABLE_STRIP@
-ds_config_ENABLE_PTHREADS	?= @ds_config_ENABLE_PTHREADS@
-ds_config_ENABLE_GCC_WARNING	?= @ds_config_ENABLE_GCC_WARNING@
-ds_config_ENABLE_SHLIB_SYMLINK	?= @ds_config_ENABLE_SHLIB_SYMLINK@
 
 #page
 ## --------------------------------------------------------------------
@@ -87,7 +88,7 @@ PKG_DIR			?= @PKG_DIR@
 ## ---------------------------------------------------------------------
 
 define ds-included-phony-rules
-$(1):	$$(addsuffix -$(1),$$(ds_INCLUDED_RULES))
+$(1):	$$(addsuffix -$(1),$$(ds_RULESETS))
 endef
 
 define ds-section-rules
@@ -121,7 +122,7 @@ $(1)-print-uninstall-files-script:
 
 endef
 
-ds_INCLUDED_RULES = \
+ds_RULESETS = \
 	$(if $(filter yes,$(ds_include_BIN_RULES)),bin) \
 	$(if $(filter yes,$(ds_include_DEV_RULES)),dev) \
 	$(if $(filter yes,$(ds_include_DOC_RULES)),doc)
@@ -139,7 +140,7 @@ ds_INCLUDED_RULES = \
 	print-uninstall-dirs-script			\
 	print-uninstall-files-script
 
-all:	$(ds_INCLUDED_RULES)
+all:	$(ds_RULESETS)
 $(eval $(call ds-included-phony-rules,clean))
 $(eval $(call ds-included-phony-rules,mostlyclean))
 $(eval $(call ds-included-phony-rules,install))
@@ -190,6 +191,24 @@ clean-builddir:
 	     test "$${ANSWER}" = yes && $(RM) "$(builddir)"/*;			\
 	     true;								\
 	fi
+
+.PHONY: examples examples-clean examples-mostlyclean
+
+examples:
+examples-mostlyclean:
+examples-clean:
+
+clean:		examples-clean
+mostlyclean:	examples-mostlyclean
+
+.PHONY: tests tests-clean tests-mostlyclean check
+
+tests:
+tests-mostlyclean:
+tests-clean:
+
+clean:		tests-clean
+mostlyclean:	tests-mostlyclean
 
 .PHONY: nop nop-clean nop-mostlyclean
 
@@ -438,6 +457,14 @@ TAR		= @TAR@
 TEXI2PDF	= @TEXI2PDF@
 DVIPS		= @DVIPS@
 SUDO		= @SUDO@
+
+ifeq ($$(ds_config_COMPRESSOR),gzip)
+ds_COMPRESSOR_PROGRAM	= @GZIP@
+ds_COMPRESSOR_TAR	= --gzip
+else ifeq ($$(ds_config_COMPRESSOR),bzip)
+ds_COMPRESSOR_PROGRAM	= @BZIP@
+ds_COMPRESSOR_TAR	= --bzip2
+endif
 
 INSTALL			= @INSTALL@
 INSTALL_DIR_MODE	?= 0755
@@ -1078,29 +1105,6 @@ endef
 
 ## ---------------------------------------------------------------------
 
-#page
-## ---------------------------------------------------------------------
-## Predefined modules: tests.
-## ---------------------------------------------------------------------
-
-define ds-tests
-.PHONY: test  test-clean  test-mostlyclean
-.PHONY: tests tests-clean tests-mostlyclean
-.PHONY: check
-
-test:
-tests:			test
-check:			test
-
-test-clean:
-tests-clean:		test-clean
-clean:			test-clean
-
-test-mostlyclean:	test-clean
-tests-mostlyclean:	test-mostlyclean
-mostlyclean:		test-mostlyclean
-endef
-
 # Synopsis:
 #
 #	$(eval $(call ds-tcl-programs))
@@ -1139,40 +1143,6 @@ tcltest-mostlyclean:
 test:			tcltest
 test-clean:		tcltest-clean
 test-mostlyclean:	tcltest-mostlyclean
-endef
-
-#page
-## ---------------------------------------------------------------------
-## Predefined modules: examples.
-## ---------------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-examples))
-#
-# Description:
-#
-#  Add rules to drive examples building and installation.
-
-define ds-examples
-ds_examples_TARGETS	?=
-
-ds_examples_INSTLST	?=
-ds_examples_INSTDIR	= $$(pkgexampledir)
-
-$$(eval $$(call ds-default-clean-files-variables,ds_examples))
-$$(eval $$(call ds-module,ds_examples,doc,DATA))
-
-.PHONY: example  example-clean  example-mostlyclean
-.PHONY: examples examples-clean examples-mostlyclean
-
-examples:		ds_examples-all
-examples-clean:		ds_examples-clean
-examples-mostlyclean:	ds_examples-mostlyclean
-
-example:		examples
-example-clean:		examples-clean
-example-mostlyclean:	examples-mostlyclean
 endef
 
 #page
@@ -1642,8 +1612,8 @@ ds_bindist_dev_ARCHIVE	= $$(ds_archive_dev_PREFIX).tar.gz
 .PHONY: bindist         bindist-bin         bindist-doc         bindist-dev
 .PHONY: bindist-install bindist-bin-install bindist-doc-install bindist-dev-install
 
-bindist:		$$(addprefix bindist-,         $$(ds_INCLUDED_RULES))
-bindist-install:	$$(addprefix bindist-install-, $$(ds_INCLUDED_RULES))
+bindist:		$$(addprefix bindist-,         $$(ds_RULESETS))
+bindist-install:	$$(addprefix bindist-install-, $$(ds_RULESETS))
 
 bindist-bin:
 	$$(call ds-bindist-make-package,bin-install,$$(ds_bindist_bin_ARCHIVE))
@@ -1669,7 +1639,7 @@ ds_bindist_ARCHIVE_FULL	= $$(ds_archive_FULL_PREFIX).tar.gz
 
 bindist-full:
 	$$(call ds-bindist-make-package,\
-		$$(addsuffix -install,$$(ds_INCLUDED_RULES)),\
+		$$(addsuffix -install,$$(ds_RULESETS)),\
 		$$(ds_bindist_full_ARCHIVE))
 
 bindist-install-full:
@@ -1798,9 +1768,14 @@ ds_slackware_ENV		?=
 
 ds_slackware_MAKEPKG_PROGRAM	?= @ds_slackware_MAKEPKG_PROGRAM@
 ifeq ($$(ds_config_SLACKWARE_CHOWN),yes)
-ds_slackware_MAKEPKG_FLAGS	?= --chown y
+ds_slackware_MAKEPKG_FLAGS	= --chown y
 else
-ds_slackware_MAKEPKG_FLAGS	?= --chown n
+ds_slackware_MAKEPKG_FLAGS	= --chown n
+endif
+ifeq ($$(ds_config_SLACKWARE_LINKADD),yes)
+ds_slackware_MAKEPKG_FLAGS	+= --prepend --linkadd y
+else
+ds_slackware_MAKEPKG_FLAGS	+= --linkadd n
 endif
 ds_slackware_MAKEPKG		= $$(ds_slackware_ENV) $$(ds_archive_SUDO) $$(ds_slackware_MAKEPKG_PROGRAM) $$(ds_slackware_MAKEPKG_FLAGS)
 
@@ -1853,10 +1828,10 @@ ds_slackware_REGISTRY=$$(ds_slackware_REGISTRY_DIR)
 
 .PHONY: slackware slackware-install slackware-remove slackware-upgrade
 
-slackware:		$(addprefix slackware-make-,	  $(ds_INCLUDED_RULES))
-slackware-install:	$(addprefix slackware-install-,	  $(ds_INCLUDED_RULES))
-slackware-remove:	$(addprefix slackware-remove-,	  $(ds_INCLUDED_RULES))
-slackware-upgrade:	$(addprefix slackware-upgrade-,	  $(ds_INCLUDED_RULES))
+slackware:		$(addprefix slackware-make-,	  $(ds_RULESETS))
+slackware-install:	$(addprefix slackware-install-,	  $(ds_RULESETS))
+slackware-remove:	$(addprefix slackware-remove-,	  $(ds_RULESETS))
+slackware-upgrade:	$(addprefix slackware-upgrade-,	  $(ds_RULESETS))
 
 ## --------------------------------------------------------------------
 
@@ -1875,10 +1850,10 @@ ds_slackware_UPGRADEPKG_PROGRAM=$$(ds_local_slackware_UPGRADEPKG_PROGRAM)
 .PHONY: local-slackware        local-slackware-install
 .PHONY: local-slackware-remove local-slackware-upgrade
 
-local-slackware:	$(addprefix local-slackware-make-,	  $(ds_INCLUDED_RULES))
-local-slackware-install:$(addprefix local-slackware-install-,	  $(ds_INCLUDED_RULES))
-local-slackware-remove:	$(addprefix local-slackware-remove-,	  $(ds_INCLUDED_RULES))
-local-slackware-upgrade:$(addprefix local-slackware-upgrade-,	  $(ds_INCLUDED_RULES))
+local-slackware:	$(addprefix local-slackware-make-,	  $(ds_RULESETS))
+local-slackware-install:$(addprefix local-slackware-install-,	  $(ds_RULESETS))
+local-slackware-remove:	$(addprefix local-slackware-remove-,	  $(ds_RULESETS))
+local-slackware-upgrade:$(addprefix local-slackware-upgrade-,	  $(ds_RULESETS))
 
 ## --------------------------------------------------------------------
 

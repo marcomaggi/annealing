@@ -639,16 +639,10 @@ ac_subst_vars='LTLIBOBJS
 GSL_LIBS
 GSL_CFLAGS
 GSL_CONFIG
-annealing_STATIC_LIBRARY_NAME
-annealing_STATIC_LIBRARY_ID
-annealing_SHARED_LIBRARY_LINK_NAME
-annealing_SHARED_LIBRARY_NAME
-annealing_SHARED_LIBRARY_LINK_ID
-annealing_SHARED_LIBRARY_ID
+annealing_LIBRARY_ID
 annealing_INTERFACE_MINOR_VERSION
 annealing_INTERFACE_MAJOR_VERSION
 annealing_INTERFACE_VERSION
-annealing_LIBRARY_ID
 LDFLAGS_DL
 LIBOBJS
 GDB
@@ -691,7 +685,9 @@ ds_slackware_UPGRADEPKG_PROGRAM
 ds_slackware_REMOVEPKG_PROGRAM
 ds_slackware_INSTALLPKG_PROGRAM
 ds_slackware_MAKEPKG_PROGRAM
-ds_config_slackware_USE_PREFIX_TOOLS
+DS_CONFIG_SLACKWARE_USE_PREFIX_TOOLS
+DS_CONFIG_SLACKWARE_LINKADD
+DS_CONFIG_SLACKWARE_CHOWN
 pkgsysconfdir
 pkglibexecdir
 pkglibdir
@@ -736,7 +732,6 @@ DS_CONFIG_ENABLE_DOC_HTML
 DS_CONFIG_ENABLE_DOC_INFO
 DS_CONFIG_ENABLE_DOC
 DS_CONFIG_VERSIONED_LAYOUT
-DS_CONFIG_SLACKWARE_CHOWN
 DS_CONFIG_USE_SUDO
 DS_CONFIG_ABI
 DS_INCLUDE_DEVELSTUFF_DIRS
@@ -789,7 +784,6 @@ ac_user_opts='
 enable_option_checking
 with_abi
 enable_use_sudo
-enable_slackware_chown
 enable_versioned_layout
 enable_doc
 enable_doc_info
@@ -797,6 +791,8 @@ enable_doc_html
 enable_doc_pdf
 enable_doc_dvi
 enable_doc_ps
+enable_slackware_chown
+enable_slackware_linkadd
 enable_slackware_prefix_tools
 enable_shared
 enable_static
@@ -1446,9 +1442,6 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-use-sudo       enable use of sudo when invoking abi and abu rules
                           (default: no)
-  --enable-slackware-chown
-                          enable creation of Slackware packages with root as
-                          file owner (default: yes)
   --enable-versioned-layout
                           enable installation directories with package version
                           component (default: yes)
@@ -1464,6 +1457,12 @@ Optional Features:
                           no)
   --enable-doc-ps         enable installation of PS documentation (default:
                           no)
+  --enable-slackware-chown
+                          enable creation of Slackware packages with root as
+                          file owner (default: yes)
+  --enable-slackware-linkadd
+                          enable creation of symboliclinks in Slackware
+                          packages by doinst.sh (default: yes)
   --enable-slackware-prefix-tools
                           use Slackware tools under installation prefix for
                           local packages (default: no)
@@ -3686,18 +3685,6 @@ fi
    { $as_echo "$as_me:$LINENO: result: $DS_CONFIG_USE_SUDO" >&5
 $as_echo "$DS_CONFIG_USE_SUDO" >&6; }
 
-   { $as_echo "$as_me:$LINENO: checking whether Slackware packages will be created with root as file owner" >&5
-$as_echo_n "checking whether Slackware packages will be created with root as file owner... " >&6; }
-   # Check whether --enable-slackware-chown was given.
-if test "${enable_slackware_chown+set}" = set; then
-  enableval=$enable_slackware_chown; if test "$enableval" = yes ; then DS_CONFIG_SLACKWARE_CHOWN=yes ; else DS_CONFIG_SLACKWARE_CHOWN=no ; fi
-else
-  DS_CONFIG_SLACKWARE_CHOWN=yes
-fi
-
-   { $as_echo "$as_me:$LINENO: result: $DS_CONFIG_SLACKWARE_CHOWN" >&5
-$as_echo "$DS_CONFIG_SLACKWARE_CHOWN" >&6; }
-
    { $as_echo "$as_me:$LINENO: checking whether installation directories will have package version component" >&5
 $as_echo_n "checking whether installation directories will have package version component... " >&6; }
    # Check whether --enable-versioned-layout was given.
@@ -4826,17 +4813,41 @@ rm -f confcache
 
     pkgsysconfdir=\${sysconfdir}/\${PKG_DIR}
 
-   { $as_echo "$as_me:$LINENO: checking whether Slackware tools under installation prefix will be used for local packages" >&5
+   { $as_echo "$as_me:$LINENO: checking whether Slackware packages will be created with root as file owner" >&5
+$as_echo_n "checking whether Slackware packages will be created with root as file owner... " >&6; }
+   # Check whether --enable-slackware-chown was given.
+if test "${enable_slackware_chown+set}" = set; then
+  enableval=$enable_slackware_chown; if test "$enableval" = yes ; then DS_CONFIG_SLACKWARE_CHOWN=yes ; else DS_CONFIG_SLACKWARE_CHOWN=no ; fi
+else
+  DS_CONFIG_SLACKWARE_CHOWN=yes
+fi
+
+   { $as_echo "$as_me:$LINENO: result: $DS_CONFIG_SLACKWARE_CHOWN" >&5
+$as_echo "$DS_CONFIG_SLACKWARE_CHOWN" >&6; }
+
+  { $as_echo "$as_me:$LINENO: checking whether symbolic links in Slackware packages will be created by doinst.sh" >&5
+$as_echo_n "checking whether symbolic links in Slackware packages will be created by doinst.sh... " >&6; }
+   # Check whether --enable-slackware-linkadd was given.
+if test "${enable_slackware_linkadd+set}" = set; then
+  enableval=$enable_slackware_linkadd; if test "$enableval" = yes ; then DS_CONFIG_SLACKWARE_LINKADD=yes ; else DS_CONFIG_SLACKWARE_LINKADD=no ; fi
+else
+  DS_CONFIG_SLACKWARE_LINKADD=yes
+fi
+
+   { $as_echo "$as_me:$LINENO: result: $DS_CONFIG_SLACKWARE_LINKADD" >&5
+$as_echo "$DS_CONFIG_SLACKWARE_LINKADD" >&6; }
+
+  { $as_echo "$as_me:$LINENO: checking whether Slackware tools under installation prefix will be used for local packages" >&5
 $as_echo_n "checking whether Slackware tools under installation prefix will be used for local packages... " >&6; }
    # Check whether --enable-slackware-prefix-tools was given.
 if test "${enable_slackware_prefix_tools+set}" = set; then
-  enableval=$enable_slackware_prefix_tools; if test "$enableval" = yes ; then ds_config_slackware_USE_PREFIX_TOOLS=yes ; else ds_config_slackware_USE_PREFIX_TOOLS=no ; fi
+  enableval=$enable_slackware_prefix_tools; if test "$enableval" = yes ; then DS_CONFIG_SLACKWARE_USE_PREFIX_TOOLS=yes ; else DS_CONFIG_SLACKWARE_USE_PREFIX_TOOLS=no ; fi
 else
-  ds_config_slackware_USE_PREFIX_TOOLS=no
+  DS_CONFIG_SLACKWARE_USE_PREFIX_TOOLS=no
 fi
 
-   { $as_echo "$as_me:$LINENO: result: $ds_config_slackware_USE_PREFIX_TOOLS" >&5
-$as_echo "$ds_config_slackware_USE_PREFIX_TOOLS" >&6; }
+   { $as_echo "$as_me:$LINENO: result: $DS_CONFIG_SLACKWARE_USE_PREFIX_TOOLS" >&5
+$as_echo "$DS_CONFIG_SLACKWARE_USE_PREFIX_TOOLS" >&6; }
 
    ds_private_PATH=${PATH}
    PATH=/sbin:${PATH}
@@ -5006,7 +5017,7 @@ fi
 
    PATH=${ds_private_PATH}
    ds_private_PATH=${PATH}
-   if test "${ds_config_slackware_USE_PREFIX_TOOLS}" = yes ; then
+   if test "${DS_CONFIG_SLACKWARE_USE_PREFIX_TOOLS}" = yes ; then
          PATH=${prefix}/sbin:${PATH}
       else
          PATH=/sbin:${PATH}
@@ -11219,14 +11230,6 @@ if test "x$ac_cv_lib_dl_dlopen" = x""yes; then
 fi
 
 
-annealing_LIBRARY_ID=annealing1.1
-
-   annealing_INTERFACE_VERSION=1.1
-
-   annealing_INTERFACE_MAJOR_VERSION=1
-
-   annealing_INTERFACE_MINOR_VERSION=1
-
 
 cat >>confdefs.h <<\_ACEOF
 #define annealing_LIBRARY_ID annealing1.1
@@ -11247,31 +11250,16 @@ cat >>confdefs.h <<\_ACEOF
 #define annealing_INTERFACE_MINOR_VERSION 1
 _ACEOF
 
-   annealing_SHARED_LIBRARY_ID=${annealing_LIBRARY_ID}
-   annealing_SHARED_LIBRARY_LINK_ID=annealing1
-   annealing_SHARED_LIBRARY_NAME=lib${annealing_SHARED_LIBRARY_ID}.so
-   annealing_SHARED_LIBRARY_LINK_NAME=lib${annealing_SHARED_LIBRARY_LINK_ID}.so
-   annealing_STATIC_LIBRARY_ID=${annealing_LIBRARY_ID}
-   annealing_STATIC_LIBRARY_NAME=lib${annealing_STATIC_LIBRARY_ID}.a
+   annealing_INTERFACE_VERSION=1.1
 
+   annealing_INTERFACE_MAJOR_VERSION=1
 
+   annealing_INTERFACE_MINOR_VERSION=1
 
+   annealing_LIBRARY_ID=annealing1.1
 
+   ac_config_commands="$ac_config_commands annealing-clib"
 
-
-   mkdir -p meta.d/makefiles
-   echo "
-annealing_LIBRARY_ID			?= ${annealing_LIBRARY_ID}
-annealing_INTERFACE_VERSION		?= ${annealing_INTERFACE_VERSION}
-annealing_INTERFACE_MAJOR_VERSION	?= ${annealing_INTERFACE_MAJOR_VERSION}
-annealing_INTERFACE_MINOR_VERSION	?= ${annealing_INTERFACE_MINOR_VERSION}
-annealing_SHARED_LIBRARY_ID		?= ${annealing_SHARED_LIBRARY_ID}
-annealing_SHARED_LIBRARY_LINK_ID	?= ${annealing_SHARED_LIBRARY_LINK_ID}
-annealing_SHARED_LIBRARY_NAME		?= ${annealing_SHARED_LIBRARY_NAME}
-annealing_SHARED_LIBRARY_LINK_NAME	?= ${annealing_SHARED_LIBRARY_LINK_NAME}
-annealing_STATIC_LIBRARY_ID		?= ${annealing_STATIC_LIBRARY_ID}
-annealing_STATIC_LIBRARY_NAME		?= ${annealing_STATIC_LIBRARY_NAME}
-   " >"meta.d/makefiles/annealing-clib.make"
 
 
 # Check whether --with-gsl-prefix was given.
@@ -12046,6 +12034,7 @@ cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
 # Files that config.status was made for.
 config_files="$ac_config_files"
 config_headers="$ac_config_headers"
+config_commands="$ac_config_commands"
 
 _ACEOF
 
@@ -12072,6 +12061,9 @@ $config_files
 
 Configuration headers:
 $config_headers
+
+Configuration commands:
+$config_commands
 
 Report bugs to <bug-autoconf@gnu.org>."
 
@@ -12195,6 +12187,7 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
+    "annealing-clib") CONFIG_COMMANDS="$CONFIG_COMMANDS annealing-clib" ;;
     "meta.d/annealing-config") CONFIG_FILES="$CONFIG_FILES meta.d/annealing-config:meta/annealing-config.in" ;;
     "meta.d/annealing.pc") CONFIG_FILES="$CONFIG_FILES meta.d/annealing.pc:meta/annealing.pc.in" ;;
     "meta.d/slackware/bin/slack-desc") CONFIG_FILES="$CONFIG_FILES meta.d/slackware/bin/slack-desc:meta/slackware/bin/slack-desc.in" ;;
@@ -12218,6 +12211,7 @@ done
 if $ac_need_defaults; then
   test "${CONFIG_FILES+set}" = set || CONFIG_FILES=$config_files
   test "${CONFIG_HEADERS+set}" = set || CONFIG_HEADERS=$config_headers
+  test "${CONFIG_COMMANDS+set}" = set || CONFIG_COMMANDS=$config_commands
 fi
 
 # Have a temporary directory for convenience.  Make it in the build tree
@@ -12514,7 +12508,7 @@ $as_echo "$as_me: error: could not setup config headers machinery" >&2;}
 fi # test -n "$CONFIG_HEADERS"
 
 
-eval set X "  :F $CONFIG_FILES  :H $CONFIG_HEADERS    "
+eval set X "  :F $CONFIG_FILES  :H $CONFIG_HEADERS    :C $CONFIG_COMMANDS"
 shift
 for ac_tag
 do
@@ -12809,9 +12803,31 @@ $as_echo "$as_me: error: could not create -" >&2;}
   fi
  ;;
 
-
+  :C)  { $as_echo "$as_me:$LINENO: executing $ac_file commands" >&5
+$as_echo "$as_me: executing $ac_file commands" >&6;}
+ ;;
   esac
 
+
+  case $ac_file$ac_mode in
+    "annealing-clib":C) mkdir -p "${ac_top_build_prefix}./meta.d/makefiles"
+      echo "# Variables for the annealing library.
+
+annealing_LIBRARY_ID			?= annealing1.1
+annealing_INTERFACE_VERSION		?= 1.1
+annealing_INTERFACE_MAJOR_VERSION	?= 1
+annealing_INTERFACE_MINOR_VERSION	?= 1
+annealing_SHARED_LIBRARY_ID		?= \$(annealing_LIBRARY_ID)
+annealing_SHARED_LIBRARY_LINK_ID	?= annealing1
+annealing_SHARED_LIBRARY_NAME		?= lib\$(annealing_SHARED_LIBRARY_ID).so
+annealing_SHARED_LIBRARY_LINK_NAME	?= lib\$(annealing_SHARED_LIBRARY_LINK_ID).so
+annealing_STATIC_LIBRARY_ID		?= \$(annealing_LIBRARY_ID)
+annealing_STATIC_LIBRARY_NAME		?= lib\$(annealing_STATIC_LIBRARY_ID).a
+
+### end of file
+" >"${ac_top_build_prefix}./meta.d/makefiles/annealing-clib.make" ;;
+
+  esac
 done # for ac_tag
 
 

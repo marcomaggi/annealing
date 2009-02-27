@@ -62,17 +62,9 @@ case "$1" in
     --library-interface-minor-version)
         echo "@annealing_INTERFACE_MINOR_VERSION@"
         ;;
-
     --library-id)
         # print the shared library identifier
         echo "@annealing_LIBRARY_ID@"
-        ;;
-    --shared-library-name)
-        echo "@annealing_SHARED_LIBRARY_NAME@"
-        ;;
-    --static-library-name)
-        # print the the static library file name
-        echo "@annealing_STATIC_LIBRARY_NAME@"
         ;;
 
     ## ----------------------------------------
@@ -163,10 +155,7 @@ options:
     --library-interface-minor-version
                                 print the library interface version
                                 minor number
-
     --library-id                print the library identifier
-    --shared-library-name       print the shared library file name
-    --static-library-name       print the static library file name
 
     --prefix            print the installation prefix for
                         architecture-independent files
