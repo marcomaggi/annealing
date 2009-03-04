@@ -6416,6 +6416,7 @@ the module.
 * clang module libs macros::    Autoconf macros defining libraries.
 * clang module libs shared::    Building shared libraries.
 * clang module libs static::    Building static libraries.
+* clang module libs misc::      Miscellaneous makefile sections.
 @end menu
 
 
@@ -6725,6 +6726,47 @@ $(eval $(call ds-module,<@var{identifier}>_stlib,\
 @end deffn
 
 @c page
+@node clang module libs misc
+@subsubsection Miscellaneous makefile sections
+
+
+@deffn {Makefile Section} ds-c-library @var{identifier}
+Helper section to build both a shared and static library.  Calling:
+
+@example
+$(eval $(call ds-c-library,mine))
+@end example
+
+@noindent
+expands to:
+
+@example
+include meta.d/makefiles/mine-clib.make
+$(eval $(call ds-c-sources,mine))
+$(eval $(call ds-c-shared-library,mine))
+$(eval $(call ds-c-static-library,mine))
+@end example
+@end deffn
+
+
+@deffn {Makefile Section} ds-c-library-extended @var{identifier}
+Helper section to build both a shared and static library, and install
+header files.  Calling:
+
+@example
+$(eval $(call ds-c-library-extended,mine))
+@end example
+
+@noindent
+expands to:
+
+@example
+$(eval $(call ds-c-library,mine))
+$(eval $(call ds-h-files-installer,mine))
+@end example
+@end deffn
+
+@c page
 @node clang module progs
 @subsection Building programs
 
@@ -7016,15 +7058,10 @@ $(eval $(call ds-module,<@var{identifier}>_programs,\
 @cindex Compiling example programs
 @cindex Example programs, compilation
 
-@noindent
-When using the following function, it is useful to also include
-@func{ds-examples}.
 
-
-@deffn {Make Function} ds-c-example-programs @var{IDENTIFIER}
+@deffn {Makefile Section} ds-c-example-programs @var{IDENTIFIER}
 Define what is needed to compile and link a set of example programs.
-This function is meant to be used to compile example programs for the
-use of a library.  Calling it with:
+Calling it with:
 
 @example
 $(eval $(call ds-c-example-programs,mine))
@@ -7034,73 +7071,17 @@ $(eval $(call ds-c-example-programs,mine))
 expands to:
 
 @example
-mine_examples_SRCDIR       ?= $$(srcdir)/examples
-mine_examples_BUILDDIR     ?= $$(builddir)/examples.d
-mine_examples_RULESET ?= examples
+mine_examples_RULESET           = examples
+mine_examples_SRCDIR            ?= $(srcdir)/examples
+mine_examples_BUILDDIR          ?= $(builddir)/examples.d
 
-$$(eval $$(call ds-c-sources,mine_examples))
+mine_examples_programs_RULESET  = examples
+mine_examples_programs_BUILDDIR ?= $(mine_examples_BUILDDIR)
 
-mine_examples_programs_BUILDDIR     ?= $$(mine_examples_BUILDDIR)
-mine_examples_programs_RULESET = examples
-
-$$(eval $$(call ds-c-programs-no-install,mine_examples))
+$(eval $(call ds-c-sources,mine_examples))
+$(eval $(call ds-c-programs-no-install,mine_examples))
 @end example
-
-@noindent
-which means the following:
-
-@enumerate
-@item
-source files are collected with the pattern
-@code{$(srcdir)/examples/*.c};
-
-@item
-object files are compiled and stored in @code{$(builddir)/examples.d};
-
-@item
-an executable program for each objec file is linked and stored in
-@code{$(builddir)/examples.d}; the name of the programs is built by
-stripping the extension from the corresponding object file;
-
-@item
-examples can be run with the @code{run-mine} and @code{examples} phony
-rule.
-@end enumerate
 @end deffn
-
-
-When using @func{ds-c-example-programs} to show how to use a library
-built with:
-
-@example
-$(eval $(call ds-c-sources,mine))
-$(eval $(call ds-c-shared-library,mine))
-@end example
-
-@noindent
-we may want to do the following:
-
-@example
-# Add the library header file as prerequisite for the
-# example object files.
-mine_examples_PREREQUISITES = $(mine_SRCDIR)/mine.h
-
-# Add the source directory of the library to the include
-# search path.
-mine_examples_CC_COMPILE_MORE_FLAGS = -I$(mine_SRCDIR)
-
-# Add the shared library to the linker command line.
-mine_examples_programs_CC_BUILD_PROGRAM_PRE = \
-  -L$(mine_shared_library_BUILDDIR) -l$(mine_shared_library_ID)
-
-# When running the example programs we need to find the
-# shared library in its build directory
-mine_examples_programs_ENV = \
-  LD_LIBRARY_PATH=$(mine_shared_library_BUILDDIR)
-
-$(eval $(call ds-c-example-programs,mine))
-@end example
-
 
 @c page
 @node clang module progs tests
@@ -7110,15 +7091,10 @@ $(eval $(call ds-c-example-programs,mine))
 @cindex Compiling test programs
 @cindex Test programs, compilation
 
-@noindent
-When using the following function, it is useful to also include
-@func{ds-tests}.
 
-
-@deffn {Make Function} ds-c-test-programs @var{IDENTIFIER}
-Define what is needed to compile and link a set of test programs.
-This function is meant to be used to compile test programs for the
-use of a library.  Calling it with:
+@deffn {Makefile Section} ds-c-test-programs @var{IDENTIFIER}
+Define what is needed to compile and link a set of example programs.
+Calling it with:
 
 @example
 $(eval $(call ds-c-test-programs,mine))
@@ -7128,76 +7104,17 @@ $(eval $(call ds-c-test-programs,mine))
 expands to:
 
 @example
-mine_tests_SRCDIR       ?= $(srcdir)/tests
-mine_tests_BUILDDIR     ?= $(builddir)/tests.d
-mine_tests_RULESET ?= tests
+mine_tests_RULESET           = tests
+mine_tests_SRCDIR            ?= $(srcdir)/tests
+mine_tests_BUILDDIR          ?= $(builddir)/tests.d
+
+mine_tests_programs_RULESET  = tests
+mine_tests_programs_BUILDDIR ?= $(mine_tests_BUILDDIR)
 
 $(eval $(call ds-c-sources,mine_tests))
-
-mine_tests_programs_BUILDDIR     ?= $(mine_tests_BUILDDIR)
-mine_tests_programs_RULESET = tests
-
 $(eval $(call ds-c-programs-no-install,mine_tests))
-
-$(mine_tests_programs_RULESET): run-mine_tests
 @end example
-
-@noindent
-which means the following:
-
-@enumerate
-@item
-source files are collected with the pattern
-@code{$(srcdir)/tests/*.c};
-
-@item
-object files are compiled and stored in @code{$(builddir)/tests.d};
-
-@item
-an executable program for each objec file is linked and stored in
-@code{$(builddir)/tests.d}; the name of the programs is built by
-stripping the extension from the corresponding object file;
-
-@item
-tests can be run with the @code{run-mine} and @code{tests} phony
-rule.
-@end enumerate
 @end deffn
-
-
-When using @func{ds-c-test-programs} to test the usage of a library
-built with:
-
-@example
-$(eval $(call ds-c-sources,mine))
-$(eval $(call ds-c-shared-library,mine))
-@end example
-
-@noindent
-we may want to do the following:
-
-@example
-# Add the library header file as prerequisite for the
-# test object files.
-mine_tests_PREREQUISITES = $(mine_SRCDIR)/mine.h
-
-# Add the source directory of the library to the include
-# search path.
-mine_tests_CC_COMPILE_MORE_FLAGS = -I$(mine_SRCDIR)
-
-# Add the shared library to the linker command line.
-mine_tests_programs_CC_BUILD_PROGRAM_PRE = \
-  -L$(mine_shared_library_BUILDDIR) -l$(mine_shared_library_ID)
-
-# When running the test programs we need to find the
-# shared library in its build directory
-mine_tests_programs_ENV = \
-  LD_LIBRARY_PATH=$(mine_shared_library_BUILDDIR)
-
-$(eval $(call ds-c-test-programs,mine))
-@end example
-
-
 
 @c page
 @node clang misc

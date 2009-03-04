@@ -22,26 +22,16 @@ $(eval $(call ds-c-library-extended,annealing))
 ## Tests.
 ## ------------------------------------------------------------
 
-anntests_RULESET		= tests
-anntests_SRCDIR			= $(srcdir)/tests
-anntests_BUILDDIR		= $(builddir)/tests.d
-anntests_PREREQUISITES		= annealing.h
-anntests_CC_COMPILE_INCLUDES	= -I$(annealing_SRCDIR)
+annealing_tests_PREREQUISITES			= annealing.h
+annealing_tests_CC_COMPILE_INCLUDES		= -I$(annealing_SRCDIR)
+annealing_tests_programs_CC_PROGRAM_LDFLAGS	= -L$(annealing_shlib_BUILDDIR)
+annealing_tests_programs_CC_PROGRAM_LIBS	= $(GSL_LIBS) -l$(annealing_LIBRARY_ID)
 
-anntests_programs_RULESET		= tests
-anntests_programs_BUILDDIR		= $(builddir)/tests.d
-anntests_programs_CC_PROGRAM_LDFLAGS	= -L$(annealing_shlib_BUILDDIR)
-anntests_programs_CC_PROGRAM_LIBS	= $(GSL_LIBS) -l$(annealing_LIBRARY_ID)
-
-$(eval $(call ds-c-sources,anntests))
-$(eval $(call ds-c-programs-no-install,anntests))
+$(eval $(call ds-c-test-programs,annealing))
 
 tests:
-	$(foreach f,$(anntests_programs_PATHNAMES),\
+	$(foreach f,$(annealing_tests_programs_PATHNAMES),\
 	LD_LIBRARY_PATH=$(annealing_shlib_BUILDDIR) $(f);)
-
-tests-mostlyclean:	anntests_programs-mostlyclean
-tests-clean:		anntests_programs-clean
 
 #page
 ## ------------------------------------------------------------

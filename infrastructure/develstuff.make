@@ -1292,24 +1292,23 @@ endef
 
 #page
 define ds-c-example-programs
-$(1)_examples_RULESET	?= examples
-$(1)_examples_SRCDIR	?= $$(srcdir)/examples
-$(1)_examples_BUILDDIR	?= $$(builddir)/examples.d
-$$(eval $$(call ds-c-sources,$(1)_examples))
-$(1)_examples_programs_BUILDDIR	?= $$($(1)_examples_BUILDDIR)
+$(1)_examples_RULESET		= examples
+$(1)_examples_SRCDIR		?= $$(srcdir)/examples
+$(1)_examples_BUILDDIR		?= $$(builddir)/examples.d
 $(1)_examples_programs_RULESET	= examples
-$$(eval $$(call ds-c-programs-no-install,$(1)_examples))
+$(1)_examples_programs_BUILDDIR	?= $$($(1)_examples_BUILDDIR)
+$$(eval $$(call ds-c-sources,$(1)))
+$$(eval $$(call ds-c-programs-no-install,$(1)))
 endef
 
 define ds-c-test-programs
-$(1)_tests_RULESET	?= test
-$(1)_tests_SRCDIR	?= $$(srcdir)/tests
-$(1)_tests_BUILDDIR	?= $$(builddir)/tests.d
-$$(eval $$(call ds-c-sources,$(1)_tests))
+$(1)_tests_RULESET		= tests
+$(1)_tests_SRCDIR		?= $$(srcdir)/tests
+$(1)_tests_BUILDDIR		?= $$(builddir)/tests.d
+$(1)_tests_programs_RULESET	= tests
 $(1)_tests_programs_BUILDDIR	?= $$($(1)_tests_BUILDDIR)
-$(1)_tests_programs_RULESET	?= test
+$$(eval $$(call ds-c-sources,$(1)_tests))
 $$(eval $$(call ds-c-programs-no-install,$(1)_tests))
-$$($(1)_tests_programs_RULESET): run-$(1)_tests
 endef
 
 define ds-h-files-installer

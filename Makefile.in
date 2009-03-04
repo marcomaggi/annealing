@@ -6,6 +6,5 @@ builddir	= @builddir@
 
 include meta.d/makefiles/develstuff.make
 include meta.d/makefiles/project.make
-$(eval $(call ds-common-modules))
 
 ### end of file
