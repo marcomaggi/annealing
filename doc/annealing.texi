@@ -75,7 +75,7 @@
 
 @c To be used as @value{AUTHOR_EMAIL} whenever we need to include the
 @c email of the *single* author of this document.
-@c @set AUTHOR_EMAIL               @email{marcomaggi@@gna.org}
+@set AUTHOR_EMAIL               @email{marcomaggi@@gna.org}
 
 @c To be used as @value{COPYRIGHT_YEARS} whenever we need to include the
 @c list of copyright years.
@@ -95,13 +95,15 @@ The package is distributed under the terms of the @gnu{} General Public
 License (@gpl{}) and can be downloaded from:
 
 @center @url{http://gna.org/projects/@value{PACKAGE_NICKNAME}}
+@center @url{http://github.com/marcomaggi/@value{PACKAGE_NICKNAME}/tree/master}
 
 @noindent
-Copyright @copyright{} @value{COPYRIGHT_YEARS} by @value{AUTHOR}
+Copyright @copyright{} 1996, 1997, 1998, 1999, 2000 by Mark Galassi@*
+Copyright @copyright{} 2007, 2009 by Marco Maggi @value{AUTHOR_EMAIL}
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
-under the terms of the @gnu{} Free Documentation License, Version 1.2 or
+under the terms of the @gnu{} Free Documentation License, Version 1.3 or
 any later version published by the Free Software Foundation; with
 Invariant Sections being ``@gnu{} Free Documentation License'' and
 ``@gnu{} General Public License'', no Front--Cover Texts, and no
@@ -228,7 +230,6 @@ form.
 @section Using the library
 
 
-@noindent
 In the following we assume that the library is installed under the
 @file{/usr/local} hierarchy.
 
@@ -239,9 +240,6 @@ arguments for the usage screen.  An example of output for the important
 options is:
 
 @example
-$ annealing-config --package-xversion
-0.2a1
-
 $ annealing-config --package-version
 0.2.0
 
@@ -255,7 +253,7 @@ $ annealing-config --libdir
 /usr/local/lib
 
 $ annealing-config --library-id
-annealing2.0
+annealing1.0
 @end example
 
 There is a single header file that must be included in C sources:
@@ -285,10 +283,9 @@ option to the linker.
 @section Using @gnu{} Autoconf
 
 
-@noindent
-If you use @gnu{} Autoconf to configure your application you can embed
-in your distribution the file @file{annealing.m4}, installed under
-@file{$prefix/share/aclocal}, and load it in your @file{configure.ac} by
+If we use @gnu{} Autoconf to configure our application we can embed in
+our project the file @file{annealing.m4}, installed under
+@file{$prefix/share/aclocal}, and load it in our @file{configure.ac} by
 putting:
 
 @example
@@ -297,8 +294,8 @@ m4_include(annealing.m4)
 
 @noindent
 in @file{aclocal.m4}.  Notice that @gsl{} distributes its own Autoconf
-plug--in, a file named @file{gsl.m4}.  The @file{annealing.m4} macro file
-defines a function that can be invoked with:
+plug--in, a file named @file{gsl.m4}.  The @file{annealing.m4} macro
+file defines a macro that can be invoked with:
 
 @example
 ANNEALING_LIBRARY(1,0)
@@ -315,44 +312,44 @@ specify them.
 
 @table @code
 @item @@ANNEALING_INCLUDEDIR@@
-the directory under which header files are installed, example:
-@file{/usr/local/include/annealing/0.2a1};
+The directory under which header files are installed, example:
+
+@example
+/usr/local/include/annealing/0.2a1
+@end example
+
+
+@item @@ANNEALING_CPPFLAGS@@
+The preprocessor option @option{-I} with the value of
+@code{@@ANNEALING_INCLUDEDIR@@} attached, example:
+
+@example
+-I/usr/local/include/annealing/0.2a1
+@end example
 
 @item @@ANNEALING_LIBDIR@@
-the directory under which shared and static libraries are installed,
-example: @file{/usr/local/lib};
+The directory under which shared and static libraries are installed,
+example: @file{/usr/local/lib}.
 
 @item @@ANNEALING_LDFLAGS@@
-the linker option @code{-L} with the value of
-@code{@@ANNEALING_LIBDIR@@} appended, example: @file{-L/usr/local/lib};
-this value should be appended to the value of the @code{LDFLAGS}
-variable in your @file{Makefile};
+The linker option @code{-L} with the value of
+@code{@@ANNEALING_LIBDIR@@} appended, example: @file{-L/usr/local/lib}.
 
 @item @@ANNEALING_LIBRARY_ID@@
-the identifier of the shared or static library, example:
-@code{annealing1.0};
+The identifier of the shared or static library, example:
+@code{annealing1.0}.
 
 @item @@ANNEALING_LIBS@@
-the linker option @code{-l} with the value of
+The linker option @code{-l} with the value of
 @code{@@ANNEALING_LIBRARY_ID@@} appended, example:
-@code{-lannealing1.0}; this value must be appended to the command line
-of the linking command for libraries and programs that directly use
-Annealing; for example: it could be appended to the value of the
-@code{LIBS} variable in your @file{Makefile}.
+@code{-lannealing1.0}.
 @end table
-
-@autoconfref{Preset Output Variables}, for details on the
-@file{Makefile} variables @code{LDFLAGS} and @code{LIBS}.
-
-
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c page
 @node overview pkgconfig
 @section Using pkgconfig
 
 
-@noindent
 @pkgconfig{} is a program (a compiled executable) that inspects a
 database of package meta informations and prints to its standard output
 channel informations about installed packages and libraries.  Annealing
@@ -378,9 +375,6 @@ $ pkg-config annealing --variable=<VARNAME>
 an example of output for the important variables is:
 
 @example
-$ pkg-config annealing --variable=PACKAGE_XVERSION
-0.2a1
-
 $ pkg-config annealing --variable=PACKAGE_VERSION
 0.2.0
 
@@ -431,16 +425,6 @@ distribution version.
 @chapter Simulated annealing
 
 
-@menu
-* annealing algorithm::         The basic algorithm.
-* annealing types::             Data types.
-* annealing basic::             Interface to the basic algorithm.
-* annealing multi::             Interface to the multi-best algorithm.
-* annealing many::              Interface to the many-tries algorithm.
-@end menu
-
-
-@noindent
 Stochastic search techniques are used when the structure of a space is
 not well understood or is not smooth, so that techniques like Newton's
 method (which requires calculating Jacobian derivative matrices) cannot
@@ -455,15 +439,19 @@ minima; it is based on the idea of taking a random walk through the
 space at successively lower temperatures, where the probability of
 taking a step is given by a Boltzmann distribution.
 
-
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@menu
+* annealing algorithm::         The basic algorithm.
+* annealing types::             Data types.
+* annealing basic::             Interface to the basic algorithm.
+* annealing multi::             Interface to the multi-best algorithm.
+* annealing many::              Interface to the many-tries algorithm.
+@end menu
 
 @c page
 @node annealing algorithm
 @section The basic algorithm
 
 
-@noindent
 Here is an explanation of the basic algorithm.  The idea is to generate
 at random new configurations in the solution's space, and apply two
 criteria to decide if the a new configuration must be accepted or
@@ -977,7 +965,6 @@ copy_function (void * dummy,
 @section Interface to the multi--best algorithm
 
 
-@noindent
 To understand this section you have to read @ref{annealing algorithm}
 first.
 
@@ -1279,7 +1266,6 @@ copy_function (void * dummy, void * dst_configuration, void * src_configuration)
 @section Interface to the many--tries algorithm
 
 
-@noindent
 To understand this section you have to read @ref{annealing algorithm}
 first.
 
@@ -1730,7 +1716,6 @@ copy_function (void * dummy, void * dst_configuration, void * src_configuration)
 @section Version functions
 
 
-@noindent
 @ref{library version} for details on version numbers.
 
 
@@ -1748,9 +1733,6 @@ Return an integer representing the interface major number version.
 Return an integer representing the interface minor number version.
 @end deftypefun
 
-
-@c  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c page
 @node References
 @appendix Bibliography and references
@@ -1761,8 +1743,6 @@ Return an integer representing the interface minor number version.
 2007, 14:52 UTC.  Wikimedia Foundation, Inc. 26 Feb 2007
 @url{http://en.wikipedia.org/w/index.php?title=Boltzmann_distribution&oldid=102908405}.
 
-
-@c  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c page
 
