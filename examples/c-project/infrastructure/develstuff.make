@@ -38,6 +38,7 @@ ds_include_DEV_RULES			= @DS_INCLUDE_DEV_RULES@
 ds_include_AUTOCONF_DIRS		= @DS_INCLUDE_AUTOCONF_DIRS@
 ds_include_DEVELSTUFF_DIRS		= @DS_INCLUDE_DEVELSTUFF_DIRS@
 ds_include_C_LANGUAGE			= @DS_INCLUDE_C_LANGUAGE@
+ds_include_CXX_LANGUAGE			= @DS_INCLUDE_CXX_LANGUAGE@
 ds_include_GENERIC_DOCUMENTATION	= @DS_INCLUDE_GENERIC_DOCUMENTATION@
 ds_include_TEXINFO_DOCUMENTATION	= @DS_INCLUDE_TEXINFO_DOCUMENTATION@
 ds_include_META_SCRIPTS			= @DS_INCLUDE_META_SCRIPTS@
@@ -1054,19 +1055,8 @@ CC_LINK_OUTPUT		?= -o
 
 endif # ds_include_C_LANGUAGE = yes
 
-#page
-## --------------------------------------------------------------------
-## CXX language support.
 ## --------------------------------------------------------------------
 
-ifeq ($(ds_include_CXX_LANGUAGE),yes)
-
-CXX			?= @CXX@
-CXXFLAGS		?= @CXXFLAGS@
-
-endif # ds_include_CXX_LANGUAGE = yes
-
-#page
 define ds-cc-compile
 $(1)_CC_COMPILE_ENV		?=
 $(1)_CC_COMPILE_CC		?= $$(CC) $$(GCC_PIPE)
@@ -1115,7 +1105,8 @@ $(1)_CC_SHLIB			?= $$($(1)_CC_SHLIB_ENV)	\
 				$$($(1)_CC_SHLIB_POST)
 endef
 
-#page
+## --------------------------------------------------------------------
+
 define ds-c-sources
 $(1)_RULESET		?= bin
 $(1)_SRCDIR		?= $$(srcdir)/src
@@ -1142,7 +1133,8 @@ $$($(1)_TARGETS) : $$($(1)_BUILDDIR)/%.@OBJEXT@ : $$($(1)_SRCDIR)/%.c $$($(1)_PR
 	$$($(1)_CC_COMPILE) $$(@) $$(<)
 endef
 
-#page
+## --------------------------------------------------------------------
+
 define ds-c-shared-library
 ifeq ($$(ds_config_ENABLE_SHARED),yes)
 
@@ -1194,7 +1186,8 @@ endif # ds_config_ENABLE_SHLIB_SYMLINK = yes
 endif # ds_config_ENABLE_SHARED = yes
 endef
 
-#page
+## --------------------------------------------------------------------
+
 define ds-c-static-library
 ifeq ($$(ds_config_ENABLE_STATIC),yes)
 
@@ -1222,7 +1215,8 @@ $$($(1)_stlib_PATHNAME) : $$($(1)_stlib_OBJECTS)
 endif # ds_config_ENABLE_STATIC = yes
 endef
 
-#page
+## --------------------------------------------------------------------
+
 define ds-c-single-program
 # $(1) - the identifier of the module
 # $(2) - the name of the program
@@ -1242,7 +1236,7 @@ $(1)_sinprog_OBJECTS	?= $$($(1)_TARGETS)
 $$(eval $$(call ds-builddir,$(1)_sinprog))
 
 $(1)_sinprog_PREFIX	?=
-$(1)_sinprog_NAME	= $$($(1)_sinprog_PREFIX)/$(2)
+$(1)_sinprog_NAME	= $$($(1)_sinprog_PREFIX)$(2)
 $(1)_sinprog_PATHNAME	= $$($(1)_sinprog_BUILDDIR)/$$($(1)_sinprog_NAME)
 $(1)_sinprog_TARGETS	= $$($(1)_sinprog_PATHNAME)
 
@@ -1255,7 +1249,8 @@ $$($(1)_sinprog_PATHNAME) : $$($(1)_sinprog_OBJECTS)
 	$$(STRIP) $$(@)
 endef
 
-#page
+## --------------------------------------------------------------------
+
 define ds-c-programs
 # $(1) - the identifier of the module
 $$(eval $$(call ds-c-programs-no-install,$(1)))
@@ -1290,7 +1285,8 @@ $$($(1)_programs_PATHNAMES) \
 	$$(STRIP) $$(@)
 endef
 
-#page
+## --------------------------------------------------------------------
+
 define ds-c-example-programs
 $(1)_examples_RULESET		= examples
 $(1)_examples_SRCDIR		?= $$(srcdir)/examples
@@ -1310,6 +1306,8 @@ $(1)_tests_programs_BUILDDIR	?= $$($(1)_tests_BUILDDIR)
 $$(eval $$(call ds-c-sources,$(1)_tests))
 $$(eval $$(call ds-c-programs-no-install,$(1)_tests))
 endef
+
+## --------------------------------------------------------------------
 
 define ds-h-files-installer
 $(1)_c_headers_RULESET	?= dev
@@ -1332,6 +1330,276 @@ endef
 define ds-c-library-extended
 $$(eval $$(call ds-c-library,$(1)))
 $$(eval $$(call ds-h-files-installer,$(1)))
+endef
+
+#page
+## --------------------------------------------------------------------
+## C++ language support.
+## --------------------------------------------------------------------
+
+ifeq ($(ds_include_CXX_LANGUAGE),yes)
+
+CXX			?= @CXX@
+CXXFLAGS		?= @CXXFLAGS@
+
+ifeq ($(ds_config_ENABLE_GCC_WARNING),yes)
+GXX_WARNINGS		= -Wall -W -Wextra -pedantic			\
+			  -Wpointer-arith -Wcast-qual -Wcast-align	\
+			  -Wwrite-strings -Wshadow -fno-common
+endif # ds_config_ENABLE_GCC_WARNING = yes
+
+#CXX_COMPILE_OUTPUT	?= $(if @CXX_NO_MINUS_C_MINUS_O@,-o,-c -o)
+CXX_COMPILE_OUTPUT	?= $(CC_COMPILE_OUTPUT)
+CXX_LINK_OUTPUT		?= -o
+
+endif # ds_include_CXX_LANGUAGE = yes
+
+## --------------------------------------------------------------------
+
+define ds-cxx-compile
+$(1)_CXX_COMPILE_ENV		?=
+$(1)_CXX_COMPILE_CXX		?= $$(CXX) $$(GCC_PIPE)
+$(1)_CXX_COMPILE_INCLUDES	?=
+$(1)_CXX_COMPILE_CPPFLAGS	?= $$(DEFS) $$(CPPFLAGS)
+$(1)_CXX_COMPILE_CXXFLAGS	?= $$(GXX_WARNINGS) $$(CXXFLAGS)
+$(1)_CXX_COMPILE_MORE		?=
+$(1)_CXX_COMPILE		?= $$($(1)_CXX_COMPILE_ENV)	\
+				$$($(1)_CXX_COMPILE_CXX)	\
+				$$($(1)_CXX_COMPILE_INCLUDES)	\
+				$$($(1)_CXX_COMPILE_CPPFLAGS)	\
+				$$($(1)_CXX_COMPILE_CXXFLAGS)	\
+				$$($(1)_CXX_COMPILE_MORE)	\
+				$$(CXX_COMPILE_OUTPUT)
+endef
+
+define ds-cxx-link-program
+$(1)_CXX_PROGRAM_ENV		?=
+$(1)_CXX_PROGRAM_CXX		?= $$(CXX) $$(GCC_PIPE)
+$(1)_CXX_PROGRAM_LDFLAGS	?= $$(LDFLAGS)
+$(1)_CXX_PROGRAM_LIBS		?= $$(LIBS)
+$(1)_CXX_PROGRAM_PRE		?=
+$(1)_CXX_PROGRAM_POST		?=
+$(1)_CXX_PROGRAM		?= $$($(1)_CXX_PROGRAM_ENV)	\
+				$$($(1)_CXX_PROGRAM_CXX)	\
+				$$($(1)_CXX_PROGRAM_LDFLAGS)	\
+				$$($(1)_CXX_PROGRAM_PRE)	\
+				$$($(1)_CXX_PROGRAM_LIBS)	\
+				$$(CXX_LINK_OUTPUT) $$(@) $$(^)	\
+				$$($(1)_CXX_PROGRAM_POST)
+endef
+
+define ds-cxx-link-shared-library
+$(1)_CXX_SHLIB_ENV		?=
+$(1)_CXX_SHLIB_CXX		?= $$(CXX) $$(GCC_PIPE) $$(GCC_SHARED)
+$(1)_CXX_SHLIB_LDFLAGS		?= $$(LDFLAGS)
+$(1)_CXX_SHLIB_LIBS		?= $$(LIBS)
+$(1)_CXX_SHLIB_PRE		?=
+$(1)_CXX_SHLIB_POST		?=
+$(1)_CXX_SHLIB			?= $$($(1)_CXX_SHLIB_ENV)	\
+				$$($(1)_CXX_SHLIB_CXX)		\
+				$$($(1)_CXX_SHLIB_LDFLAGS)	\
+				$$($(1)_CXX_SHLIB_PRE)		\
+				$$($(1)_CXX_SHLIB_LIBS)		\
+				$$(CXX_LINK_OUTPUT) $$(@) $$(^)	\
+				$$($(1)_CXX_SHLIB_POST)
+endef
+
+## --------------------------------------------------------------------
+
+define ds-cxx-sources
+$(1)_RULESET		?= bin
+$(1)_SRCDIR		?= $$(srcdir)/src
+$(1)_BUILDDIR		?= $$(builddir)/objects.d
+$(1)_PATTERNS		?= *.cpp
+$(1)_PREREQUISITES	?=
+
+$$(eval $$(call ds-srcdir,$(1)))
+$$(eval $$(call ds-builddir,$(1)))
+
+vpath	%.hpp		$$($(1)_SRCDIR)
+vpath	%.@OBJEXT@	$$($(1)_BUILDDIR)
+
+$(1)_CXX_COMPILE_INCLUDES+= -I$$(builddir) -I$$($(1)_SRCDIR)
+$$(eval $$(call ds-cxx-compile,$(1)))
+
+$(1)_SOURCES	= $$(call ds-glob,$(1),$$($(1)_PATTERNS))
+$(1)_TARGETS	= $$(call ds-replace-dir,$$($(1)_BUILDDIR),$$($(1)_SOURCES:.cpp=.@OBJEXT@))
+
+$$(eval $$(call ds-default-clean-variables,$(1)))
+$$(eval $$(call ds-module-no-install,$(1),$$($(1)_RULESET)))
+
+$$($(1)_TARGETS) : $$($(1)_BUILDDIR)/%.@OBJEXT@ : $$($(1)_SRCDIR)/%.cpp $$($(1)_PREREQUISITES)
+	$$($(1)_CXX_COMPILE) $$(@) $$(<)
+endef
+
+## --------------------------------------------------------------------
+
+define ds-cxx-shared-library
+ifeq ($$(ds_config_ENABLE_SHARED),yes)
+
+$(1)_shlib_RULESET	?= bin
+$(1)_shlib_BUILDDIR	?= $$(builddir)/libraries.d
+$(1)_shlib_OBJECTS	?= $$($(1)_TARGETS)
+
+$$(eval $$(call ds-builddir,$(1)_shlib))
+
+$(1)_shlib_NAME		= $$($(1)_SHARED_LIBRARY_NAME)
+$(1)_shlib_PATHNAME	= $$($(1)_shlib_BUILDDIR)/$$($(1)_shlib_NAME)
+$(1)_shlib_LINK_NAME	= $$($(1)_SHARED_LIBRARY_LINK_NAME)
+$(1)_shlib_LINK_PATHNAME= $$($(1)_shlib_BUILDDIR)/$$($(1)_shlib_LINK_NAME)
+$(1)_shlib_TARGETS	= $$($(1)_shlib_PATHNAME) $$($(1)_shlib_LINK_PATHNAME)
+$(1)_shlib_INSTLST	= $$($(1)_shlib_PATHNAME)
+$(1)_shlib_INSTDIR	?= $(libdir)
+
+$$(eval $$(call ds-cxx-link-shared-library,$(1)_shlib))
+$$(eval $$(call ds-default-clean-variables,$(1)_shlib))
+$$(eval $$(call ds-module,$(1)_shlib,$$($(1)_shlib_RULESET),LIB))
+
+$$($(1)_shlib_PATHNAME) : $$($(1)_shlib_OBJECTS)
+	$$(call ds-echo,'## ---------------------------------------------------------------------')
+	$$(call ds-echo,'## Building shared library $$($(1)_shlib_NAME)')
+	$$($(1)_shlib_CXX_SHLIB)
+	$$(STRIP) $$(@)
+ifeq ($$(ds_config_ENABLE_SHLIB_SYMLINK),yes)
+	cd $$($(1)_shlib_BUILDDIR);\
+	test -L $$($(1)_shlib_LINK_NAME) || \
+	$$(SYMLINK) $$($(1)_shlib_NAME) $$($(1)_shlib_LINK_NAME)
+endif
+	$$(call ds-echo,'## done.')
+
+ifeq ($$(ds_config_ENABLE_SHLIB_SYMLINK),yes)
+$(1)_shlib-install-post:
+	$$(call ds-install-directory,$(1)_shlib)
+	cd $$(DESTDIR)$$($(1)_shlib_INSTDIR) ; \
+	$$(SYMLINK) $$($(1)_shlib_NAME) $$($(1)_shlib_LINK_NAME)
+
+$(1)_shlib-uninstall-post:
+	$$(RM_FILE) $$(DESTDIR)$$(libdir)/$$($(1)_shlib_LINK_NAME)
+
+$(1)_shlib-print-install-files-layout-post:
+	@echo $$($(1)_shlib_INSTDIR)/$$($(1)_shlib_LINK_NAME)
+
+$(1)_shlib-print-uninstall-files-script-post:
+	@echo $$(RM_FILE) $$($(1)_shlib_INSTDIR)/$$($(1)_shlib_LINK_NAME)
+endif # ds_config_ENABLE_SHLIB_SYMLINK = yes
+endif # ds_config_ENABLE_SHARED = yes
+endef
+
+## --------------------------------------------------------------------
+
+define ds-cxx-single-program
+# $(1) - the identifier of the module
+# $(2) - the name of the program
+$$(eval $$(call ds-cxx-single-program-no-install,$(1),$(2)))
+$$(eval $$(call ds-default-install-variables,$(1),$(pkglibexecdir)))
+$$(eval $$(call ds-module-install-rules,$(1),$$($(1)_sinprog_RULESET),BIN))
+endef
+
+define ds-cxx-single-program-no-install
+# $(1) - the identifier of the module
+# $(2) - the name of the program
+
+$(1)_sinprog_RULESET	?= bin
+$(1)_sinprog_BUILDDIR	?= $$(builddir)/programs.d
+$(1)_sinprog_OBJECTS	?= $$($(1)_TARGETS)
+
+$$(eval $$(call ds-builddir,$(1)_sinprog))
+
+$(1)_sinprog_PREFIX	?=
+$(1)_sinprog_NAME	= $$($(1)_sinprog_PREFIX)$(2)
+$(1)_sinprog_PATHNAME	= $$($(1)_sinprog_BUILDDIR)/$$($(1)_sinprog_NAME)
+$(1)_sinprog_TARGETS	= $$($(1)_sinprog_PATHNAME)
+
+$$(eval $$(call ds-cxx-link-program,$(1)_sinprog))
+$$(eval $$(call ds-default-clean-variables,$(1)_sinprog))
+$$(eval $$(call ds-module-no-install,$(1)_sinprog,$$($(1)_sinprog_RULESET)))
+
+$$($(1)_sinprog_PATHNAME) : $$($(1)_sinprog_OBJECTS)
+	$$($(1)_sinprog_CXX_PROGRAM)
+	$$(STRIP) $$(@)
+endef
+
+## --------------------------------------------------------------------
+
+define ds-cxx-programs
+# $(1) - the identifier of the module
+$$(eval $$(call ds-cxx-programs-no-install,$(1)))
+$$(eval $$(call ds-default-install-variables,$(1),$(pkglibexecdir)))
+$$(eval $$(call ds-module-install-rules,$(1),$$($(1)_programs_RULESET),BIN))
+endef
+
+define ds-cxx-programs-no-install
+# $(1) - the identifier of the module
+
+$(1)_programs_RULESET	?= bin
+$(1)_programs_SRCDIR	?= $$($(1)_BUILDDIR)
+$(1)_programs_BUILDDIR	?= $$(builddir)/programs.d
+$(1)_programs_OBJECTS	?= $$($(1)_TARGETS)
+
+$$(eval $$(call ds-builddir,$(1)_programs))
+
+$(1)_programs_PREFIX	?=
+$(1)_programs_NAMES	= $$(addprefix $$($(1)_programs_PREFIX),\
+				$$(notdir $$($(1)_programs_OBJECTS:.@OBJEXT@=)))
+$(1)_programs_PATHNAMES	= $$(addprefix $$($(1)_programs_BUILDDIR)/,$$($(1)_programs_NAMES))
+$(1)_programs_TARGETS	= $$($(1)_programs_PATHNAMES)
+
+$$(eval $$(call ds-cxx-link-program,$(1)_programs))
+$$(eval $$(call ds-default-clean-variables,$(1)_programs))
+$$(eval $$(call ds-module-no-install,$(1)_programs,$$($(1)_programs_RULESET)))
+
+$$($(1)_programs_PATHNAMES) \
+   : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% \
+   : $$($(1)_programs_SRCDIR)/%.@OBJEXT@
+	$$($(1)_programs_CXX_PROGRAM)
+	$$(STRIP) $$(@)
+endef
+
+## --------------------------------------------------------------------
+
+define ds-cxx-example-programs
+$(1)_examples_RULESET		= examples
+$(1)_examples_SRCDIR		?= $$(srcdir)/examples
+$(1)_examples_BUILDDIR		?= $$(builddir)/examples.d
+$(1)_examples_programs_RULESET	= examples
+$(1)_examples_programs_BUILDDIR	?= $$($(1)_examples_BUILDDIR)
+$$(eval $$(call ds-cxx-sources,$(1)))
+$$(eval $$(call ds-cxx-programs-no-install,$(1)))
+endef
+
+define ds-cxx-test-programs
+$(1)_tests_RULESET		= tests
+$(1)_tests_SRCDIR		?= $$(srcdir)/tests
+$(1)_tests_BUILDDIR		?= $$(builddir)/tests.d
+$(1)_tests_programs_RULESET	= tests
+$(1)_tests_programs_BUILDDIR	?= $$($(1)_tests_BUILDDIR)
+$$(eval $$(call ds-cxx-sources,$(1)_tests))
+$$(eval $$(call ds-cxx-programs-no-install,$(1)_tests))
+endef
+
+## --------------------------------------------------------------------
+
+define ds-hpp-files-installer
+$(1)_cxx_headers_RULESET	?= dev
+$(1)_cxx_headers_SRCDIR		?= $(2)
+$(1)_cxx_headers_PATTERNS	?= $(3)
+$$(eval $$(call ds-srcdir,$(1),$$($(1)_cxx_headers_SRCDIR)))
+$(1)_cxx_headers_INSTLST	= \
+   $$(call ds-glob,$(1),$$(if $$($(1)_cxx_headers_PATTERNS),$$($(1)_cxx_headers_PATTERNS),*.hpp))
+$(1)_cxx_headers_INSTDIR	?= $$(pkgincludedir)
+$$(eval $$(call ds-module-install-rules,$(1)_cxx_headers,$$($(1)_cxx_headers_RULESET)))
+endef
+
+define ds-cxx-library
+include meta.d/makefiles/$(1)-clib.make
+$$(eval $$(call ds-cxx-sources,$(1)))
+$$(eval $$(call ds-cxx-shared-library,$(1)))
+$$(eval $$(call ds-c-static-library,$(1)))
+endef
+
+define ds-cxx-library-extended
+$$(eval $$(call ds-cxx-library,$(1)))
+$$(eval $$(call ds-hpp-files-installer,$(1)))
 endef
 
 #page

@@ -494,6 +494,7 @@ Special support
 
 * compilers::                   Generic support for compiling.
 * clang::                       C language support.
+* cxxlang::                     C++ language support.
 
 Appendices
 
@@ -5938,14 +5939,6 @@ defaults to @code{@@CFLAGS@@}, which is set by the Autoconf macro
 @end defvr
 
 
-@defvr {Configuration Variable} CXXFLAGS
-Must be set to a list of options for the C compiler.  In the makefile it
-defaults to @code{@@CXXFLAGS@@}, which is set by the Autoconf macro
-@code{AC_PROG_CXX} and usually expands to @code{-g -O2}.  It is used by
-@code{ds-cxx-compile}.
-@end defvr
-
-
 @defvr {Configuration Variable} LDFLAGS
 Must be set to a list of @option{-L} linker options.  In the makefile it
 defaults @code{@@LDFLAGS@@}, which should expand to the empty string.
@@ -5972,11 +5965,6 @@ command lines.
 
 @defvr {Makefile Variable} CC
 The C language compiler.
-@end defvr
-
-
-@defvr {Makefile Variable} CXX
-The C++ language compiler.
 @end defvr
 
 
@@ -6076,25 +6064,6 @@ recursion.
 @end defvr
 
 
-@defvr {Makefile Variable} GXX_WARNINGS
-Default warning options for the @gcc{} C++ compiler.  If the
-configuration variable @code{ds_config_ENABLE_GCC_WARNING} is set to
-@code{yes} (its default) @code{GCC_WARNINGS} is set to the following
-list of options:
-
-@example
--Wall                   -W
--Wextra                 -pedantic
--Wpointer-arith         -Wcast-qual
--Wcast-align            -Wwrite-strings
--Wshadow                -fno-common
-@end example
-
-@noindent
-else it is left unset.
-@end deffn
-
-
 @defvr {Makefile Variable} GCC_PIPE
 If the @configure{} script detects usage of the @gcc{} compiler: this
 variable is set to @option{-pipe}, else it is left unset.  It is used by
@@ -6137,8 +6106,7 @@ command line of the linker.
 
 
 @defvr {Makefile Variable} CC_COMPILE_OUTPUT
-@defvrx {Makefile Variable} CXX_COMPILE_OUTPUT
-If the C or C++ language compiler accepts the @code{-c -o} options
+If the C language compiler accepts the @code{-c -o} options
 simultaneously to produce object files: this variable is set to @code{-c
 -o}; else it is set to @code{-o}.
 @end defvr
@@ -6228,46 +6196,6 @@ $(mine_BUILDDIR)/%.@@OBJEXT@@                    \
    : $(mine_BUILDDIR)/%.@@OBJEXT@@               \
    : $(mine_SRCDIR)/%.c $(mine_PREREQUISITES)
 	$(mine_CC_COMPILE) $(@@) $(<)
-@end example
-@end deffn
-
-
-@deffn {Makefile Function} ds-cxx-compile @var{identifier}
-Define variables to be used to preprocess and compile a C++ source file
-into an object file.  The following:
-
-@example
-$(eval $(call ds-cxx-compile,mine))
-@end example
-
-@noindent
-expands to:
-
-@example
-mine_CXX_COMPILE_ENV      ?=
-mine_CXX_COMPILE_CXX      ?= $(CXX) $(GCC_PIPE)
-mine_CXX_COMPILE_INCLUDES ?=
-mine_CXX_COMPILE_CPPFLAGS ?= $(DEFS) $(CPPFLAGS)
-mine_CXX_COMPILE_CXXFLAGS ?= $(GXX_WARNINGS) $(CXXFLAGS)
-mine_CXX_COMPILE_MORE     ?=
-mine_CXX_COMPILE          ?= $(mine_CXX_COMPILE_ENV)      \
-                             $(mine_CXX_COMPILE_CXX)      \
-                             $(mine_CXX_COMPILE_INCLUDES) \
-                             $(mine_CXX_COMPILE_CPPFLAGS) \
-                             $(mine_CXX_COMPILE_CXXFLAGS) \
-                             $(mine_CXX_COMPILE_MORE)     \
-                             $(CXX_COMPILE_OUTPUT)
-@end example
-
-@noindent
-we are fully free to preset all the variables.  To use the produced
-variables to compile object files we can do:
-
-@example
-$(mine_BUILDDIR)/%.@@OBJEXT@@                    \
-   : $(mine_BUILDDIR)/%.@@OBJEXT@@               \
-   : $(mine_SRCDIR)/%.cpp $(mine_PREREQUISITES)
-	$(mine_CXX_COMPILE) $(@@) $(<)
 @end example
 @end deffn
 
@@ -6400,17 +6328,6 @@ mine_PATTERNS   = *.c
 $(eval $(call ds-c-sources,mine))
 @end example
 
-To compile a set of C++ language source files into object files we do
-this:
-
-@example
-$(eval $(call ds-cxx-sources,mine))
-@end example
-
-@noindent
-which collects the files matching @code{$(srcdir)/src/*.cpp} and
-compiles them into object files under @code{$(builddir)/objects.d}.
-
 
 @deffn {Makefile Section} ds-c-sources @var{identifier}
 Define what is needed to compile a set of C source files into object
@@ -6451,93 +6368,6 @@ is added to the search path for @code{%.@@OBJEXT@@} files using the
 @code{vpath} directive;
 
 @item <@var{identifier}>_PATTERNS ?= *.c
-a list of wildcard patterns used to select source files from the source
-directory; the list of source files is built with:
-
-@example
-$(call ds-glob,<@var{identifier}>,$(<@var{identifier}>_PATTERNS))
-@end example
-
-@item <@var{identifier}>_PREREQUISITES ?=
-selects a list of prerequisites for the building rule, which is usually
-a list of header files; notice that this list is not prefixed with the
-source directory, but can benefit of the search paths selected with
-@code{vpath};
-@end table
-
-@noindent
-notice that the following options:
-
-@example
--I$(builddir) -I$(<@var{identifier}>_SRCDIR)
-@end example
-
-@noindent
-are added to the command line of the compiler to let it find the header
-files for this module (under @code{$(<@var{identifier}>_SRCDIR)}) and
-the @file{config.h} file (under @code{$(builddir)}).
-
-The following variables are available for module inspection and usage:
-
-@table @code
-@item <@var{identifier}>_SOURCES
-the list of selected source file pathnames;
-
-@item <@var{identifier}>_TARGETS
-the list of object file pathnames that are produced by this module;
-
-@item <@var{identifier}>_MOSTLYCLEANFILES += $(<@var{identifier}>_TARGETS)
-the list of files to clean for this module;
-
-@item <@var{identifier}>_CLEANFILES += $(<@var{identifier}>_MOSTLYCLEANFILES)
-the list of files to really clean for this module;
-@end table
-
-@noindent
-all the phony rules defined by @code{ds-module} are available to drive
-the module.
-@end deffn
-
-
-@deffn {Makefile Section} ds-cxx-sources @var{identifier}
-Define what is needed to compile a set of C++ source files into object
-files.  All the variables used by the module are prefixed with
-@var{identifier}.
-
-The core rules of the module is built with:
-
-@example
-$(eval $(call ds-module-no-install,
-   <@var{identifier}>, $(<@var{identifier}>_RULESET)))
-@end example
-
-@noindent
-and the command line of the compiler is composed with:
-
-@example
-$(eval $(call ds-cxx-compile,<@var{identifier}>))
-@end example
-
-@noindent
-and all the variables defined by @code{ds-cxx-compile} are available for
-customisation; additionally, the following variables are available to
-configure the module:
-
-@table @code
-@item <@var{identifier}>_RULESET ?= bin
-selects the main ruleset this module belongs to;
-
-@item <@var{identifier}>_SRCDIR ?= $(srcdir)/src
-the directory from which source files are collected; this directory is
-added to the search path for @code{%.h} files using the @code{vpath}
-directive;
-
-@item <@var{identifier}>_BUILDDIR ?= $(builddir)/objects.d
-the directory in which output object files are created; this directory
-is added to the search path for @code{%.@@OBJEXT@@} files using the
-@code{vpath} directive;
-
-@item <@var{identifier}>_PATTERNS ?= *.cpp
 a list of wildcard patterns used to select source files from the source
 directory; the list of source files is built with:
 
@@ -7326,6 +7156,814 @@ the selected file patterns;
 the list of files that will be installed;
 
 @item <IDENTIFIER>_c_headers_INSTDIR
+the installation directory; defaults to @code{$(pkgincludedir)}.
+@end table
+@end deffn
+
+
+@c page
+@node cxxlang
+@chapter C++ language support
+
+
+Support for the C++ language is almost equal to the one for C language,
+and partiall depends upon it.
+
+@menu
+* cxxlang language::            Language configuration.
+* cxxlang variables::           Makefile variables.
+* cxxlang invocation::          Invoking the compiler and the linker.
+* cxxlang module::              Compiler modules.
+* cxxlang misc::                Miscellaneous modules.
+@end menu
+
+@c page
+@node cxxlang language
+@section Language configuration
+
+
+To enable support for C++ we must include both the @code{C_LANGUAGE} and
+the @code{CXX_LANGUAGE} sections and initialise support for the C
+language.  The @file{configure.ac} template should include a chunk like
+this:
+
+@example
+DS_INCLUDE_SECTION([DEV_RULES])
+DS_INCLUDE_SECTION([C_LANGUAGE])
+DS_INCLUDE_SECTION([CXX_LANGUAGE])
+DS_COMPILED_STUFF
+DS_SYSTEM_SETUP
+DS_C99_LANGUAGE
+DS_CXX_LANGUAGE
+@end example
+
+
+@deffn {Autoconf Macro} DS_CXX_LANGUAGE
+Run the tests required to setup the C++ language environment.
+@end deffn
+
+
+@c page
+@node cxxlang variables
+@section Makefile variables
+
+
+@defvr {Configuration Variable} CXXFLAGS
+Must be set to a list of options for the C compiler.  In the makefile it
+defaults to @code{@@CXXFLAGS@@}, which is set by the Autoconf macro
+@code{AC_PROG_CXX} and usually expands to @code{-g -O2}.  It is used by
+@code{ds-cxx-compile}.
+
+This variable can be preset on the command line of @command{configure}
+and @command{make}.
+@end defvr
+
+
+@defvr {Makefile Variable} CXX
+The C++ language compiler.
+@end defvr
+
+
+@defvr {Makefile Variable} GXX_WARNINGS
+Default warning options for the @gcc{} C++ compiler.  If the
+configuration variable @code{ds_config_ENABLE_GCC_WARNING} is set to
+@code{yes} (its default) @code{GXX_WARNINGS} is set to the following
+list of options:
+
+@example
+-Wall                   -W
+-Wextra                 -pedantic
+-Wpointer-arith         -Wcast-qual
+-Wcast-align            -Wwrite-strings
+-Wshadow                -fno-common
+@end example
+
+@noindent
+else it is left unset.
+@end defvr
+
+
+@defvr {Makefile Variable} CXX_COMPILE_OUTPUT
+If the C++ language compiler accepts the @code{-c -o} options
+simultaneously to produce object files: this variable is set to @code{-c
+-o}; else it is set to @code{-o}.
+@end defvr
+
+
+@defvr {Makefile Variable} CXX_LINK_OUTPUT
+Set to @code{-o}, it is meant to be used to select the output of a
+linker invocation.
+@end defvr
+
+@c page
+@node cxxlang invocation
+@section Invoking the compiler and the linker
+
+
+The C++ compiler ivocation is much similar to the one for the C
+language.  @ref{clang invocation, Invoking the compiler and the linker}.
+
+@menu
+* cxxlang invocation objects::   Preprocessing and compiling
+                                 source files.
+* cxxlang invocation programs::  Linking programs.
+* cxxlang invocation libraries:: Linking shared libraries.
+@end menu
+
+@c page
+@node cxxlang invocation objects
+@subsection Preprocessing and compiling source files
+
+
+@deffn {Makefile Function} ds-cxx-compile @var{identifier}
+Define variables to be used to preprocess and compile a C++ source file
+into an object file.  The following:
+
+@example
+$(eval $(call ds-cxx-compile,mine))
+@end example
+
+@noindent
+expands to:
+
+@example
+mine_CXX_COMPILE_ENV      ?=
+mine_CXX_COMPILE_CXX      ?= $(CXX) $(GCC_PIPE)
+mine_CXX_COMPILE_INCLUDES ?=
+mine_CXX_COMPILE_CPPFLAGS ?= $(DEFS) $(CPPFLAGS)
+mine_CXX_COMPILE_CXXFLAGS ?= $(GXX_WARNINGS) $(CXXFLAGS)
+mine_CXX_COMPILE_MORE     ?=
+mine_CXX_COMPILE          ?= $(mine_CXX_COMPILE_ENV)      \
+                             $(mine_CXX_COMPILE_CXX)      \
+                             $(mine_CXX_COMPILE_INCLUDES) \
+                             $(mine_CXX_COMPILE_CPPFLAGS) \
+                             $(mine_CXX_COMPILE_CXXFLAGS) \
+                             $(mine_CXX_COMPILE_MORE)     \
+                             $(CXX_COMPILE_OUTPUT)
+@end example
+
+@noindent
+we are fully free to preset all the variables.  To use the produced
+variables to compile object files we can do:
+
+@example
+$(mine_BUILDDIR)/%.@@OBJEXT@@                    \
+   : $(mine_BUILDDIR)/%.@@OBJEXT@@               \
+   : $(mine_SRCDIR)/%.cpp $(mine_PREREQUISITES)
+	$(mine_CXX_COMPILE) $(@@) $(<)
+@end example
+@end deffn
+
+@c page
+@node cxxlang invocation programs
+@subsection Linking programs
+
+
+@deffn {Make Function} ds-cxx-link-program @var{identifier}
+Define variables to be used to link a set of object files and static
+libraries into an executable program.  The following:
+
+@example
+$(eval $(call ds-cxx-link-program,mine))
+@end example
+
+@noindent
+expands to:
+
+@example
+mine_CXX_PROGRAM_ENV     ?=
+mine_CXX_PROGRAM_CXX     ?= $(CXX) $(GCC_PIPE)
+mine_CXX_PROGRAM_LDFLAGS ?= $(LDFLAGS)
+mine_CXX_PROGRAM_LIBS    ?= $(LIBS)
+mine_CXX_PROGRAM_PRE     ?=
+mine_CXX_PROGRAM_POST    ?=
+mine_CXX_PROGRAM         ?= $(mine_CXX_PROGRAM_ENV)       \
+                            $(mine_CXX_PROGRAM_CXX)       \
+                            $(mine_CXX_PROGRAM_LDFLAGS)   \
+                            $(mine_CXX_PROGRAM_PRE)       \
+                            $(mine_CXX_PROGRAM_LIBS)      \
+                            $(CXX_LINK_OUTPUT) $(@@) $(^) \
+                            $(mine_CXX_PROGRAM_POST)
+@end example
+
+@noindent
+we are fully free to preset all the variables; notice that all the
+prerequisites are included as object files (through @code{$(^)}).
+
+To use the variables we can do:
+
+@example
+$(mine_program_PATHNAME) : $(mine_program_OBJECTS)
+	$(mine_program_CXX_PROGRAM)
+ifeq ($(ds_config_ENABLE_STRIP),yes)
+	$(STRIP) $(@@)
+endif
+@end example
+@end deffn
+
+@c page
+@node cxxlang invocation libraries
+@subsection Linking shared libraries
+
+
+@deffn {Make Function} ds-cxx-link-shared-library @var{identifier}
+Define variables to be used to link a set of object files and static
+libraries into a shared library.  The following:
+
+@example
+$(eval $(call ds-cxx-link-shared-library,mine))
+@end example
+
+@noindent
+expands to:
+
+@example
+mine_CXX_SHLIB_ENV     ?=
+mine_CXX_SHLIB_CXX     ?= $(CXX) $(GCC_PIPE) $(GCC_SHARED)
+mine_CXX_SHLIB_LDFLAGS ?= $(LDFLAGS)
+mine_CXX_SHLIB_LIBS    ?= $(LIBS)
+mine_CXX_SHLIB_PRE     ?=
+mine_CXX_SHLIB_POST    ?=
+mine_CXX_SHLIB         ?= $(mine_CXX_SHLIB_ENV)         \
+                          $(mine_CXX_SHLIB_CXX)         \
+                          $(mine_CXX_SHLIB_LDFLAGS)     \
+                          $(mine_CXX_SHLIB_PRE)         \
+                          $(mine_CXX_SHLIB_LIBS)        \
+                          $(CXX_LINK_OUTPUT) $(@@) $(^) \
+                          $(mine_CXX_SHLIB_POST)
+@end example
+
+@noindent
+we are fully free to preset all the variables; notice that all the
+prerequisites are included as object files (through @code{$(^)}).
+
+To use the variables we can do:
+
+@example
+$(mine_shared_library_PATHNAME) : $(mine_shared_library_OBJECTS)
+        $(mine_CXX_SHLIB)
+ifeq ($(ds_config_ENABLE_STRIP),yes)
+        $(STRIP) $(@@)
+endif
+@end example
+@end deffn
+
+@c page
+@node cxxlang module
+@section Compiler modules
+
+
+@menu
+* cxxlang module objects::      Compiling object files.
+* cxxlang module libs::         Building libraries.
+* cxxlang module progs::        Building programs.
+@end menu
+
+@c page
+@node cxxlang module objects
+@subsection Compiling object files
+
+
+To compile a set of C++ language source files into object files we do
+this:
+
+@example
+$(eval $(call ds-cxx-sources,mine))
+@end example
+
+@noindent
+which collects the files matching @code{$(srcdir)/src/*.cpp} and
+compiles them into object files under @code{$(builddir)/objects.d}.
+
+
+@deffn {Makefile Section} ds-cxx-sources @var{identifier}
+Define what is needed to compile a set of C++ source files into object
+files.  All the variables used by the module are prefixed with
+@var{identifier}.
+
+The core rules of the module is built with:
+
+@example
+$(eval $(call ds-module-no-install,
+   <@var{identifier}>, $(<@var{identifier}>_RULESET)))
+@end example
+
+@noindent
+and the command line of the compiler is composed with:
+
+@example
+$(eval $(call ds-cxx-compile,<@var{identifier}>))
+@end example
+
+@noindent
+and all the variables defined by @code{ds-cxx-compile} are available for
+customisation; additionally, the following variables are available to
+configure the module:
+
+@table @code
+@item <@var{identifier}>_RULESET ?= bin
+selects the main ruleset this module belongs to;
+
+@item <@var{identifier}>_SRCDIR ?= $(srcdir)/src
+the directory from which source files are collected; this directory is
+added to the search path for @code{%.h} files using the @code{vpath}
+directive;
+
+@item <@var{identifier}>_BUILDDIR ?= $(builddir)/objects.d
+the directory in which output object files are created; this directory
+is added to the search path for @code{%.@@OBJEXT@@} files using the
+@code{vpath} directive;
+
+@item <@var{identifier}>_PATTERNS ?= *.cpp
+a list of wildcard patterns used to select source files from the source
+directory; the list of source files is built with:
+
+@example
+$(call ds-glob,<@var{identifier}>,$(<@var{identifier}>_PATTERNS))
+@end example
+
+@item <@var{identifier}>_PREREQUISITES ?=
+selects a list of prerequisites for the building rule, which is usually
+a list of header files; notice that this list is not prefixed with the
+source directory, but can benefit of the search paths selected with
+@code{vpath};
+@end table
+
+@noindent
+notice that the following options:
+
+@example
+-I$(builddir) -I$(<@var{identifier}>_SRCDIR)
+@end example
+
+@noindent
+are added to the command line of the compiler to let it find the header
+files for this module (under @code{$(<@var{identifier}>_SRCDIR)}) and
+the @file{config.h} file (under @code{$(builddir)}).
+
+The following variables are available for module inspection and usage:
+
+@table @code
+@item <@var{identifier}>_SOURCES
+the list of selected source file pathnames;
+
+@item <@var{identifier}>_TARGETS
+the list of object file pathnames that are produced by this module;
+
+@item <@var{identifier}>_MOSTLYCLEANFILES += $(<@var{identifier}>_TARGETS)
+the list of files to clean for this module;
+
+@item <@var{identifier}>_CLEANFILES += $(<@var{identifier}>_MOSTLYCLEANFILES)
+the list of files to really clean for this module;
+@end table
+
+@noindent
+all the phony rules defined by @code{ds-module} are available to drive
+the module.
+@end deffn
+
+@c page
+@node cxxlang module libs
+@subsection Building libraries
+
+
+@ref{clang module libs, Building libraries}, for and introduction to
+library support.
+
+@ref{clang module libs macros, Autoconf macros defining libraries}, for
+an explanation of how to declare a library in the @file{configure.ac}
+template.
+
+@ref{clang module libs static, Building static libraries}, for an
+explanation of how to link a set of object files into a static library.
+
+@menu
+* cxxlang module libs shared::  Building shared libraries.
+* cxxlang module libs misc::    Miscellaneous makefile sections.
+@end menu
+
+@c page
+@node cxxlang module libs shared
+@subsubsection Building shared libraries
+
+
+@deffn {Makefile Section} ds-cxx-shared-library @var{identifier}
+Define what is needed to link a set of object files into a shared
+library.  The expansion of this function is included only if
+@code{ds_config_ENABLE_SHARED} is set to @code{yes}.  @ref{compilers
+options,Command line options}
+
+This section is meant to link a set of object files produced with
+@func{ds-cxx-sources}, but notice that the only interface from
+@func{ds-cxx-sources} to @func{ds-cxx-shared-library} is the variable
+@code{<@var{identifier}>_TARGETS} which must hold the list of object
+files.
+
+All the variables and phony rules used by the module are prefixed with
+@code{<@var{identifier}>_shlib}.
+
+Debugging symbols are stripped from the shared library if
+@code{ds_config_ENABLE_STRIP} is set to @code{yes}.  @ref{compilers
+options,Command line options}
+
+The command line of the linker is composed with:
+
+@example
+$(eval $(call ds-cxx-link-library,<IDENTIFIER>_shlib))
+@end example
+
+@noindent
+and all the variables defined by @code{ds-cxx-link-library} are
+available for customisation; additionally the following variables are
+available to configure the module:
+
+@table @code
+@item <IDENTIFIER>_shlib_RULESET ?= bin
+Selects the ruleset this module belongs to.
+
+@item <@var{identifier}>_shlib_BUILDDIR ?= $(builddir)/libraries.d
+Select the output directory for the library file.
+
+@item <IDENTIFIER>_shlib_OBJECTS ?= $(<IDENTIFIER>_TARGETS)
+The list of object files to be included in the library, prefixed with
+the directory in which they are to be found.  The default value is
+consistent with the interface of @func{ds-c-sources}.  @ref{clang module
+objects, Compiling object files}.
+
+@item <IDENTIFIER>_shlib_INSTDIR ?= $(libdir)
+The directory in which to install the files.
+@end table
+
+The following variables are available for inspection:
+
+@table @code
+@item <IDENTIFIER>_shlib_NAME
+The file name of the shared library.
+
+@item <IDENTIFIER>_shlib_PATHNAME
+The file name of the shared library prefixed with the build directory.
+
+@item <IDENTIFIER>_shlib_LINK_NAME
+The name of the symbolic link to the shared library file.
+
+@item <IDENTIFIER>_shlib_LINK_PATHNAME
+The name of the symbolic link to the shared library file prefixed with
+the build directory.
+
+@item <IDENTIFIER>_shlib_TARGETS
+The list of targets for this module.  It should be the shared library
+file name and the symbolic link name, both prefixed with the build
+directory.
+
+@item <IDENTIFIER>_shlib_INSTLST
+The list of files to install, prefixed with the directory in which they
+are to be found.  It should be the library file name; notice that the
+symbolic link is also installed, but it is directly created in the
+destination directory.
+@end table
+
+The core of the phony rules is generated with:
+
+@example
+$(eval $(call ds-module,<@var{identifier}>_shlib,\
+   $(<@var{identifier}>_shlib_RULESET),LIB))
+@end example
+@end deffn
+
+@c page
+@node cxxlang module libs misc
+@subsubsection Miscellaneous makefile sections
+
+
+@deffn {Makefile Section} ds-cxx-library @var{identifier}
+Helper section to build both a shared and static library.  Calling:
+
+@example
+$(eval $(call ds-cxx-library,mine))
+@end example
+
+@noindent
+expands to:
+
+@example
+include meta.d/makefiles/mine-clib.make
+$(eval $(call ds-cxx-sources,mine))
+$(eval $(call ds-cxx-shared-library,mine))
+$(eval $(call ds-c-static-library,mine))
+@end example
+@end deffn
+
+
+@deffn {Makefile Section} ds-cxx-library-extended @var{identifier}
+Helper section to build both a shared and static library, and install
+header files.  Calling:
+
+@example
+$(eval $(call ds-cxx-library-extended,mine))
+@end example
+
+@noindent
+expands to:
+
+@example
+$(eval $(call ds-cxx-library,mine))
+$(eval $(call ds-hpp-files-installer,mine))
+@end example
+@end deffn
+
+@c page
+@node cxxlang module progs
+@subsection Building programs
+
+
+Support for linking programs is much similar to the one of the C language.
+
+@menu
+* cxxlang module progs single::   Linking several object files
+                                  into a single program.
+* cxxlang module progs multi::    Linking several programs.
+* cxxlang module progs examples:: Building example programs.
+* cxxlang module progs tests::    Building test programs.
+@end menu
+
+@c page
+@node cxxlang module progs single
+@subsubsection Linking several object files into a single program
+
+
+@cindex @code{ds_config_ENABLE_STRIP}, stripping symbols from single programs.
+@cindex @func{ds-cxx-link-program}, linking several object files into a single program.
+
+
+@deffn {Makefile Section} ds-cxx-single-program @var{identifier} @var{progname}
+@deffnx {Makefile Section} ds-cxx-single-program-no-install @var{identifier} @var{progname}
+Define what is needed to link a set of object files into an executable
+program.  The no install version does not define installation rules for
+the output program.
+
+This section is meant to link a set of object files produced with
+@func{ds-cxx-sources}, but notice that the only interface from
+@func{ds-cxx-sources} to @func{ds-cxx-single-program} is the variable
+@code{<@var{identifier}>_TARGETS} which must hold the list of object
+files.
+
+All the variables and phony rules used by the module are prefixed with
+@code{<@var{identifier}>_sinprog}.
+
+Debugging symbols are stripped from the program if
+@code{ds_config_ENABLE_STRIP} is set to @code{yes}.  @ref{compilers
+options,Command line options}
+
+The command line of the linker is composed with:
+
+@example
+$(eval $(call ds-cxx-link-program,<IDENTIFIER>_sinprog))
+@end example
+
+@noindent
+and all the variables defined by @code{ds-cxx-link-program} are
+available for customisation; additionally the following variables are
+available to configure the module:
+
+@table @code
+@item <IDENTIFIER>_sinprog_RULESET ?= bin
+Selects the main phony rules section this module belongs to.
+
+@item <IDENTIFIER>_sinprog_BUILDDIR ?= $(builddir)/programs.d
+Select the output directory for the executable file.
+
+@item <IDENTIFIER>_sinprog_OBJECTS ?= $(<IDENTIFIER>_TARGETS)
+The list of object files to be linked in the executable, prefixed with
+the directory in which they are to be found; this is exactly what is
+produced by the @func{ds-c-sources} function.  @ref{cxxlang module
+objects, Compiling object files}.
+
+@item <IDENTIFIER>_sinprog_PREFIX ?=
+A string that is prefixed to @var{PROGNAME} to build the true name of
+the program.
+
+@item <IDENTIFIER>_sinprog_INSTDIR ?= $(pkglibexecdir)
+The directory in which to install the files.
+@end table
+
+The following variables are available for inspection:
+
+@table @code
+@item <IDENTIFIER>_sinprog_NAME
+The @var{progname} argument prefixed with the selected program prefix.
+
+@item <IDENTIFIER>_sinprog_PATHNAME
+The file name of the program prefixed with the build directory in which
+it is created.
+
+@item <IDENTIFIER>_sinprog_TARGETS
+The list of targets for this module; should be the program file name
+prefixed with its build directory.
+
+@item <IDENTIFIER>_sinprog_INSTLST
+The list of files to install, prefixed with the directory in which they
+are to be found.
+@end table
+
+We can think of the core of the phony rules as generated with:
+
+@example
+$(eval $(call ds-module,<@var{identifier}>_sinprog,\
+   $(<@var{identifier}>_sinprog_RULESET),BIN))
+@end example
+@end deffn
+
+@c page
+@node cxxlang module progs multi
+@subsubsection Linking several programs
+
+
+@cindex @code{ds_config_ENABLE_STRIP}, stripping symbols from several programs.
+@cindex @func{ds-cxx-link-program}, linking several object files into a several programs.
+
+
+@deffn {Makefile Section} ds-cxx-programs @var{identifier}
+@deffnx {Makefile Section} ds-cxx-programs-no-install @var{identifier}
+Define what is needed to link a set of object files into a set of
+executable programs: one object file for each program.  The no install
+version does not install the linked programs.
+
+This section is meant to link a set of object files produced with
+@func{ds-cxx-sources}, but notice that the only interface from
+@func{ds-cxx-sources} to @func{ds-cxx-programs} is the variable
+@code{<@var{identifier}>_TARGETS} which must hold the list of object
+files.
+
+All the variables and phony rules used by the module are prefixed with
+@code{<@var{identifier}>_programs}.
+
+Debugging symbols are stripped from the program if
+@code{ds_config_ENABLE_STRIP} is set to @code{yes}.  @ref{compilers
+options,Command line options}
+
+The command line of the linker is composed with:
+
+@example
+$(eval $(call ds-cxx-link-program,<IDENTIFIER>_programs))
+@end example
+
+@noindent
+and all the variables defined by @code{ds-cxx-link-program} are
+available for customisation; additionally the following variables are
+available to configure the module:
+
+@table @code
+@item <IDENTIFIER>_programs_RULESET ?= bin
+Select the ruleset this module belongs to.
+
+@item <IDENTIFIER>_programs_SRCDIR ?= $(<IDENTIFIER>_BUILDDIR)
+The source directory in which the object files are to be found; all the
+object files have to be in the same directory.  The deafult value is
+exactly what is defined by @func{ds-c-sources}.  @ref{cxxlang module
+objects, Compiling object files}.
+
+@item <IDENTIFIER>_programs_BUILDDIR ?= $(builddir)/programs.d
+Select the output directory for the executable files.
+
+@item <IDENTIFIER>_programs_OBJECTS ?= $(<IDENTIFIER>_TARGETS)
+The list of object files to be linked in the executables, prefixed with
+the directory in which they are to be found.  This is exactly what is
+produced by the @func{ds-c-sources} function.  @ref{cxxlang module
+objects, Compiling object files}.
+
+@item <IDENTIFIER>_programs_PREFIX ?=
+A string that is prefixed to the name of the programs.
+
+@item <IDENTIFIER>_programs_INSTDIR ?= $(pkglibexecdir)
+The directory in which to install the files.
+@end table
+
+The following variables are available for inspection:
+
+@table @code
+@item <IDENTIFIER>_programs_NAMES
+The list of names of the produced programs; it is built by stripping the
+extension from the object file names and prefixing with the selected
+prefix.
+
+@item <IDENTIFIER>_programs_PATHNAMES
+The list of file pathnames.
+
+@item <IDENTIFIER>_programs_TARGETS
+The list of targets for this module.  It should be the list of
+executable programs pathnames.
+
+@item <IDENTIFIER>_programs_INSTLST
+The list of files to install, prefixed with the directory in which they
+are to be found.
+@end table
+
+We can think of the core of the phony rules as generated with:
+
+@example
+$(eval $(call ds-module,<@var{identifier}>_programs,\
+   $(<@var{identifier}>_programs_RULESET),BIN))
+@end example
+@end deffn
+
+
+@c page
+@node cxxlang module progs examples
+@subsubsection Linking example programs
+
+
+@cindex Compiling example programs
+@cindex Example programs, compilation
+
+
+@deffn {Makefile Section} ds-cxx-example-programs @var{IDENTIFIER}
+Define what is needed to compile and link a set of example programs.
+Calling it with:
+
+@example
+$(eval $(call ds-cxx-example-programs,mine))
+@end example
+
+@noindent
+expands to:
+
+@example
+mine_examples_RULESET           = examples
+mine_examples_SRCDIR            ?= $(srcdir)/examples
+mine_examples_BUILDDIR          ?= $(builddir)/examples.d
+
+mine_examples_programs_RULESET  = examples
+mine_examples_programs_BUILDDIR ?= $(mine_examples_BUILDDIR)
+
+$(eval $(call ds-cxx-sources,mine_examples))
+$(eval $(call ds-cxx-programs-no-install,mine_examples))
+@end example
+@end deffn
+
+@c page
+@node cxxlang module progs tests
+@subsubsection Building test programs
+
+
+@cindex Compiling test programs
+@cindex Test programs, compilation
+
+
+@deffn {Makefile Section} ds-cxx-test-programs @var{IDENTIFIER}
+Define what is needed to compile and link a set of example programs.
+Calling it with:
+
+@example
+$(eval $(call ds-c-test-programs,mine))
+@end example
+
+@noindent
+expands to:
+
+@example
+mine_tests_RULESET           = tests
+mine_tests_SRCDIR            ?= $(srcdir)/tests
+mine_tests_BUILDDIR          ?= $(builddir)/tests.d
+
+mine_tests_programs_RULESET  = tests
+mine_tests_programs_BUILDDIR ?= $(mine_tests_BUILDDIR)
+
+$(eval $(call ds-cxx-sources,mine_tests))
+$(eval $(call ds-cxx-programs-no-install,mine_tests))
+@end example
+@end deffn
+
+@c page
+@node cxxlang misc
+@section Miscellaneous modules
+
+
+@deffn {Makefile Module} ds-hpp-files-installer @var{identifier} @var{srcdir} [@var{patterns}]
+Define what is needed to install a set of C++ header files.  All the
+variables used by the module are prefixed with
+@code{<IDENTIFIER>_cxx_headers}.
+
+@var{srcdir} must be the directory from which files are collected,
+selecting them with @var{patterns}.  The default of @var{patterns} is
+@code{*.hpp}.
+
+The following variables are available for configuration and inspection:
+
+@table @code
+@item <IDENTIFIER>_cxx_headers_RULESET
+selects the main phony rules section this module belongs to; defaults to
+@code{dev};
+
+@item <IDENTIFIER>_cxx_headers_SRCDIR
+the selected source directory;
+
+@item <IDENTIFIER>_cxx_headers_PATTERNS
+the selected file patterns;
+
+@item <IDENTIFIER>_cxx_headers_INSTLST
+the list of files that will be installed;
+
+@item <IDENTIFIER>_cxx_headers_INSTDIR
 the installation directory; defaults to @code{$(pkgincludedir)}.
 @end table
 @end deffn

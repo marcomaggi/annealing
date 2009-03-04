@@ -24,7 +24,7 @@ $(eval $(call ds-cxx-single-program,progs,sinc))
 .PHONY: run
 
 run: progs_sinprog-all
-	$(foreach f,$(progs_sinprog_PATHNAMES),$(f);)
+	$(progs_sinprog_PATHNAME)
 
 ### end of file
 # Local Variables:
