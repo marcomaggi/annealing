@@ -365,6 +365,10 @@ the main purpose of this document is to provide an Info version.
 @command{make}
 @end macro
 
+@macro acmacro{NAME}
+@code{\NAME\}
+@end macro
+
 @c ------------------------------------------------------------
 @c External document references.
 @c ------------------------------------------------------------
@@ -484,14 +488,7 @@ Texts.  A copy of the license is included in the section entitled
 @menu
 * overview::                    Overview of the infrastructure.
 * config::                      General configuration.
-
-Make library
-
-* make rules::                  Organisation of main rules.
-* make directories::            Predefined directory variables.
-* make generics::               Generic make functions and modules.
-* make transformers::           Make's modules to process files.
-* make dist::                   Source and binary distributions.
+* make::                        The makefile library.
 
 Special support
 
@@ -504,7 +501,7 @@ Appendices
 * library version::             How to interpret library versions.
 * Package License::             GNU General Public License.
 * Documentation License::       GNU Free Documentation License.
-* References::                  Bibliography and references.
+* references::                  Bibliography and references.
 
 Indexes
 
@@ -544,13 +541,11 @@ A typical @file{configure.ac} file looks like the following:
 #
 
 AC_INIT(my_project,1.2.3)
-AC_PREREQ(2.63)
-AC_CONFIG_SRCDIR(./some/file.ext)
-DS_BEGIN
+DS_BEGIN([./some/file.ext])
 
 dnl Project specific tasks go here.
 
-DS_CONFIG_FILES
+DS_END
 AC_OUTPUT
 
 ### end of file
@@ -567,17 +562,14 @@ srcdir          = @@srcdir@@
 builddir        = @@builddir@@
 
 include meta.d/makefiles/develstuff.make
-$(eval $(call ds-full-head))
 include meta.d/makefiles/project.make
-$(eval $(call ds-full-tail))
 
 ### end of file
 @end example
 
 @noindent
 the definition of the @code{builddir} and @code{srcdir} variables is
-mandatory.  The @code{ds-full-head} and @code{ds-full-tail} functions
-define common makefile rules.
+mandatory.
 
 Notice that the external makefiles are included from a pathname under
 the @code{$(builddir)} directory.  To have them in the specified
@@ -591,7 +583,9 @@ AC_CONFIG_FILES([meta.d/makefiles/project.make:\
 @end example
 
 @noindent
-which is exactly what the predefined @code{DS_CONFIG_FILES} macro does.
+which is exactly what the predefined @acmacro{DS_COMMON_CONFIG_FILES}
+macro does, and @acmacro{DS_END} invokes
+@acmacro{DS_COMMON_CONFIG_FILES}.
 
 @c page
 @node overview conventions
@@ -653,7 +647,7 @@ The following are naming conventions for the Autocon library of macros.
 @enumerate
 @item
 Function names are uppercase with @code{_} as word--splitting char and
-@code{DS} as namespace prefix; example: @func{DS_CONFIG_FILES}.
+@code{DS} as namespace prefix; example: @func{DS_COMMON_CONFIG_FILES}.
 
 @item
 Private variable names are mixed case with @code{_} as word--splitting
@@ -970,13 +964,65 @@ infrastructure using the appropriate Autoconf macros in the
 @file{configure.ac} template.
 
 @menu
+* config intro::                Introduction.
 * config preamble::             Preamble configuration.
+* config conclusion::           Conclusion.
 * config sections::             Selection of feature sets.
 * config options::              Configuration options.
 * config modules::              Configuration modules.
 * config packaging::            Packaging support.
 * config helpers::              Helper macros.
 @end menu
+
+@c page
+@node config intro
+@section Introduction
+
+
+Let's say that a project is named @code{develstuff} and its version
+number is @code{1.2.3}; its detailed @file{configure.ac} template file
+looks like this:
+
+@example
+# @@configure_input@@
+#
+
+AC_INIT([develstuff],[1.2.3],[marcomaggi@@gna.org])
+AC_PREREQ(2.63)
+AC_CONFIG_SRCDIR([./some/source/file.ext])
+
+DS_PREAMBLE
+DS_DECLARE_SECTIONS
+DS_OPTIONS
+DS_DIRECTORIES
+DS_PROGRAMS
+DS_PACKAGING
+
+dnl project specific tasks go here
+
+DS_SUBST_SECTION_VARIABLES
+DS_COMMON_CONFIG_FILES
+AC_OUTPUT
+
+### end of file
+@end example
+
+@noindent
+and using helper macros it becomes:
+
+@example
+# @@configure_input@@
+#
+
+AC_INIT([develstuff],[1.2.3],[marcomaggi@@gna.org])
+DS_BEGIN([./some/source/file.ext])
+
+dnl project specific tasks go here
+
+DS_END
+
+### end of file
+@end example
 
 @c page
 @node config preamble
@@ -998,39 +1044,7 @@ DS_FIND_CONFIGURATION
 @end deffn
 
 
-@deffn {Autoconf Macro} DS_BEGIN
-Equivalent to the following:
-
-@example
-DS_PREAMBLE
-DS_DEFAULT_SECTIONS
-DS_OPTIONS
-DS_DIRECTORIES
-DS_PROGRAMS
-DS_PACKAGING
-@end example
-@end deffn
-
-
-@deffn {Autoconf Macro} DS_BEGIN_DEV
-Equivalent to the following:
-
-@example
-DS_PREAMBLE
-DS_DEFAULT_SECTIONS_DEV
-DS_OPTIONS
-DS_DIRECTORIES
-DS_PROGRAMS
-DS_PACKAGING
-@end example
-
-The only difference between @code{DS_BEGIN} and @code{DS_BEGIN_DEV} is
-that the @code{dev} makefile rules are included.
-@end deffn
-
-
 @subsubheading Auxiliary tasks
-
 
 @deffn {Autoconf Macro} DS_FIND_INFRASTRUCTURE
 Find the @file{infrastructure} directory.  This is the directory in
@@ -1055,6 +1069,142 @@ available in the makefile library as @code{configurationdir}.
 @end deffn
 
 @c page
+@node config conclusion
+@section Conclusion
+
+
+@deffn {Autoconf Macro} DS_COMMON_CONFIG_FILES
+A mandatory macro to be invoked at the end of the @file{configure.ac}
+template.  Expands to:
+
+@example
+AC_CONFIG_FILES([meta.d/makefiles/develstuff.make:\
+   $INFRASTRUCTUREDIR/develstuff.make])
+AC_CONFIG_FILES([meta.d/makefiles/project.make:\
+   $CONFIGURATIONDIR/project.make])
+AC_CONFIG_FILES([Makefile])
+@end example
+
+@noindent
+that is: define as output files the main @file{Makefile}, the DevelStuff
+library and the project specific makefile.
+@end deffn
+
+
+@subsubheading Package installation files
+
+
+@deffn {Autoconf Macro} DS_CONFIG_FILE_INSPECTION_SCRIPT
+Register the package installation inspection script as output file.  The
+script is meant to be called @code{$@{PACKAGE_NAME@}-config}, its source
+directory is @code{$(srcdir)/meta} and its build directory
+@code{$(builddir)/meta.d}.
+
+Equivalent to:
+
+@example
+AC_CONFIG_FILES([meta.d/$@{PACKAGE_NAME@}-config:\
+   meta/$@{PACKAGE_NAME@}-config.in])
+@end example
+@end deffn
+
+
+@deffn {Autoconf Macro} DS_CONFIG_FILE_PKGCONFIG
+Register the @command{pkg-config} meta file as output file.  The script
+is meant to be called @code{$@{PACKAGE_NAME@}.pc}, its source directory
+is @code{$(srcdir)/meta} and its build directory
+@code{$(builddir)/meta.d}.
+
+Equivalent to:
+
+@example
+AC_CONFIG_FILES([meta.d/$@{PACKAGE_NAME@}.pc:\
+   meta/$@{PACKAGE_NAME@}.pc.in])
+@end example
+@end deffn
+
+
+@subsubheading Slackware packaging files
+
+
+@deffn {Autoconf Macro} DS_CONFIG_FILE_SLACKWARE_BIN_DESC
+Register as output file the description file for the @code{bin}
+Slackware package.  @ref{make dist slackware, Slackware packaging}
+
+The file is called @file{slack-desc}, it source directory is:
+
+@example
+$(srcdir)/meta/slackware/bin
+@end example
+
+@noindent
+and its output directory is:
+
+@example
+$(builddir)/meta.d/slackware/bin
+@end example
+
+It expands to:
+
+@example
+AC_CONFIG_FILES([meta.d/slackware/bin/slack-desc:\
+  meta/slackware/bin/slack-desc.in])
+@end example
+@end deffn
+
+
+@deffn {Autoconf Macro} DS_CONFIG_FILE_SLACKWARE_DOC_DESC
+Register as output file the description file for the @code{doc}
+Slackware package.  @ref{make dist slackware, Slackware packaging}
+
+The file is called @file{slack-desc}, it source directory is:
+
+@example
+$(srcdir)/meta/slackware/doc
+@end example
+
+@noindent
+and its output directory is:
+
+@example
+$(builddir)/meta.d/slackware/doc
+@end example
+
+It expands to:
+
+@example
+AC_CONFIG_FILES([meta.d/slackware/doc/slack-desc:\
+   meta/slackware/doc/slack-desc.in])
+@end example
+@end deffn
+
+
+@deffn {Autoconf Macro} DS_CONFIG_FILE_SLACKWARE_DEV_DESC
+Register as output file the description file for the @code{dev}
+Slackware package.  @ref{make dist slackware, Slackware packaging}
+
+The file is called @file{slack-desc}, it source directory is:
+
+@example
+$(srcdir)/meta/slackware/dev
+@end example
+
+@noindent
+and its output directory is:
+
+@example
+$(builddir)/meta.d/slackware/dev
+@end example
+
+It expands to:
+
+@example
+AC_CONFIG_FILES([meta.d/slackware/dev/slack-desc:\
+  meta/slackware/dev/slack-desc.in])
+@end example
+@end deffn
+
+@c page
 @node config sections
 @section Selection of feature sets
 
@@ -1064,90 +1214,192 @@ available in the makefile library as @code{configurationdir}.
 @cindex @code{DEV_RULES} section
 @cindex @code{AUTOCONF_DIRS} section
 @cindex @code{DEVELSTUFF_DIRS} section
+@cindex @code{C_LANGUAGE} section
 
 
 In the makefile library: some facilities are available through makefile
 functions that must be explicitly invoked, while other facilities are
 included if selected by the @configure{} script.
 
+Defined sections are identified by the following symbols:
 
-@deffn {Autoconf Macro} DS_INCLUDE_SECTION (@var{section_spec}, @var{bool})
-Include or exclude the makefile section selected by @var{section_spec}.
-If @var{bool} is @code{yes}, include; if @var{bool} is @code{no}
-exclude.
+@table @code
+@item BIN_RULES
+Decide whether to include the @code{bin} ruleset in the makefile.
+Included by default.
 
-Any string can be used for @var{section_spec}; the output variable:
+@item DOC_RULES
+Decide whether to include the @code{doc} ruleset in the makefile.
+Included by default.
+
+@item DEV_RULES
+Decide whether to include the @code{dev} ruleset in the makefile.
+Excluded by default.
+
+@item AUTOCONF_DIRS
+Decide whether to include the Autoconf directory variables in the
+makefile.  Included by default.
+
+@item DEVELSTUFF_DIRS
+Decide whether to include the DevelStuff directory variables in the
+makefile.  Included by default.
+
+@item C_LANGUAGE
+Support for C language.  Excluded by default.
+
+@item GENERIC_DOCUMENTATION
+Support for generic documentation installation, @file{README} files and
+the like.  Included by default.
+
+@item TEXINFO_DOCUMENTATION
+Support for documentation in Texinfo format.  Included by default.
+
+@item UNINSTALL_SCRIPTS
+Support for automatic generation of uninstallation scripts for this
+package.  Included by default.
+
+@item META_SCRIPTS
+Support for meta installation scripts to be executed before and after
+the installation of this project.  Included by default.
+
+@item PKGCONFIG
+Support for @command{pkg-config} meta files used by other packages to
+detect this one.  Included by default.
+
+@item AUTOCONF
+Support for @gnu{} Autoconf macro files used by other packages to detect
+this one.  Included by default.
+
+@item CONFIG_INSPECTION_SCRIPT
+Support for installation inspection scripts used by other packages to
+detect this one.  Included by default.
+
+@item SOURCE_DISTRIBUTION
+Support for automatic generation of source distribution archives for
+this project.  Included by default.
+
+@item BINARY_DISTRIBUTION
+Support for automatic generation of binary distribution archives for
+this project.  Included by default.
+
+@item SLACKWARE_DISTRIBUTION
+Support for automatic generation of binary Slackware packages for this
+project.  Included by default.
+@end table
+
+
+@deffn {Autoconf Macro} DS_DECLARE_SECTIONS
+Initialise one variable for each makefile section defined by DevelStuff.
+@end deffn
+
+
+@deffn {Autoconf Macro} DS_SUBST_SECTION_VARIABLES
+Register the section variables as Autoconf output variables, so that
+their values are available in the makefiles.
+@end deffn
+
+
+@deffn {Autoconf Macro} DS_INCLUDE_SECTION (@var{section_spec})
+@deffnx {Autoconf Macro} DS_EXCLUDE_SECTION (@var{section_spec})
+Include or exclude the makefile section selected by @var{section_spec},
+which must be one of the symbols defined above.  The variable:
 
 @example
 DS_INCLUDE_<@var{section_spec}>
 @end example
 
 @noindent
-is defined to @var{bool}.  DevelStuff predefines:
-
-@table @code
-@item BIN_RULES
-Decide whether to include the @code{bin} ruleset in the makefile.
-
-@item DOC_RULES
-Decide whether to include the @code{doc} ruleset in the makefile.
-
-@item DEV_RULES
-Decide whether to include the @code{dev} ruleset in the makefile.
-
-@item AUTOCONF_DIRS
-Decide whether to include the Autoconf directory variables in the
-makefile.
-
-@item DEVELSTUFF_DIRS
-Decide whether to include the DevelStuff directory variables in the
-makefile.
-@end table
+will be defined to @code{yes} if the section is included, to @code{no}
+if excluded.
 @end deffn
 
 
-@deffn {Autoconf Macro} DS_DEFAULT_SECTIONS
-Equivalent to evaluating:
+@c ------------------------------------------------------------
 
-@example
-DS_INCLUDE_SECTION([BIN_RULES],[yes])
-DS_INCLUDE_SECTION([DOC_RULES],[yes])
-DS_INCLUDE_SECTION([DEV_RULES],[no])
-DS_INCLUDE_SECTION([AUTOCONF_DIRS],[yes])
-DS_INCLUDE_SECTION([DEVELSTUFF_DIRS],[yes])
-@end example
-@end deffn
-
-
-@deffn {Autoconf Macro} DS_DEFAULT_SECTIONS_DEV
-Equivalent to evaluating:
-
-@example
-DS_INCLUDE_SECTION([BIN_RULES],[yes])
-DS_INCLUDE_SECTION([DOC_RULES],[yes])
-DS_INCLUDE_SECTION([DEV_RULES],[yes])
-DS_INCLUDE_SECTION([AUTOCONF_DIRS],[yes])
-DS_INCLUDE_SECTION([DEVELSTUFF_DIRS],[yes])
-@end example
-@end deffn
+@subsubheading Makefile variables
 
 
 @defvr {Makefile Variable} ds_include_BIN_RULES
 @defvrx {Makefile Variable} ds_include_DOC_RULES
 @defvrx {Makefile Variable} ds_include_DEV_RULES
-If set to @code{yes} include the associated makefile section.
+If set to @code{yes}: Include the associated makefile section.
 @end defvr
 
 
-@defvr {Makefile Variables} ds_include_AUTOCONF_DIRS
-If set to @code{yes}: include the directory variables defined by @gnu{}
+@defvr {Makefile Variable} ds_include_AUTOCONF_DIRS
+If set to @code{yes}: Include the directory variables defined by @gnu{}
 Autoconf.
 @end defvr
 
 
-@defvr {Makefile Variables}  ds_include_DEVELSTUFF_DIRS
-If set to @code{yes}: include the directory variables defined by
+@defvr {Makefile Variable} ds_include_DEVELSTUFF_DIRS
+If set to @code{yes}: Include the directory variables defined by
 DevelStuff.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_include_C_LANGUAGE
+If set to @code{yes}: Include support for C language.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_include_GENERIC_DOCUMENTATION
+If set to @code{yes}: Include support for generic documentation
+installation, @file{README} files and the like.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_include_TEXINFO_DOCUMENTATION
+If set to @code{yes}: Include support for documentation in Texinfo
+format.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_include_UNINSTALL_SCRIPTS
+If set to @code{yes}: Include support for automatic generation of
+uninstallation scripts for this package.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_include_META_SCRIPTS
+If set to @code{yes}: Include support for meta installation scripts to
+be executed before and after the installation of this project.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_include_PKGCONFIG
+If set to @code{yes}: Include support for @command{pkg-config} meta
+files used by other packages to detect this one.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_include_AUTOCONF
+If set to @code{yes}: Include support for @gnu{} Autoconf macro files
+used by other packages to detect this one.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_include_CONFIG_INSPECTION_SCRIPT
+If set to @code{yes}: Include support for installation inspection
+scripts used by other packages to detect this one.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_include_SOURCE_DISTRIBUTION
+If set to @code{yes}: Include support for automatic generation of source
+distribution archives for this project.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_include_BINARY_DISTRIBUTION
+If set to @code{yes}: Include support for automatic generation of binary
+distribution archives for this project.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_include_SLACKWARE_DISTRIBUTION
+If set to @code{yes}: Include support for automatic generation of binary
+Slackware packages for this project.
 @end defvr
 
 
@@ -1216,6 +1468,24 @@ rules.  @ref{make rules abi,Build install upgrade}
 
 Supported values for this option are: @code{direct}, @code{bindist},
 @code{slackware}, @code{local-slackware}.  Defaults to @code{direct}.
+@end deffn
+
+
+@vindex ds_config_COMPRESSOR
+@deffn {Configuration Option} @option{--with-compressor}
+@deffnx {Makefile Variable} ds_config_COMPRESSOR
+Select a program to use to compress archives (@ref{make global programs,
+Program variables}, for details).
+
+Supported values for this option are:
+
+@table @code
+@item bzip
+Which selects the @command{bzip2} program.
+
+@item gzip
+Which selects the @command{gzip} program.
+@end table
 @end deffn
 
 @c page
@@ -1319,10 +1589,11 @@ pathnames.  See the documentation of the makefile library for details.
 @deffn {Autoconf Macro} DS_DIRECTORIES
 Define a bunch of output variables representing installation
 directories.  These are the DevelStuff directories that can be included
-(or excluded) from the makefile with:
+or excluded from the makefile with:
 
 @example
-DS_INCLUDE_SECTION([DEVELSTUFF_DIRS],[yes])
+DS_INCLUDE_SECTION([DEVELSTUFF_DIRS])
+DS_EXCLUDE_SECTION([DEVELSTUFF_DIRS])
 @end example
 
 They are defined in the @configure{} script so that they can be used
@@ -1346,6 +1617,15 @@ Find all the packaging tools supported by the infrastructure.
 @c page
 @node config packaging slackware
 @subsection Slackware packaging
+
+
+Support for Slackware packaging can be included or excluded from the
+makefile library with:
+
+@example
+DS_INCLUDE_SECTION([SLACKWARE_DISTRIBUTION])
+DS_EXCLUDE_SECTION([SLACKWARE_DISTRIBUTION])
+@end example
 
 
 @deffn {Autoconf Macro} DS_SLACKWARE_TOOLS
@@ -1427,11 +1707,43 @@ installed in a user's home directory.
 
 
 @menu
+* config helpers init::         Opening and closing macros.
 * config helpers options::      Command line options.
 * config helpers programs::     Finding programs.
 * config helpers tmpfile::      Temporary files.
 * config helpers misc::         Miscellaneous helpers.
 @end menu
+
+@c page
+@node config helpers init
+@subsection Opening and closing macros
+
+
+@deffn {Autoconf Macro} DS_BEGIN (@var{source-file})
+Equivalent to the following:
+
+@example
+AC_PREREQ(2.63)
+AC_CONFIG_SRCDIR([@var{source-file}])
+DS_PREAMBLE
+DS_DECLARE_SECTIONS
+DS_OPTIONS
+DS_DIRECTORIES
+DS_PROGRAMS
+DS_PACKAGING
+@end example
+@end deffn
+
+
+@deffn {Autoconf Macro} DS_END
+Equivalent to the following:
+
+@example
+DS_SUBST_SECTION_VARIABLES
+DS_COMMON_CONFIG_FILES
+AC_OUTPUT
+@end example
+@end deffn
 
 @c page
 @node config helpers options
@@ -1645,8 +1957,23 @@ DS_WITH_SAVED_VARIABLE([PATH],
 @end deffn
 
 @c page
+@node make
+@chapter The makefile library
+
+
+@menu
+* make rules::                  Organisation of main rules.
+* make global::                 Global variables.
+* make fs::                     Handling files and directories.
+* make modules::                Predefined modules.
+* make transformers::           Make's modules to process files.
+* make dist::                   Source and binary distributions.
+* make misc::                   Miscellaneous functions.
+@end menu
+
+@c page
 @node make rules
-@chapter Organisation of main rules
+@section Organisation of main rules
 
 
 @menu
@@ -1657,10 +1984,9 @@ DS_WITH_SAVED_VARIABLE([PATH],
 * make rules misc::             Miscellaneous rules.
 @end menu
 
-
 @c page
 @node make rules intro
-@section Introduction
+@subsection Introduction
 
 
 The makefile library defines a set of ``well known'' phony targets that
@@ -1716,7 +2042,7 @@ to the main rules.
 
 @c page
 @node make rules main
-@section Main rules
+@subsection Main rules
 
 
 The following are the rules that we are meant to use in normal
@@ -1818,7 +2144,7 @@ uninstall the directories or the files of all the included rulesets.
 
 @c page
 @node make rules sets
-@section Sets of rules
+@subsection Sets of rules
 
 
 @deffn {Makefile Rule} bin
@@ -1954,7 +2280,7 @@ are included: the main rules @code{print-uninstall-dirs-script} and
 
 @c page
 @node make rules abi
-@section Build, install, upgrade
+@subsection Build, install, upgrade
 
 
 @deffn {Makefile Rule} abi
@@ -1994,7 +2320,7 @@ local-slackware-install}; to invoke @code{bu} is equivalent to invoke
 
 @c page
 @node make rules misc
-@section Miscellaneous rules
+@subsection Miscellaneous rules
 
 
 @deffn {Makefile Rule} clean-builddir
@@ -2035,8 +2361,69 @@ prints each string on its line.
 @end deffn
 
 @c page
-@node make directories
-@chapter Predefined directory variables
+@node make global
+@section Generic functions and modules
+
+
+@menu
+* make global package::         Package variables.
+* make global dirs::            Predefined directory variables.
+* make global programs::        Program variables.
+@end menu
+
+@c page
+@node make global package
+@subsection Package variables
+
+
+The variables described here are defined at top level in the makefile
+library, so they are always available.  Configuration variables are not
+described here (@ref{config,General configuration}, for details on
+configuration).
+
+
+@defvr {Makefile Variable} PACKAGE_NAME
+The identifier of the package.  It is the identifier we have used as
+first argument to the Autoconf macro @code{AC_INIT}.
+@end defvr
+
+
+@defvr {Makefile Variable} PACKAGE_VERSION
+The version of the package.  It is the thing we have used as second
+argument to the Autoconf macro @code{AC_INIT}.
+@end defvr
+
+
+@defvr {Makefile Variable} PKG_ID
+The package identifier.  Defined by DevelStuff's Autoconf
+infrastructure, it should be something like:
+
+@example
+$(PACKAGE_VARIABLE)-$(PACKAGE_VERSION)
+@end example
+
+@noindent
+and it is used, for example, to build archive names for source and
+binary distributions.
+@end defvr
+
+
+@defvr {Makefile Variable} PKG_DIR
+The package directory.  Defined by DevelStuff's Autoconf infrastructure,
+it should be something like:
+
+@example
+$(PACKAGE_VARIABLE)/$(PACKAGE_VERSION)
+@end example
+
+@noindent
+and it is used to build package specific directory pathnames.
+@end defvr
+
+
+@c page
+@node make global dirs
+@subsection Predefined directory variables
 
 
 A set of variables is defined to hold the installation directories
@@ -2048,26 +2435,28 @@ The directories defined by @gnu{} Autoconf can be placed in template
 files by using symbols like @code{@@libdir@@}; the @command{configure}
 script will substitute these symbols with values that are themselves
 dependent upon other variables; example: the expansion of '@@libdir@@'
-can be '$@{prefix@}/lib'.  The presence of @code{$} in the body of a
-make function triggers expansion to empty string when a function is
-invoked with @code{eval}, and this is not good; for this reason the
-following variables are defined at top level in
-@file{Makefile.library.in}.
+can be '$@{prefix@}/lib'.
 
+@quotation
+The presence of @code{$} in the body of a make function triggers
+expansion to empty string when a function is invoked with @code{eval},
+and this is not good; for this reason the following variables are
+defined at top level in the makefile library.
+@end quotation
 
 @menu
-* make directories service::    Service variables.
-* make directories autoconf::   Predefined Autoconf directories.
-* make directories develstuff:: Predefined DevelStuff directories.
+* make global dirs service::    Service variables.
+* make global dirs autoconf::   Predefined Autoconf directories.
+* make global dirs develstuff:: Predefined DevelStuff directories.
 @end menu
 
 @c page
-@node make directories service
-@section Service variables
+@node make global dirs service
+@subsubsection Service variables
 
 
-@defvr {Make Variable} srcdir
-The top directory of the source tree.  It must be defined in
+@defvr {Makefile Variable} srcdir
+The top directory of the source tree.  It @strong{must} be defined in
 @file{Makefile.in} as:
 
 @example
@@ -2076,8 +2465,9 @@ srcdir = @@srcdir@@
 @end defvr
 
 
-@defvr {Make Variable} builddir
-The top build directory.  It must be defined in @file{Makefile.in} as:
+@defvr {Makefile Variable} builddir
+The top build directory.  It @strong{must} be defined in
+@file{Makefile.in} as:
 
 @example
 builddir = @@builddir@@
@@ -2085,7 +2475,7 @@ builddir = @@builddir@@
 @end defvr
 
 
-@defvr {Make Variable} DESTDIR
+@defvr {Makefile Variable} DESTDIR
 Select a directory to be prepended to the installation directories; it
 allows the installation in a temporary location, useful when building
 binary packages.  Usage example:
@@ -2102,374 +2492,297 @@ If its value from the environment is the empty string: it is set to
 @end defvr
 
 
-@defvr {Make Variable} infrastructuredir
-@defvrx {Make Variable} configurationdir
+@defvr {Makefile Variable} infrastructuredir
+@defvrx {Makefile Variable} configurationdir
 Hold the relative pathname from @code{$(builddir)} to the infrastructure
 and configuration directories.
 @end defvr
 
 
 @c page
-@node make directories autoconf
-@section Predefined Autoconf directories
+@node make global dirs autoconf
+@subsubsection Predefined Autoconf directories
 
 
-@defvr {Make Variable} prefix
+@defvr {Makefile Variable} prefix
 The installation prefix for all the files; defaults to @code{@@prefix@@}.
 @end defvr
 
 
-@defvr {Make Variable} exec_prefix
+@defvr {Makefile Variable} exec_prefix
 The installation prefix for executable programs; defaults to
 @code{@@exec_prefix@@}.
 @end defvr
 
 
-@defvr {Make Variable} bindir
+@defvr {Makefile Variable} bindir
 The directory in which to install public executables; defaults to
 @code{@@bindir@@}.
 @end defvr
 
 
-@defvr {Make Variable} datarootdir
+@defvr {Makefile Variable} datarootdir
 The installation prefix for platform independent data files; defaults to
 @code{@@datarootdir@@}.
 @end defvr
 
 
-@defvr {Make Variable} datadir
+@defvr {Makefile Variable} datadir
 The directory in which to install platform independent data files;
 defaults to @code{@@datadir@@}.
 @end defvr
 
 
-@defvr {Make Variable} docdir
+@defvr {Makefile Variable} docdir
 The directory in which to install documentation files; defaults to
 @code{@@datarootdir@@/doc}.
 @end defvr
 
 
-@defvr {Make Variable} includedir
+@defvr {Makefile Variable} includedir
 The directory in which to install C language header files; defaults to
 @code{@@includedir@@}.
 @end defvr
 
 
-@defvr {Make Variable} infodir
+@defvr {Makefile Variable} infodir
 The directory in which to install Info files; defaults to
 @code{@@infodir@@}.
 @end defvr
 
 
-@defvr {Make Variable} libdir
+@defvr {Makefile Variable} libdir
 The directory in which to install platform dependent libraries; defaults
 to @code{@@libdir@@}.
 @end defvr
 
 
-@defvr {Make Variable} libexecdir
+@defvr {Makefile Variable} libexecdir
 The directory in which to install private executables; defaults to
 @code{@@libexecdir@@}.
 @end defvr
 
 
-@defvr {Make Variable} localstatedir
+@defvr {Makefile Variable} localstatedir
 The directory in which to install the application's local state files;
 defaults to @code{@@localstatedir@@}.
 @end defvr
 
 
-@defvr {Make Variable} mandir
+@defvr {Makefile Variable} mandir
 The directory in which to install manual pages; defaults to
 @code{@@mandir@@}.
 @end defvr
 
 
-@defvr {Make Variable} sbindir
+@defvr {Makefile Variable} sbindir
 The directory in which to install system public executables; defaults to
 @code{@@sbindir@@}.
 @end defvr
 
 
-@defvr {Make Variable} sharedstatedir
+@defvr {Makefile Variable} sharedstatedir
 The directory in which to install the application's shared state files;
 defaults to @code{@@sharedstatedir@@}.
 @end defvr
 
 
-@defvr {Make Variable} sysconfdir
+@defvr {Makefile Variable} sysconfdir
 The directory in which to install system configuration files; defaults
 to @code{@@sysconfdir@@}.
 @end defvr
 
-
 @c page
-@node make directories develstuff
-@section Predefined DevelStuff directories
+@node make global dirs develstuff
+@subsubsection Predefined DevelStuff directories
 
 
-@defvr {Make Variable} PKG_DIR
-The package specific directory; defaults to @code{@@PKG_DIR@@}.
-@end defvr
-
-
-@defvr {Make Variable} pkgdatadir
+@defvr {Makefile Variable} pkgdatadir
 The directory in which to install data files and platform independent
 libraries; defaults to @code{@@pkgdatadir@@}.
 @end defvr
 
 
-@defvr {Make Variable} pkgdocdir
+@defvr {Makefile Variable} pkgdocdir
 The directory in which to install documentation files; defaults to
 @code{@@pkgdocdir@@}.
 @end defvr
 
 
-@defvr {Make Variable} pkgexampledir
+@defvr {Makefile Variable} pkgexampledir
 The directory in which to install example files; defaults to
 @code{@@pkgexampledir@@}.
 @end defvr
 
 
-@defvr {Make Variable} pkginfodir
+@defvr {Makefile Variable} pkginfodir
 The directory in which to install Info files; defaults to
 @code{@@pkginfodir@@}.
 @end defvr
 
 
-@defvr {Make Variable} pkghtmldir
+@defvr {Makefile Variable} pkghtmldir
 The directory in which to install @acronym{HTML} documentation files;
 defaults to @code{@@pkghtmldir@@}.
 @end defvr
 
 
-@defvr {Make Variable} pkgincludedir
+@defvr {Makefile Variable} pkgincludedir
 The directory in which to install C language header files; defaults to
 @code{@@pkgincludedir@@}.
 @end defvr
 
 
-@defvr {Make Variable} pkglibdir
+@defvr {Makefile Variable} pkglibdir
 The directory in which to install platform dependent libraries and data
 files; defaults to @code{@@pkglibdir@@}.
 @end defvr
 
 
-@defvr {Make Variable} pkglibexecdir
+@defvr {Makefile Variable} pkglibexecdir
 The directory in which to install private executable files; defaults to
 @code{@@pkglibexecdir@@}.
 @end defvr
 
 
-@defvr {Make Variable} pkgsysconfdir
+@defvr {Makefile Variable} pkgsysconfdir
 The directory in which to install system configuration files; defaults
 to @code{@@pkgsysconfdir@@}.
 @end defvr
 
-
 @c page
-@node make generics
-@chapter Generic make functions and modules
+@node make global programs
+@subsection Program variables
 
 
-@menu
-* make init::                   Beginning and ending a make file.
-* make file system::            Handling files and directories.
-* make misc::                   Miscellaneous functions.
-@end menu
-
-
-@c page
-@node make init
-@section Beginning and ending a make file
-
-
-@menu
-* make init mandatory::         Other mandatory modules.
-* make init variables::         Variables defined by mandatory modules.
-@end menu
-
-
-@deffn {Make Module} ds-begin
-This must be the first module evaluated in the make file; it does the
+The program variables are defined at top level, so they are always
+available; they are initialised by the @code{DS_PROGRAMS} Autoconf
+macro.  This section is constantly updated, so we have to look at the
+source of the makefile library, but it should be something like the
 following:
 
-@enumerate
-@item
-evaluate the following modules:
-
 @example
-ds-common-programs
-ds-tests
-ds-examples
-ds-generic-documentation
-@end example
-@end enumerate
-@end deffn
-
-
-@deffn {Make Module} ds-end
-This must be the last module evaluated in the make file.
-@end deffn
-
-
-@deffn {Make Module} ds-common-end
-When used, it must be the last module evaluated in the makefile.  It
-evaluates the following modules:
-
-@example
-ds-texinfo-documentation
-ds-uninstall-scripts
-ds-meta-scripts
-ds-pkg-config
-ds-autoconf
-ds-config-inspection-script
-ds-source-distribution
-ds-binary-distribution
-ds-slackware-distribution
-ds-end
-@end example
-@end deffn
-
-
-@c page
-@node make init mandatory
-@subsection Other mandatory modules
-
-
-@deffn {Make Module} ds-package-variables
-Define package related variables; this module is not meant to be
-evaluated directly because is it evaluated by @code{ds-begin}.  It
-expands to the following:
-
-@example
-PACKAGE_NAME            = @@PACKAGE_NAME@@
-PACKAGE_VERSION         = @@PACKAGE_VERSION@@
-PACKAGE_VERSION_MAJMIN  = @@PACKAGE_VERSION_MAJOR_MINOR@@
-PACKAGE_XVERSION        = @@PACKAGE_XVERSION@@
-PACKAGE_NAME_LOWERCASE  = @@PACKAGE_NAME_LOWERCASE@@
-PKG_ID                  = $(PACKAGE_NAME)-$(PACKAGE_XVERSION)
-@end example
-@end deffn
-
-
-@deffn {Make Module} ds-common-programs
-Define variables that hold the command line of common programs; this
-module is not meant to be evaluated directly because is it evaluated by
-@code{ds-begin}.  It expands to:
-
-@example
-BASH_PROGRAM    = @@BASH_PROGRAM@@
-SHELL           = @@SHELL@@
+BASH_PROGRAM = @@BASH_PROGRAM@@
+SHELL        = @@SHELL@@
 @@SET_MAKE@@
-
-BZIP            = @@BZIP@@
-CAT             = @@CAT@@
-CP              = @@CP@@ --force --verbose --preserve=mode --
-DATE            = @@DATE@@
-GREP            = @@GREP@@
-GAWK            = @@GAWK@@
-GZIP            = @@GZIP@@
-M4              = @@M4@@
-MAKEINFO        = @@MAKEINFO@@
-MKDIR           = @@MKDIR@@ --parents --verbose
-MV              = @@MV@@ --verbose --
-RM              = @@RM@@ --force --recursive --verbose --
-RM_FILE         = @@RM@@ --force --verbose --
-RM_SILENT       = @@RM@@ --force --recursive --
-RMDIR           = @@RMDIR@@ --parents --ignore-fail-on-non-empty --
-SED             = @@SED@@
-SYMLINK         = @@SYMLINK@@ --symbolic
-TAR             = @@TAR@@
-SUDO            = @@SUDO@@
-
-TCLSH           = @@TCLSH@@
+MAKE_SILENT  = $(MAKE) --silent
+MAKE_NODIR   = $(MAKE) --no-print-directory
+BZIP         = @@BZIP@@
+CAT          = @@CAT@@
+CP           = @@CP@@ --force --verbose \
+                 --preserve=mode,timestamp --
+DATE         = @@DATE@@
+GREP         = @@GREP@@
+GAWK         = @@GAWK@@
+GZIP         = @@GZIP@@
+M4           = @@M4@@
+MAKEINFO     = @@MAKEINFO@@
+MKDIR        = @@MKDIR@@ --parents --verbose
+MV           = @@MV@@ --verbose --
+RM           = @@RM@@ --force --recursive --verbose --
+RM_FILE      = @@RM@@ --force --verbose --
+RM_SILENT    = @@RM@@ --force --recursive --
+RMDIR        = @@RMDIR@@ --parents \
+                  --ignore-fail-on-non-empty --
+SED          = @@SED@@
+SYMLINK      = @@SYMLINK@@ --symbolic
+TAR          = @@TAR@@
+TEXI2PDF     = @@TEXI2PDF@@
+DVIPS        = @@DVIPS@@
+SUDO         = @@SUDO@@
 
 INSTALL                 = @@INSTALL@@
 INSTALL_DIR_MODE        ?= 0755
 INSTALL_BIN_MODE        ?= 0555
 INSTALL_DATA_MODE       ?= 0444
 INSTALL_LIB_MODE        ?= 0444
-@end example
-@end deffn
 
-
-@deffn {Make Module} ds-main-rules
-Define all the phony rules required to drive the building and
-installation of the package; this module is not meant to be evaluated
-directly because is it evaluated by @code{ds-begin}.
-@end deffn
-
-@c page
-@node make init variables
-@subsection Variables defined by mandatory modules
-
-
-@defvr {Make Variable} PACKAGE_NAME
-Must be set to the name of the packge; this variable is used when
-composing the names of archive files.  Defaults to
-@code{@@PACKAGE_NAME@@}.
-@end defvr
-
-
-@defvr {Make Variable} PACKAGE_VERSION
-Must be se to the version number of the package, something like:
-
-@example
-<major number>.<minor number>.<patch level>
+INSTALL_DIR  = $(INSTALL) -p -m $(INSTALL_DIR_MODE) -d
+INSTALL_BIN  = $(INSTALL) -p -m $(INSTALL_BIN_MODE)
+INSTALL_DATA = $(INSTALL) -p -m $(INSTALL_DATA_MODE)
 @end example
 
 @noindent
-it is almost always better to use @code{PACKAGE_XVERSION}.  Defaults to
-@code{@@PACKAGE_VERSION@@}.
+notice that automatic installation of files and directories is
+@strong{not} performed with the @code{INSTALL_DIR}, @code{INSTALL_BIN},
+@code{INSTALL_DATA} variables, but rather with the
+@func{ds-install-directory} and @func{ds-install-files} makefile
+functions.
+
+Special support for compressing archive files is present through the
+following variables.  Notice that the selected compressor is
+@strong{not} used for all the compression tasks in the DevelStuff
+infrastructure (example: documentation files are compressed with
+@command{gzip}).
+
+
+@defvr {Makefile Variable} ds_COMPRESSOR_PROGRAM
+The executable to use to compress a file.  This variable is configured
+by the value of @code{ds_config_COMPRESSOR}; if it is:
+
+@table @code
+@item gzip
+This variable is set to @code{$(GZIP)}.
+
+@item bzip
+This variable is set to @code{$(BZIP)}.
+@end table
 @end defvr
 
 
-@defvr {Make Variable} PKG_ID
-Must be set to a string that identifies this package and its version
-number; it is used to compose the name of temporary directories and of
-versioned installation directories.  Defaults to
-@code{$(PACKAGE_NAME)-$(PACKAGE_XVERSION)}.
+@defvr {Makefile Variable} ds_COMPRESSOR_TAR
+The command line option to give to @gnu{} Tar to make it compress or
+uncompress an archive.  This variable is configured by the value of
+@code{ds_config_COMPRESSOR}; if it is:
 
-Notice that this is different from @code{PKG_DIR}.
+@table @code
+@item gzip
+This variable is set to @option{--gzip}.
+
+@item bzip
+This variable is set to @option{--bzip2}.
+@end table
+@end defvr
+
+
+@defvr {Makefile Variable} ds_COMPRESSOR_EXT
+The file name extension of a file compressed with the selected
+compressor.  This variable is configured by the value of
+@code{ds_config_COMPRESSOR}; if it is:
+
+@table @code
+@item gzip
+This variable is set to @code{gz}.
+
+@item bzip
+This variable is set to @code{bz2}.
+@end table
 @end defvr
 
 @c page
-@node make file system
+@node make fs
 @section Handling files and directories
 
 
-@menu
-* make fs inspection::          File system inspection functions.
-* make fs srcdir::              Handling source directories.
-* make fs builddir::            Handling build directories.
-* make fs cleanfiles::          Removing target files.
-@end menu
-
-@c page
-@node make fs inspection
-@subsection File system inspection functions
-
-
-@deffn {Make Function} ds-drop-backup-files @var{list_of_pathnames}
+@deffn {Makefile Function} ds-drop-backup-files @var{list_of_pathnames}
 Filter out backup files, that is files whose name ends with @code{~}.
 @end deffn
 
 
-@deffn {Make Function} ds-drop-equal-prefixed-files @var{list_of_pathnames}
+@deffn {Makefile Function} ds-drop-equal-prefixed-files @var{list_of_pathnames}
 Filter out files whose name begins with @code{=}; notice that it is the
 name of the file that is checked, not the directory part of the
 pathname.
 @end deffn
 
 
-@deffn {Make Function} ds-drop-unwanted-files @var{list_of_pathnames}
+@deffn {Makefile Function} ds-drop-unwanted-files @var{list_of_pathnames}
 Applies the following functions: @func{ds-drop-backup-files},
 @func{ds-drop-equal-prefixed-files}.
 @end deffn
 
 
-@deffn {Make Function} ds-files-from-dir @var{directory} [@var{list_of_patterns}]
+@deffn {Makefile Function} ds-files-from-dir @var{directory} [@var{list_of_patterns}]
 Return the list of files in @var{directory}, filtering out unwanted
 files by applying @func{ds-drop-unwanted-files}.  The optional
 @var{list_of_patterns} is used to filter the collected files with
@@ -2502,13 +2815,13 @@ $(call ds-files-from-dir,$(srcdir),src/*.c include/*.h)
 @end deffn
 
 
-@deffn {Make Function} ds-replace-dir @var{new_directory} @var{list_of_pathnames}
+@deffn {Makefile Function} ds-replace-dir @var{new_directory} @var{list_of_pathnames}
 Remove the directory part from @var{list_of_pathnames} then prepend
 @var{new_directory} to each file name.
 @end deffn
 
 
-@deffn {Make Function} ds-glob @var{identifier} @var{list_of_patterns}
+@deffn {Makefile Function} ds-glob @var{identifier} @var{list_of_patterns}
 Take a module's source directory from the variable
 @code{<IDENTIFIER>_SRCDIR} and apply @func{ds-files-from-dir} to it
 and the patterns.  This is meant to acquire the list of source files of
@@ -2516,20 +2829,927 @@ a transformation module.  An error is signalled if the source directory
 is the empty string.
 @end deffn
 
+@c page
+@node make modules
+@section Predefined modules
+
+
+@menu
+* make modules gendoc::         Generic documentation.
+* make modules texinfo::        Texinfo documentation.
+* make modules meta::           Meta scripts.
+* make modules pkgconfig::      Support for @command{pkg-config}.
+* make modules autoconf::       Detecting this package with Autoconf.
+* make modules inspect::        Configuration inspection scripts.
+* make modules uninstall::      Uninstallation scripts.
+@end menu
 
 @c page
-@node make fs srcdir
+@node make modules gendoc
+@subsection Generic documentation
+
+
+If the makefile variable @code{ds_include_GENERIC_DOCUMENTATION} is set
+to @code{yes}: the makefile section @code{ds-generic-documenation} is
+automatically evaluated in the makefile library.
+
+
+@deffn {Makefile Section} ds-generic-documentation
+Install generic documentation files under the package specific
+documentation directory.  This module does its job only if the makefile
+variable @code{ds_config_ENABLE_DOC} is set to @code{yes}.
+
+Generic documentation files are @file{README}, @file{COPYRIGHT},
+@file{INSTALL}, @file{BUGS}, @file{TODO} and the like that are in the
+top level source directory.  They are compressed with @code{$(GZIP)} and
+installed under @code{$(pkgdocdir)}.
+
+To use this module put the following in the makefile:
+
+@example
+$(eval $(call ds-generic-documentation))
+@end example
+
+@noindent
+the core of the module is generated with:
+
+@example
+$(eval $(call ds-module,ds_gendoc,doc,DATA))
+@end example
+
+@noindent
+and all the rules generated by @func{ds-module} are available.
+@end deffn
+
+
+@defvr {Makefile Variable} ds_gendoc_SRCDIR
+The source directory; it is the directory in which the module will
+search the generic documentation files.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_gendoc_BUILDDIR
+The build directory in which the files will be compressed.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_gendoc_PATTERNS
+The list of shell patterns used to select the files.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_gendoc_SOURCES
+The list of selected files.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_gendoc_TARGETS
+The list of compressed files.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_gendoc_INSTLST
+The list of files that will be installed.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_gendoc_INSTDIR
+The directory under which the files will be installed.  It is set to
+@code{$(pkgdocdir)}.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_gendoc_CLEANFILES
+@defvrx {Makefile Variable} ds_gendoc_MOSTLYCLEANFILES
+The list of files removed by the @code{clean} and @code{mostlyclean}
+rules.
+@end defvr
+
+
+@c page
+@node make modules texinfo
+@subsection Texinfo documentation
+
+
+If the makefile variable @code{ds_include_TEXINFO_DOCUMENTATION} is set
+to @code{yes}: the makefile section @code{ds-texinfo-documenation} is
+automatically evaluated in the makefile library.
+
+To use this module put the following in the makefile:
+
+@example
+$(eval $(call ds-texinfo-documentation))
+@end example
+
+@noindent
+this module does it job only if the makefile variable
+@code{ds_config_ENABLE_DOC} is set to @code{yes}.  @ref{config options
+doc, Documentation options}.
+
+
+@deffn {Makefile Section} ds-texinfo-documentation
+Build and install documentation from source files in Texinfo format.
+@end deffn
+
+
+@menu
+* make modules texinfo gen::    Generic variables and rules.
+* make modules texinfo info::   Documenation in Info format.
+* make modules texinfo html::   Documenation in @acronym{HTML} format.
+* make modules texinfo dvi::    Documenation in @acronym{DVI} format.
+* make modules texinfo pdf::    Documenation in @acronym{PDF} format.
+* make modules texinfo ps::     Documenation in PostScript format.
+@end menu
+
+@c page
+@node make modules texinfo gen
+@subsubsection Generic variables and rules
+
+
+@defvr {Makefile Variable} ds_texi_SRCDIR
+The source directory for Texinfo files.  It is set to
+@code{$(srcdir)/doc}.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_texi_BUILDDIR
+The build directory for Texinfo files.  It is set to
+@code{$(builddir)/texinfo.d}.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_texi_SOURCES
+The list of source files in Texinfo format.  It is the list of file with
+@code{texi} extension under the source directory.
+@end defvr
+
+
+@deffn {Makefile Rule} ds-texinfo-builddir
+Create the build directory under which all the documentation files from
+Texinfo source will be created.
+@end deffn
+
+
+@c page
+@node make modules texinfo info
+@subsubsection Documenation in Info format
+
+
+The core of the Info format support rules is generated with:
+
+@example
+$(eval $(call ds-module,ds_texi_INFO,doc,DATA))
+@end example
+
+@noindent
+all the rules generated by @func{ds-module} are available.  The
+auxiliary rule @code{info} invokes @code{ds_texi_INFO-all}.
+
+
+@defvr {Makefile Variable} ds_texi_INFO_TARGETS
+The list of target files in Info format.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_texi_INFO_INSTLST
+The list of files in Info format to install.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_texi_INFO_INSTDIR
+The directory in which install the files in Info format.  Defaults to
+@code{$(pkginfodir)}.
+@end defvr
+
+@c page
+@node make modules texinfo html
+@subsubsection Documenation in @acronym{HTML} format
+
+
+The core of the @acronym{HTML} format support rules is generated with:
+
+@example
+$(eval $(call ds-module,ds_texi_HTML,doc,DATA))
+@end example
+
+@noindent
+all the rules generated by @func{ds-module} are available.  The
+auxiliary rule @code{html} invokes @code{ds_texi_HTML-all}.
+
+
+@defvr {Makefile Variable} ds_texi_HTML_TARGETS
+The list of target files in @acronym{HTML} format.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_texi_HTML_INSTLST
+The list of files in @acronym{HTML} format to install.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_texi_HTML_INSTDIR
+The directory in which install the files in @acronym{HTML} format.
+Defaults to @code{$(pkghtmldir)}.
+@end defvr
+
+@c page
+@node make modules texinfo dvi
+@subsubsection Documenation in @acronym{DVI} format
+
+
+The core of the @acronym{DVI} format support rules is generated with:
+
+@example
+$(eval $(call ds-module,ds_texi_DVI,doc,DATA))
+@end example
+
+@noindent
+all the rules generated by @func{ds-module} are available.  The
+auxiliary rule @code{dvi} invokes @code{ds_texi_DVI-all}.
+
+
+@defvr {Makefile Variable} ds_texi_DVI_TARGETS
+The list of target files in @acronym{DVI} format.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_texi_DVI_INSTLST
+The list of files in @acronym{DVI} format to install.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_texi_DVI_INSTDIR
+The directory in which install the files in @acronym{DVI} format.
+Defaults to @code{$(pkgdvidir)}.
+@end defvr
+
+@c page
+@node make modules texinfo pdf
+@subsubsection Documenation in @acronym{PDF} format
+
+
+The core of the @acronym{PDF} format support rules is generated with:
+
+@example
+$(eval $(call ds-module,ds_texi_PDF,doc,DATA))
+@end example
+
+@noindent
+all the rules generated by @func{ds-module} are available.  The
+auxiliary rule @code{pdf} invokes @code{ds_texi_PDF-all}.
+
+
+@defvr {Makefile Variable} ds_texi_PDF_TARGETS
+The list of target files in @acronym{PDF} format.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_texi_PDF_INSTLST
+The list of files in @acronym{PDF} format to install.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_texi_PDF_INSTDIR
+The directory in which install the files in @acronym{PDF} format.
+Defaults to @code{$(pkgpdfdir)}.
+@end defvr
+
+@c page
+@node make modules texinfo ps
+@subsubsection Documenation in PostScript format
+
+
+The core of the PostScript format support rules is generated with:
+
+@example
+$(eval $(call ds-module,ds_texi_PS,doc,DATA))
+@end example
+
+@noindent
+all the rules generated by @func{ds-module} are available.  The
+auxiliary rule @code{ps} invokes @code{ds_texi_PS-all}.  Notice that
+PostScript files are compressed with @code{$(GZIP)} before installation.
+
+
+@defvr {Makefile Variable} ds_texi_PS_TARGETS
+The list of target files in PostScript format.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_texi_PS_INSTLST
+The list of files in PostScript format to install.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_texi_PS_INSTDIR
+The directory in which install the files in PostScript format.  Defaults
+to @code{$(pkgpsdir)}.
+@end defvr
+
+
+@c page
+@node make modules meta
+@subsection Meta scripts
+
+
+Meta scripts are:
+
+@table @file
+@item preinstall
+To be executed before installing the package (for example to add users
+and groups).
+
+@item postinstall
+To be executed after package installation (for example to configure the
+pakcage).
+
+@item preremoval
+To be executed before removing the package (for example to remove
+programs from menu infrastructures).
+
+@item postremoval
+To be executed after removing the package (for example to remove users
+and groups).
+@end table
+
+At present there is no support for meta scripts in the @code{install}
+and @code{uninstall} rules.
+
+If the makefile variable @code{ds_include_META_SCRIPTS} is set to
+@code{yes}: the makefile section @code{ds-meta-scripts} is automatically
+evaluated in the makefile library.
+
+
+@deffn {Makefile Section} ds-meta-scripts
+Install package handling scripts.  It is fine if only some (or none) of
+the scripts exist in the source tree.
+
+To use this module put the following in the makefile:
+
+@example
+$(eval $(call ds-meta-scripts))
+@end example
+@end deffn
+
+
+@defvr {Makefile Variable} ds_meta_scripts_SOURCES
+The list of generic documentation files.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_meta_scripts_INSTLST
+The list of files that will be installed.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_meta_scripts_INSTDIR
+The directory in which the files will be installed.  It is set to
+@code{$(pkglibexecdir)}.
+@end defvr
+
+@c page
+@node make modules pkgconfig
+@subsection Support for @command{pkg-config}
+
+
+@command{pkg-config} is a program (a compiled executable) that inspects
+a database of package meta informations and prints to its standard
+output channel informations about installed packages and libraries.  It
+can print any custom value, but has special support for C compiler flags
+to be used in preprocessing and linking.
+
+An example meta file for a package named @code{annealing} that provides
+a shared library may look like this:
+
+@example
+# annealing.pc --
+#
+
+PACKAGE_NAME="annealing"
+PACKAGE_VERSION="0.4a0"
+
+library_interface_version="1.1"
+library_interface_major_version="1"
+library_interface_minor_version="1"
+library_id="annealing1.1"
+
+Name: Annealing
+Description: simulated annealing for the GNU Scientific Library
+Version: $library_interface_version
+Libs: -L$libdir -l$library_id
+Cflags: -I$pkgincludedir
+Requires: gsl >= 1.9
+
+### end of file
+@end example
+
+When using the DevelStuff infrastructure we are meant to build a
+template file to be processed by Autoconf; for example by putting the
+following macro in @file{configure.ac}:
+
+@example
+AC_CONFIG_FILES(meta.d/@meta{package-name}.pc:meta/@meta{package-name}.pc.in)
+@end example
+
+@noindent
+where @code{@meta{package-name}} can be equal to the first argument to
+@code{AC_INIT}.
+
+If the makefile variable @code{ds_include_PKGCONFIG} is set to
+@code{yes}: the makefile section @code{ds-pkg-config} is automatically
+evaluated in the makefile library with no arguments.
+
+
+@deffn {Makefile Section} ds-pkg-config
+@deffnx {Makefile Section} ds-pkg-config @var{names}
+Install the meta data files for @command{pkg-config}, usually it is a
+single meta file.
+
+If @var{names} is not used: by default an attempt is done to install
+@code{$(PACKAGE_NAME).pc} picking it up from @code{$(builddir)/meta.d}.
+More than one meta file can be selected by setting the @var{names}
+optional parameter to the list of file names with the @code{.pc}
+extension stripped.
+
+To use this module put the following in the makefile:
+
+@example
+$(eval $(call ds-pkg-config))
+@end example
+@end deffn
+
+
+@defvr {Makefile Variable} ds_pkgconfig_SRCDIR
+The source directory.  It is set to @code{$(srcdir)/meta}.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_pkgconfig_BUILDDIR
+The build directory.  It is set to @code{$(builddir)/meta.d}.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_pkgconfig_NAMES
+The list of meta files that will be searched in the source tree.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_pkgconfig_SOURCES
+The list of meta files that are present in the source tree.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_pkgconfig_INSTLST
+The list of meta files that will be installed.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_pkgconfig_INSTDIR
+The directory in which the files will be installed.  It is set to
+@code{$(libdir)/pkgconfig}.
+@end defvr
+
+@c page
+@node make modules autoconf
+@subsection Detecting this package with Autoconf
+
+
+When using @gnu{} Autoconf to configure a package, it is possible to
+load in the @file{configure.ac} template a file of macros that detect
+the availability of another package.
+
+For example, to detect the availability of a package named
+@code{annealing} that provides a shared library
+@file{libannealing1.2.so}, we can prepare the following macro file:
+
+@example
+# annealing.m4 --
+#
+
+AC_DEFUN([ANNEALING_LIBRARY],
+  [annealing_MAJOR=$1
+   annealing_MINOR=$2
+   annealing_LIBID=annealing$annealing_MAJOR.$annealing_MINOR
+
+   AC_CHECK_HEADERS([annealing.h])
+   AC_CHECK_LIB([$annealing_LIBID],[annealing_version],
+     [ANNEALING_LIBS="-l$annealing_LIBID"],
+     [AC_MSG_ERROR([cannot link to Annealing Library])])
+   AC_SUBST([ANNEALING_LIBS],[$ANNEALING_LIBS])])
+
+### end of file
+@end example
+
+@noindent
+put the following in @file{aclocal.m4}:
+
+@example
+m4_include(annealing.m4)
+@end example
+
+@noindent
+and put the following in @file{configure.ac}:
+
+@example
+ANNEALING_LIBRARY(1,2)
+@end example
+
+If the makefile variable @code{ds_include_AUTOCONF} is set to
+@code{yes}: the makefile section @code{ds-autoconf} is automatically
+evaluated in the makefile library with no arguments.
+
+
+@deffn {Makefile Section} ds-autoconf
+@deffnx {Makefile Section} ds-autoconf @var{names}
+Install macro files for @gnu{} Autoconf to be used by other projects to
+detect this package installation.
+
+If @var{names} is not used: by default an attempt is done to install
+@code{$(PACKAGE_NAME).m4} by picking it up from
+@code{$(srcdir)/meta/autoconf}.  More than one meta file can be selected
+by setting the @var{names} optional parameter to the list of file names
+with the @code{.m4} extension stripped.
+
+To use this module put the following in the makefile:
+
+@example
+$(eval $(call ds-autoconf))
+@end example
+@end deffn
+
+
+@defvr {Makefile Variable} ds_autoconf_SRCDIR
+The source directory.  It is set to @code{$(srcdir)/meta/autoconf}.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_autoconf_NAMES
+The list of macro files that will be searched in the source tree.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_autoconf_SOURCES
+The list of macro files found in the source tree.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_autoconf_INSTLST
+The list of macro files that will be installed.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_autoconf_INSTDIR
+The directory in which the files will be installed.  It is set to:
+
+@example
+$(datadir)/aclocal/$(PKG_DIR)
+@end example
+@end defvr
+
+@c page
+@node make modules inspect
+@subsection Configuration inspection scripts.
+
+
+A configuration inspection script is an executable that can be used to
+inspect the installation of a package from the command line or another
+script.
+
+For example, to detect the availability of a package named
+@code{annealing} that provides a shared library
+@file{libannealing1.2.so}, we can prepare the following script:
+
+@example
+#!/bin/sh
+#
+# annealing-config
+
+case "$1" in
+    --package-name)
+        echo "annealing"
+        ;;
+    --package-version)
+        echo "0.4a0"
+        ;;
+
+    --library-interface-version)
+        echo "1.2"
+        ;;
+    --library-interface-major-version)
+        echo "1"
+        ;;
+    --library-interface-minor-version)
+        echo "2"
+        ;;
+    --library-id)
+        # print the shared library identifier
+        echo "annealing1.1"
+        ;;
+    *)
+        echo 'usage: annealing-config OPTION
+options:
+
+    --package-name              print the package name
+    --package-version           print the full package version
+
+    --library-interface-version
+                                print the interface version
+    --library-interface-major-version
+                                print the interface version
+                                major number
+    --library-interface-minor-version
+                                print the interface version
+                                minor number
+    --library-id                print the library identifier
+'
+        ;;
+esac
+
+exit 0
+
+### end of file
+@end example
+
+It is useful to write such a script so that it is preprocessed by
+Autoconf; for example by putting the following macro in
+@file{configure.ac}:
+
+@example
+AC_CONFIG_FILES(meta.d/@meta{package-name}-config:\
+meta/@meta{package-name}-config.in)
+@end example
+
+@noindent
+where @code{@meta{package-name}} can be equal to the first argument to
+@code{AC_INIT}.
+
+If the makefile variable @code{ds_include_CONFIG_INSPECTION_SCRIPT} is
+set to @code{yes}: the makefile section
+@code{ds-config-inspection-script} is automatically evaluated in the
+makefile library with no arguments.
+
+
+@deffn {Makefile Module} ds-config-inspection-script
+@deffnx {Makefile Module} ds-config-inspection-script @var{names}
+Install the configuration inspection script.
+
+If @var{names} is not used: by default an attempt is done to install
+@code{$(PACKAGE_NAME)-config} by picking it up from
+@code{$(builddir)/meta.d}.  More than one script can be selected by
+setting the @var{names} optional parameter to the list of file names.
+
+To use this module put the following in the makefile:
+
+@example
+$(eval $(call ds-config-inspection-script))
+@end example
+@end deffn
+
+
+@defvr {Makefile Variable} ds_config_script_SRCDIR
+The source directory.  It is set to @code{$(srcdir)/meta}.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_config_script_BUILDDIR
+The build directory.  It is set to @code{$(builddir)/meta.d}.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_config_script_NAMES
+The list of config scripts that will be searched in the source tree.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_config_script_SOURCES
+The list of config scripts that are present in the source tree.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_config_script_INSTLST
+The list of config scripts that will be installed.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_config_script_INSTDIR
+The directory in which the files will be installed.  It is set to
+@code{$(bindir)}.
+@end defvr
+
+@c page
+@node make modules uninstall
+@subsection Uninstallation scripts
+
+
+In addition to the @code{install} and @code{uninstall} rules, DevelStuff
+autocomposes and installs a set of scripts that can be used to remove a
+package from the system.  Three scripts are generated, one for each main
+ruleset: @code{bin}, @code{doc}, @code{dev}.
+
+If the makefile variable @code{ds_include_UNINSTALL_SCRIPTS} is set to
+@code{yes}: the makefile section @code{ds-uninstall-scripts} is
+automatically evaluated in the makefile library.
+
+
+@deffn {Makefile Section} ds-uninstall-scripts
+Enable generation of uninstallation scripts.  Only scripts to uninstall
+the included main rulesets are generated.
+
+To use this module put the following in the makefile:
+
+@example
+$(eval $(call ds-uninstall-scripts))
+@end example
+
+@noindent
+the core of the module is generated with:
+
+@example
+$(eval $(call ds-module,ds_uninstall,bin,BIN))
+$(eval $(call ds-module,ds_uninstall,doc,BIN))
+$(eval $(call ds-module,ds_uninstall,dev,BIN))
+@end example
+
+@noindent
+and all the rules generated by @func{ds-module} are available.
+@end deffn
+
+
+@defvr {Makefile Variable} ds_uninstall_BUILDDIR
+The build directory in which the scripts will be created.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_uninstall_bin_TARGETS
+@defvrx {Makefile Variable} ds_uninstall_doc_TARGETS
+@defvrx {Makefile Variable} ds_uninstall_dev_TARGETS
+The list of scripts that will be generated.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_uninstall_bin_INSTLST
+@defvrx {Makefile Variable} ds_uninstall_doc_INSTLST
+@defvrx {Makefile Variable} ds_uninstall_dev_INSTLST
+The list of scripts that will be installed.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_uninstall_bin_INSTDIR
+@defvrx {Makefile Variable} ds_uninstall_doc_INSTDIR
+@defvrx {Makefile Variable} ds_uninstall_dev_INSTDIR
+The directory under which the scripts will be installed.  Defaults to
+@code{$(pkglibexecdir)}.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_uninstall_bin_CLEANFILES
+@defvrx {Makefile Variable} ds_uninstall_doc_CLEANFILES
+@defvrx {Makefile Variable} ds_uninstall_dev_CLEANFILES
+@defvrx {Makefile Variable} ds_uninstall_bin_MOSTLYCLEANFILES
+@defvrx {Makefile Variable} ds_uninstall_doc_MOSTLYCLEANFILES
+@defvrx {Makefile Variable} ds_uninstall_dev_MOSTLYCLEANFILES
+The list of files under the build directory that will be removed by the
+@code{clean} and @code{mostlyclean} rules.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_uninstall_bin_NAME
+@defvrx {Makefile Variable} ds_uninstall_doc_NAME
+@defvrx {Makefile Variable} ds_uninstall_dev_NAME
+The scripts file names.
+@end defvr
+
+
+@defvr {Makefile Variable} ds_uninstall_bin_PATHNAME
+@defvrx {Makefile Variable} ds_uninstall_doc_PATHNAME
+@defvrx {Makefile Variable} ds_uninstall_dev_PATHNAME
+The scripts pathnames.
+@end defvr
+
+@c page
+@node make transformers
+@section Make's modules to process files
+
+
+@menu
+* make transformers intro::     Introduction to the usage of modules.
+* make transformers srcdir::    Handling source directories.
+* make transformers builddir::  Handling build directories.
+* make transformers define::    Defining a module.
+* make transformers clean::     Removing target files.
+* make transformers install::   Module installation code sections
+                                and functions.
+@end menu
+
+@c page
+@node make transformers intro
+@subsection Introduction to the usage of modules
+
+
+Let's se an example of module whose purpose is to process a set of files
+with the @gnu{} M4 preprocessor:
+
+@example
+$(eval $(call ds-srcdir,mine,$(srcdir)/src/mine))
+$(eval $(call ds-builddir,mine))
+
+mine_SOURCES    = $(call ds-glob,mine,*.txt.m4)
+mine_TARGETS    = $(mine_SOURCES:.txt.m4=.txt)
+
+$(eval $(call ds-default-install-variables,mine,$(pkgdatadir)))
+$(eval $(call ds-default-clean-variables,mine))
+$(eval $(call ds-module,mine,bin,DATA))
+
+vpath %.m4    $(mine_SRCDIR)
+
+mine_M4FLAGS   = --prefix-builtins --include=$(mine_SRCDIR) --
+
+%.txt : %.txt.m4
+      $(M4) $(mine_M4FLAGS) $(<) >$(@@)
+@end example
+
+@noindent
+this chunk of makefile defines a module with identifier @code{mine},
+having the following characteristics:
+
+@itemize
+@item
+the module is registered under the @code{bin} ruleset and its output
+files are meant to be installed as data (as opposed to binaries and
+libraries);
+
+@item
+the source files are under @code{$(srcdir)/src/mine} and match the
+pattern @code{*.txt.m4};
+
+@item
+the output files will be built under @code{$(builddir)/mine.d} and will
+have @code{.txt} extension;
+
+@item
+the variable @code{M4} must hold the pathname of the executable program
+of @gnu{} M4; something like:
+
+@example
+AC_PATH_PROG([M4],[m4],[:])
+@end example
+
+@noindent
+must be present in @file{configure.ac} and something like:
+
+@example
+M4  = @@M4@@
+@end example
+
+@noindent
+must be present in the makefile;
+
+@item
+the @gnu{} M4 flags to be used are specific for this module and selected
+with @code{mine_M4FLAGS};
+
+@item
+the following phony rules are available to drive the module:
+
+@table @code
+@item mine-all
+build the output files;
+
+@item mine-mostlyclean
+remove the files listed in the variable @code{mine_MOSTLYCLEANFILES},
+which is set to the value of the variable @code{mine_TARGETS} by
+@func{ds-default-clean-variables};
+
+@item mine-clean
+remove the files listed in the variable @code{mine_CLEANFILES}, which is
+set to the value of the variable @code{mine_MOSTLYCLEANFILES} by
+@func{ds-default-clean-variables};
+
+@item mine-install
+installs the files in @code{mine_INSTLST} under the directory in
+@code{mine_INSTDIR} with data files permissions.
+@end table
+@end itemize
+
+Other rules and variables are generated.
+
+@c page
+@node make transformers srcdir
 @subsection Handling source directories
 
 
-@deffn {Make Code Section} ds-srcdir @var{identifier} [@var{directory_pathname}]
+@deffn {Makefile Section} ds-srcdir @var{identifier}
+@deffnx {Makefile Section} ds-srcdir @var{identifier} @var{directory_pathname}
 Test if the source directory of the module exists in the source tree;
 this function makes use of @func{ds-assert-srcdir}.
 
 The module @var{identifier} is the one used when defining a module with
 @func{ds-module}, the optional directory pathname defaults to
-@code{$(srcdir)/<IDENTIFIER>}.  The variable @code{<IDENTIFIER>_SRCDIR}
-is set to the source directory pathname.
+@code{$(srcdir)/<IDENTIFIER>}.
+
+The variable @code{<IDENTIFIER>_SRCDIR} is set to the source directory
+pathname.  The assignment is performed with the @code{?=} operator, so
+if the variable is already defined: it will @strong{not} be overwritten.
 
 Examples:
 
@@ -2553,27 +3773,31 @@ $(eval $(call ds-srcdir,mine))
 @end deffn
 
 
-@deffn {Make Code Section} ds-assert-srcdir @var{identifier}
-Invoke the built in make function @func{error} if a module's source
+@deffn {Makefile Section} ds-assert-srcdir @var{identifier}
+Invoke the built in makefile function @func{error} if a module's source
 directory does not exist.  The module's source directory is the value of
 the variable @code{<IDENTIFIER>_SRCDIR}.
 @end deffn
 
 @c page
-@node make fs builddir
+@node make transformers builddir
 @subsection Handling build directories
 
 
-@deffn {Make Code Section} ds-builddir @var{identifier} [@var{directory_pathname}]
+@deffn {Makefile Section} ds-builddir @var{identifier}
+@deffnx {Makefile Section} ds-builddir @var{identifier} @var{directory_pathname}
 Define what is needed to create a module's build directory.  The module
 @var{identifier} is the one used when defining a module with
 @func{ds-module}, the optional directory pathname defaults to
 @code{$(builddir)/<IDENTIFIER>.d}.
 
 The variable @code{<IDENTIFIER>_BUILDDIR} is set to the build directory
-pathname.  The phony rule @code{<IDENTIFIER>-make-builddir} is defined
-to apply @func{ds-make-builddir} to @var{identifier}; the rule is
-added as prerequisite to the rule @code{<IDENTIFIER>-all}.
+pathname.  The assignment is performed with the @code{?=} operator, so
+if the variable is already defined: it will @strong{not} be overwritten.
+
+The phony rule @code{<IDENTIFIER>-make-builddir} is defined to apply
+@func{ds-make-builddir} to @var{identifier}; the rule is added as
+prerequisite to the rule @code{<IDENTIFIER>-all}.
 
 Examples:
 
@@ -2597,24 +3821,436 @@ $(eval $(call ds-builddir,mine,$(builddir)/objects.d))
 @end deffn
 
 
-@deffn {Make Function} ds-make-builddir @var{identifier}
+@deffn {Makefile Function} ds-make-builddir @var{identifier}
 If the directory pathname in the variable @code{<IDENTIFIER>_BUILDDIR}
 does not exists: create it using @code{$(MKDIR)}.  If the pathname is
 the empty string: an error is signalled.  Notice that this function has
 to be called without indentation in the makefile, for example:
 
 @example
-things_BUILDDIR         = $(builddir)/things.d)
+mine_BUILDDIR = $(builddir)/mine.d)
 
-.PHONY: things-make-builddir
+.PHONY: mine-make-builddir
 
-things-make-builddir:
-$(call ds-make-builddir,things)
+mine-make-builddir:
+$(call ds-make-builddir,mine)
+@end example
+
+@noindent
+alternatively:
+
+@example
+mine-make-builddir: ; $(call ds-make-builddir,mine)
 @end example
 @end deffn
 
 @c page
-@node make fs cleanfiles
+@node make transformers define
+@subsection Defining a module
+
+
+There are a number of makefile sections to define transformation
+modules; usually we need only @func{ds-module} or
+@func{ds-module-with-defaults}.  The others are provided for flexibility
+and customisation.
+
+For all the makefile sections described below, the arguments are as
+follows:
+
+@table @var
+@item identifier
+It is the prefix for all module's variables and phony rules.
+
+@item set
+It is the ruleset under which the defined module is registered; usually
+it is one among @code{bin}, @code{doc} and @code{dev}, but it can also
+be @code{nop}, @code{tests}, @code{examples} or some custom makefile
+ruleset.
+
+@item install-mode
+It is the installation mode to be handed to @func{ds-install-module};
+usually it is one among: @code{BIN}, @code{DATA} and @code{LIB}, but it
+can be a custom mode, too.
+
+@item install-directory
+It is the installation directory for the module's output files; it is
+used to initialise the variable @code{<@var{IDENTIFIER}>_INSTDIR}.
+@end table
+
+To use each of the sections we need the @code{eval} plus @code{call}
+idiom; examples:
+
+@example
+$(eval $(call ds-module,mine,bin))
+$(eval $(call ds-module-with-defaults,mine,bin,LIB,$(libdir)))
+@end example
+
+
+@deffn {Makefile Section} ds-module-all-rule @var{identifier} @var{set}
+Define the @code{<@var{identifier}>-all} phony rule and make it a
+prerequisite for the @code{<@var{set}>} phony rule.
+
+This module gives us the responsibility to define appropriate values for
+the following variables:
+
+@example
+<@var{IDENTIFIER}>_TARGETS
+@end example
+
+@noindent
+see below for details.
+@end deffn
+
+
+@deffn {Makefile Section} ds-module-clean-rules @var{identifier} @var{set}
+Define the @code{<@var{identifier}>-clean} and
+@code{<@var{identifier}>-mostlyclean} phony rules and make them
+prerequisites for the @code{<@var{set}>-clean} and
+@code{<@var{set}>-mostlyclean} phony rules, respectively.
+
+This module gives us the responsibility to define appropriate values for
+the following variables:
+
+@example
+<@var{IDENTIFIER}>_CLEANFILES
+<@var{IDENTIFIER}>_MOSTLYCLEANFILES
+@end example
+
+@noindent
+see below for details.
+@end deffn
+
+
+@deffn {Makefile Section} ds-module-install-rules @var{identifier} @var{set}
+@deffnx {Makefile Section} ds-module-install-rules @var{identifier} @var{set} @var{install-mode}
+Define the installation, uninstallation, layout and uninstall script
+rules.  See below for details.
+
+This module gives us the responsibility to define appropriate values for
+the following variables:
+
+@example
+<@var{IDENTIFIER}>_INSTLST
+<@var{IDENTIFIER}>_INSTDIR
+@end example
+
+@noindent
+see below for details.
+@end deffn
+
+
+@deffn {Makefile Section} ds-module-no-install @var{identifier} @var{set}
+Define all the rules needed to drive a transformation module that does
+@strong{not} install output files.  This section embeds the following
+sections:
+
+@example
+ds-module-all-rule
+ds-module-clean-rules
+@end example
+@end deffn
+
+
+@deffn {Makefile Section} ds-module @var{identifier} @var{set}
+@deffnx {Makefile Section} ds-module @var{identifier} @var{set} @var{install-mode}
+Define all the rules needed to drive a transformation module that
+installs output files.  This section embeds the following sections:
+
+@example
+ds-module-no-install
+ds-module-install-rules
+@end example
+@end deffn
+
+
+@deffn {Makefile Section} ds-module-with-defaults @var{identifier} @var{set} @var{install-mode} @var{install-directory}
+Define a transformer module with default clean and install variables.
+This section embeds the following sections:
+
+@example
+ds-default-clean-variables
+ds-default-install-variables
+ds-module
+@end example
+@end deffn
+
+@c ------------------------------------------------------------
+
+@subsubheading Building rules
+
+@table @code
+@item <IDENTIFIER>-all
+Rebuild the module targets; the list of targets for this module must be
+stored in the variable @code{<IDENTIFIER>_TARGETS}.  This rule is
+registered as prerequisite of @code{<SET>}.
+
+@item <IDENTIFIER>-mostlyclean
+Remove the files and directories listed in the variable
+@code{<IDENTIFIER>_MOSTLYCLEANFILES}.  This rule is registered as
+prerequisite of @code{<SET>-mostlyclean}.
+
+@item <IDENTIFIER>-clean
+Remove the files and directories listed in the variable
+@code{<IDENTIFIER>_CLEANFILES}.  This rule is registered as prerequisite
+of @code{<SET>-clean}.
+@end table
+
+@c ------------------------------------------------------------
+
+@subsubheading Install rules
+
+@table @code
+@item <IDENTIFIER>-install
+Run the rules:
+
+@example
+<@var{identifier}>-install-pre
+<@var{identifier}>-install-body
+<@var{identifier}>-install-post
+@end example
+
+@noindent
+in this order.  This rule is registered as prerequisite of
+@code{<SET>-install}.
+
+@item <IDENTIFIER>-install-pre
+Empty rule we can customise at will.
+
+@item <IDENTIFIER>-install-body
+Apply @func{ds-install-module} to @var{identifier} and
+@var{install-mode}, or @code{DATA} if @var{install-mode} is not used.
+
+@item <IDENTIFIER>-install-post
+Empty rule we can customise at will.
+@end table
+
+@c ------------------------------------------------------------
+
+@subsubheading Uninstall rules
+
+@table @code
+@item <IDENTIFIER>-uninstall
+Run the rules:
+
+@example
+<@var{identifier}>-uninstall-pre
+<@var{identifier}>-uninstall-body
+<@var{identifier}>-uninstall-post
+@end example
+
+@noindent
+in this order.  This rule is registered as prerequisite of
+@code{<SET>-uninstall}.
+
+@item <IDENTIFIER>-uninstall-pre
+Empty rule we can customise at will.
+
+@item <IDENTIFIER>-uninstall-body
+Apply @func{ds-uninstall-module} to @var{identifier}.
+
+@item <IDENTIFIER>-uninstall-post
+Empty rule we can customise at will.
+@end table
+
+@c ------------------------------------------------------------
+
+@subsubheading Installation layout
+
+@table @code
+@item <IDENTIFIER>-print-install-files-layout
+Run the following rules:
+
+@example
+<IDENTIFIER>-print-install-files-layout-pre
+<IDENTIFIER>-print-install-files-layout-body
+<IDENTIFIER>-print-install-files-layout-post
+@end example
+
+@noindent
+in this order.  This rule is registered as prerequisite of
+@code{<SET>-print-install-files-layout}.
+
+@item <IDENTIFIER>-print-install-files-layout-pre
+Empty rule we can customise at will.
+
+@item <IDENTIFIER>-print-install-files-layout-body
+Print installed files layout: apply @func{ds-print-files-layout}
+to @var{identifier}.
+
+@item <IDENTIFIER>-print-install-files-layout-post
+Empty rule we can customise at will.
+
+@item <IDENTIFIER>-print-install-dirs-layout
+Run the following rules:
+
+@example
+<IDENTIFIER>-print-install-dirs-layout-pre
+<IDENTIFIER>-print-install-dirs-layout-body
+<IDENTIFIER>-print-install-dirs-layout-post
+@end example
+
+@noindent
+in this order.  This rule is registered as prerequisite of
+@code{<SET>-print-install-dirs-layout}.
+
+@item <IDENTIFIER>-print-install-dirs-layout-pre
+Empty rule we can customise at will.
+
+@item <IDENTIFIER>-print-install-dirs-layout-body
+Print installed directories layout: apply
+@func{ds-print-dirs-layout} to @var{identifier}.
+
+@item <IDENTIFIER>-print-install-dirs-layout-post
+Empty rule we can customise at will.
+
+@item <IDENTIFIER>-print-install-layout
+Run the following rules:
+
+@example
+<IDENTIFIER>-print-install-layout-pre
+<IDENTIFIER>-print-install-layout-body
+<IDENTIFIER>-print-install-layout-post
+@end example
+
+@noindent
+in this order.  This rule is registered as prerequisite of
+@code{<SET>-print-install-layout}.
+
+@item <IDENTIFIER>-print-install-layout-pre
+Run the following rules:
+
+@example
+<IDENTIFIER>-print-install-dirs-layout-pre
+<IDENTIFIER>-print-install-files-layout-pre
+@end example
+
+@noindent
+in this order.
+
+@item <IDENTIFIER>-print-install-layout-body
+Run the following rules:
+
+@example
+<IDENTIFIER>-print-install-dirs-layout-body
+<IDENTIFIER>-print-install-files-layout-body
+@end example
+
+@noindent
+in this order.
+
+@item <IDENTIFIER>-print-install-layout-post
+Run the following rules:
+
+@example
+<IDENTIFIER>-print-install-dirs-layout-post
+<IDENTIFIER>-print-install-files-layout-post
+@end example
+
+@noindent
+in this order.
+@end table
+
+@c ------------------------------------------------------------
+
+@subsubheading Uninstall script rules
+
+@table @code
+@item <IDENTIFIER>-print-uninstall-files-script
+Run the following rules:
+
+@example
+<IDENTIFIER>-print-uninstall-files-script-pre
+<IDENTIFIER>-print-uninstall-files-script-body
+<IDENTIFIER>-print-uninstall-files-script-post
+@end example
+
+@noindent
+in this order.  This rule is registered as prerequisite of
+@code{<SET>-print-uninstall-files-script}.
+
+@item <IDENTIFIER>-print-uninstall-files-script-pre
+Empty rule we can customise at will.
+
+@item <IDENTIFIER>-print-uninstall-files-script-body
+Print a script to uninstall files: apply
+@func{ds-print-uninstall-files-script} to @var{identifier}.
+
+@item <IDENTIFIER>-print-uninstall-files-script-post
+Empty rule we can customise at will.
+
+@item <IDENTIFIER>-print-uninstall-dirs-script
+Run the following rules:
+
+@example
+<IDENTIFIER>-print-uninstall-dirs-script-pre
+<IDENTIFIER>-print-uninstall-dirs-script-body
+<IDENTIFIER>-print-uninstall-dirs-script-post
+@end example
+
+@noindent
+in this order.  This rule is registered as prerequisite of
+@code{<SET>-print-uninstall-dirs-script}.
+
+@item <IDENTIFIER>-print-uninstall-dirs-script-pre
+Empty rule we can customise at will.
+
+@item <IDENTIFIER>-print-uninstall-dirs-script-body
+Print a script to uninstall directories: apply
+@func{ds-print-uninstall-dirs-script} to @var{identifier}.
+
+@item <IDENTIFIER>-print-uninstall-dirs-script-post
+Empty rule we can customise at will.
+
+
+@item <IDENTIFIER>-print-uninstall-script
+Run the following rules:
+
+@example
+<IDENTIFIER>-print-uninstall-script-pre
+<IDENTIFIER>-print-uninstall-script-body
+<IDENTIFIER>-print-uninstall-script-post
+@end example
+
+@noindent
+in this order.  This rule is registered as prerequisite of
+@code{<SET>-print-uninstall-script}.
+
+@item <IDENTIFIER>-print-uninstall-script-pre
+Run the following rules:
+
+@example
+<IDENTIFIER>-print-uninstall-files-script-pre
+<IDENTIFIER>-print-uninstall-dirs-script-pre
+@end example
+
+@noindent
+in this order.
+
+@item <IDENTIFIER>-print-uninstall-script-body
+Run the following rules:
+
+@example
+<IDENTIFIER>-print-uninstall-files-script-body
+<IDENTIFIER>-print-uninstall-dirs-script-body
+@end example
+
+@noindent
+in this order.
+
+@item <IDENTIFIER>-print-uninstall-script-post
+Run the following rules:
+
+@example
+<IDENTIFIER>-print-uninstall-files-script-post
+<IDENTIFIER>-print-uninstall-dirs-script-post
+@end example
+
+@noindent
+in this order.
+@end table
+
+@c page
+@node make transformers clean
 @subsection Removing target files
 
 
@@ -2623,320 +4259,108 @@ identifier used when defining a module with @func{ds-module}; this
 is not mandatory, though.
 
 
-@deffn {Make Function} ds-clean-files @var{identifier}
-Remove all the files listed in the variable
-@code{<IDENTIFIER>_CLEANFILES}.
+@deffn {Makefile Function} ds-mostlyclean-files @var{identifier}
+Remove all the items listed in the variable
+@code{<IDENTIFIER>_MOSTLYCLEANFILES}.  The shell command uses
+@code{$(RM)}, so both files and directories can be removed.
+
+Usage example:
+
+@example
+mine_MOSTLYCLEANFILES = a b c
+
+.PHONY: mine-mostlyclean
+
+mine-mostlyclean: ; -@@$(call ds-mostlyclean-files,mine)
+@end example
 @end deffn
 
 
-@deffn {Make Function} ds-real-clean-files @var{identifier}
-Remove all the files listed in the variable
-@code{<IDENTIFIER>_REALCLEANFILES}.
+@deffn {Makefile Function} ds-clean-files @var{identifier}
+Remove all the items listed in the variable
+@code{<IDENTIFIER>_CLEANFILES}.  The shell command uses @code{$(RM)}, so
+both files and directories can be removed.
+
+Usage example:
+
+@example
+mine_MOSTLYCLEANFILES = a b c
+mine_CLEANFILES       = d e f $(mine_MOSTLYCLEANFILES)
+
+.PHONY: mine-clean
+
+mine-clean: ; -@@$(call ds-clean-files,mine)
+@end example
 @end deffn
 
 
-@deffn {Make Code Section} ds-default-clean-files-variables @var{identifier}
+@deffn {Makefile Section} ds-default-clean-variables @var{identifier}
 Add variables needed to clean the targets of a module that creates only
 ordinary output files.  The following is added to the make file:
 
 @example
-<IDENTIFIER>_CLEANFILES         += $(<IDENTIFIER>_TARGETS)
-<IDENTIFIER>_REALCLEANFILES     += $(<IDENTIFIER>_CLEANFILES)
+<IDENTIFIER>_MOSTLYCLEANFILES += $(<IDENTIFIER>_TARGETS)
+<IDENTIFIER>_CLEANFILES += $(<IDENTIFIER>_MOSTLYCLEANFILES)
 @end example
 
 @noindent
 so we see that the list of ordinary targets to clean must be stored in a
-variable named @code{<IDENTIFIER>_TARGETS}.
-@end deffn
+variable named @code{<IDENTIFIER>_TARGETS}.  The use of the @code{+=}
+assignment operator allows us to predefine the variables and add the
+defaults to the preset values.
 
-
-@c page
-@node make misc
-@section Miscellaneous functions
-
-
-@deffn {Make Function} ds-ornull @var{argument} @var{alternate_argument}
-If @var{argument} is not the empty string: the call expands to
-@var{argument}; else the call expands to @var{alternate_argument}.
-Example:
+Usage example:
 
 @example
-dir = $(call ds-ornull,$(mine_BUILDDIR),$(builddir)/mine.d)
-@end example
-@end deffn
+mine_TARGETS    = a b c
 
-
-@deffn {Make Function} ds-verbose @var{stuff_for_verbose} @var{stuff_for_silent}
-If the variable @code{ds_config_VERBOSE_MESSAGES} has a non--empty
-value: expand to @var{stuff_for_verbose}, else expand to
-@var{stuff_for_silent}.  It is fine for @var{stuff_for_silent} to be the
-empty string.
-@end deffn
-
-
-@deffn {Make Function} ds-echo @var{message}
-Output a message with the shell built in @code{echo}.  The function
-@func{ds-verbose} is used to avoid printing the output in silent
-mode.  Example:
-
-@example
-$(call ds-echo,"installing files...")
-@end example
-@end deffn
-
-
-@c page
-@node make transformers
-@chapter Make's modules to process files
-
-
-@menu
-* make module intro::           Introduction to the usage of modules.
-* make module define::          Defining a module.
-* make module install::         Module installation code sections
-                                and functions.
-@end menu
-
-@c page
-@node make module intro
-@section Introduction to the usage of modules
-
-
-Let's se an example of module whose purpose is to process a set of files
-with the @gnu{} M4 preprocessor:
-
-@example
-$(eval $(call ds-srcdir,mine,$(srcdir)/src/mine))
-$(eval $(call ds-builddir,mine))
-
-mine_SOURCES    = $(call ds-glob,mine,*.txt.m4)
-mine_TARGETS    = $(mine_SOURCES:.txt.m4=.txt)
-mine_INSTLST    = $(mine_TARGETS)
-mine_INSTDIR    = $(pkgdatadir)
-
-$(eval $(call ds-default-clean-files-variables,mine))
-$(eval $(call ds-module,mine,bin,DATA))
-
-vpath %.m4    $(mine_SRCDIR)
-
-mine_M4FLAGS   = --prefix-builtins --include=$(mine_SRCDIR) --
-
-%.txt : %.txt.m4
-      $(M4) $(mine_M4FLAGS) $(<) >$(@@)
+$(eval $(call ds-default-clean-variables,mine))
 @end example
 
 @noindent
-this chunk of makefile defines a module with identifier @code{mine},
-having the following characteristics:
-
-@itemize
-@item
-the module is registered under the @code{bin} section and its output
-files are meant to be installed as data (as opposed to binaries and
-libraries);
-
-@item
-the source files are under @code{$(srcdir)/src/mine} and match the
-pattern @code{*.txt.m4};
-
-@item
-the output files will be built under @code{$(builddir)/mine.d} and will
-have @code{.txt} extension;
-
-@item
-the variable @code{M4} must hold the pathname of the executable program
-of @gnu{} M4; the variable is declared by the function
-@func{ds-common-programs} and something like:
+usage example with preset values:
 
 @example
-AC_PATH_PROG([M4],[m4],[:])
+mine_TARGETS    = a b c
+mine_CLEANFILES = d e f
+
+$(eval $(call ds-default-clean-variables,mine))
 @end example
 
 @noindent
-must be present in @file{configure.ac};
-
-@item
-the @gnu{} M4 flags to be used are specific for this module and selected
-with @code{mine_M4FLAGS};
-
-@item
-the following main phony rules are available to drive the module:
-
-@table @code
-@item mine-all
-build the output files;
-
-@item mine-mostlyclean
-remove the files listed in the variable @code{mine_MOSTLYCLEANFILES},
-which is set to the value of the variable @code{mine_TARGETS} by
-@func{ds-default-clean-files-variables};
-
-@item mine-clean
-remove the files listed in the variable @code{mine_CLEANFILES}, which is
-set to the value of the variable @code{mine_MOSTLYCLEANFILES} by
-@func{ds-default-clean-files-variables};
-
-@item mine-install
-installs the files in @code{mine_INSTLST} under the directory in
-@code{mine_INSTDIR} with data files permissions.
-@end table
-
-Other rules are available.
-@end itemize
-
-@c page
-@node make module define
-@section Defining a module
-
-
-@deffn {Make Module} ds-module @var{identifier} @var{set}
-@deffnx {Make Module} ds-module @var{identifier} @var{set} @var{install_mode}
-Define the rules to drive a transformation module.  Arguments
-description follows:
-
-@table @var
-@item identifier
-is the prefix for all module's variables and phony rules;
-
-@item set
-is the ruleset under which this module is registered; usually it is one
-among @code{bin}, @code{doc} and @code{dev}, but it can also be
-@code{nop} or some custom makefile ruleset;
-
-@item install_mode
-the installation mode to be handed to @func{ds-install-module}; should
-be one among: @code{BIN}, @code{DATA}, @code{LIB}.
-@end table
-
-Here is a list of predefined phony rules for modules:
-
-@table @code
-@item <IDENTIFIER>-all
-rebuilds the module targets; the list of targets for this module must be
-stored in the variable @code{<IDENTIFIER>_TARGETS}; this rule is
-registered as prerequisite of @code{<SET>};
-
-@item <IDENTIFIER>-mostlyclean
-removes the files and directories listed in the variable
-@code{<IDENTIFIER>_MOSTLYCLEANFILES}; this rule is registered as
-prerequisite of @code{<SET>-mostlyclean};
-
-@item <IDENTIFIER>-clean
-removes the files and directories listed in the variable
-@code{<IDENTIFIER>_CLEANFILES}; this rule is registered as prerequisite
-of @code{<SET>-clean};
-
-@item <IDENTIFIER>-install
-apply @func{ds-install-module} to @var{identifier} and
-@var{install_mode} or @code{DATA} if @var{install_mode} is not used;
-this rule is registered as prerequisite of @code{<SET>-install};
-
-@item <IDENTIFIER>-install-aux
-this is defined as empty rule and we can add commands to it at will;
-this rule is a prerequisite of @code{<IDENTIFIER>-install};
-
-@item <IDENTIFIER>-uninstall
-apply @func{ds-uninstall-module} to @var{identifier}; this rule is
-registered as prerequisite of @code{<SET>-uninstall};
-
-@item <IDENTIFIER>-uninstall-aux
-this is defined as empty rule and we can add commands to it at will;
-this rule is a prerequisite of @code{<IDENTIFIER>-uninstall};
-
-@item <IDENTIFIER>-print-install-files-layout
-print installed files layout: apply
-@func{ds-module-print-files-layout} to @var{identifier}; this rule
-is registered as prerequisite of
-@code{<SET>-print-install-files-layout};
-
-@item <IDENTIFIER>-print-install-directories-layout
-print installed directories layout: apply
-@func{ds-module-print-directories-layout} to @var{identifier}; this
-rule is registered as prerequisite of
-@code{<SET>-print-install-directories-layout};
-
-@item <IDENTIFIER>-print-install-layout
-print installed directories layout: apply
-@func{ds-module-print-layout} to @var{identifier}; this rule is
-registered as prerequisite of @code{<SET>-print-install-layout};
-
-@item <IDENTIFIER>-print-uninstall-files-script
-print a script to uninstall files: apply
-@func{ds-module-print-uninstall-files-script} to @var{identifier};
-this rule is registered as prerequisite of
-@code{<SET>-print-uninstall-files-script};
-
-@item <IDENTIFIER>-print-uninstall-directories-script
-print a script to uninstall directories:: apply
-@func{ds-module-print-uninstall-directories-script} to
-@var{identifier}; this rule is registered as prerequisite of
-@code{<SET>-print-uninstall-directories-script};
-
-@item <IDENTIFIER>-print-uninstall-script
-print a script to uninstall files and directories: apply
-@func{ds-module-print-uninstall-script} to @var{identifier}; this
-rule is registered as prerequisite of
-@code{<SET>-print-uninstall-script}.
-@end table
+@code{mine_CLEANFILES} equals @code{d e f a b c}.
 @end deffn
 
-
-@deffn {Make Module} ds-module-no-install @var{identifier} @var{set}
-This is like @code{ds-module}, but @strong{without} all the installation
-related rules.
-@end deffn
-
-
 @c page
-@node make module install
-@section Module installation code sections and functions
+@node make transformers install
+@subsection Module installation code sections and functions
 
+
+This section describes makefile functions and sections that can be used
+to automate installation, uninstallation and installation inspection of
+makefile modules.  Some of these are used by @func{ds-module}.
 
 @menu
-* make module install code::    Miscellaneous sections of code.
-* make module install stuff::   Installing files and directories.
-* make module install module::  Installing module's output files.
-* make module install layout::  Inspecting module's installation
-                                layout.
-* make module uninstall scripts:: Producing uninstall scripts.
-* make module uninstall::       Uninstalling a module's files and
-                                directories.
+* make transformers install funcs::     Installing files and directories.
+* make transformers install install::   Installing module's files and
+                                        directories.
+* make transformers install uninstall:: Uninstalling a module's files
+                                        and directories.
+* make transformers install layout::    Inspecting module's installation
+                                        layout.
+* make transformers install scripts::   Producing uninstall scripts.
 @end menu
 
 @c page
-@node make module install code
-@subsection Miscellaneous sections of code
+@node make transformers install funcs
+@subsubsection Installing files and directories
 
 
 In the following the @var{identifier} parameter is always a module's
 identifier.
 
 
-@deffn {Make Code Section} ds-permissions @var{identifier} @var{owner} @var{group} @var{file_mode} @var{dir_mode}
-Expands to the following:
-
-@example
-<IDENTIFIER>_OWNER      = @var{owner}
-<IDENTIFIER>_GROUP      = @var{group}
-<IDENTIFIER>_FMODE      = @var{file_mode}
-<IDENTIFIER>_DMODE      = @var{dir_mode}
-@end example
-
-@noindent
-the variables are meant to override the default values in the functions
-below.
-@end deffn
-
-@c page
-@node make module install stuff
-@subsection Installing files and directories
-
-
-In the following the @var{identifier} parameter is always a module's
-identifier.
-
-
-@deffn {Make Function} ds-install-directory @var{identifier}
+@deffn {Makefile Function} ds-install-directory @var{identifier}
 Use the @code{$(INSTALL)} command to install a module's installation
 directory:
 
@@ -2987,8 +4411,8 @@ $(call ds-install-directory,mine)
 
 @c ------------------------------------------------------------
 
-@deffn {Make Function} ds-install-files @var{identifier} @var{mode}
-Use the @code{$(INSTALL)} command to install a module's output files:
+@deffn {Makefile Function} ds-install-files @var{identifier} @var{mode}
+Use the @code{$(INSTALL)} command to install a module's generated files:
 
 @itemize
 @item
@@ -3023,7 +4447,7 @@ Examples:
 @itemize
 @item
 install the files @file{$(srcdir)/src/one.txt} and
-@file{$(srcdir)/src/two.txt} in the directory directory
+@file{$(srcdir)/src/two.txt} in the directory
 @code{$(DESTDIR)$(pkgdatadir)} with mode @code{INSTALL_DATA_MODE}:
 
 @example
@@ -3052,63 +4476,122 @@ $(call ds-install-files,mine,DATA)
 @end itemize
 @end deffn
 
+
+@deffn {Makefile Section} ds-permissions @var{identifier} @var{owner} @var{group} @var{file_mode} @var{dir_mode}
+Expands to the following:
+
+@example
+<IDENTIFIER>_OWNER      = @var{owner}
+<IDENTIFIER>_GROUP      = @var{group}
+<IDENTIFIER>_FMODE      = @var{file_mode}
+<IDENTIFIER>_DMODE      = @var{dir_mode}
+@end example
+
+@noindent
+the variables are meant to override the default values in other
+functions like @func{ds-install-directory} and @func{ds-install-files}.
+
+To use this function evaluate:
+
+@example
+$(eval $(call ds-permissions,@var{identifier},\
+   @var{owner},@var{group},@var{file_mode},@var{dir_mode}))
+@end example
+@end deffn
+
 @c page
-@node make module install module
-@subsection Installing module's output files
+@node make transformers install install
+@subsubsection Installing module's generated files
 
 
 In the following the @var{identifier} parameter is always a module's
 identifier.
 
 
-@deffn {Make Function} ds-install-module @var{identifier} @var{mode}
+@deffn {Makefile Function} ds-install-module @var{identifier} @var{mode}
 Install the output files of a module: invoke both
 @func{ds-install-directory} and @func{ds-install-files} using
 the supplied arguments.
 @end deffn
 
 
-@deffn {Make Function} ds-install-bin @var{identifier}
-@deffnx {Make Function} ds-install-data @var{identifier}
-@deffnx {Make Function} ds-install-lib @var{identifier}
+@deffn {Makefile Function} ds-install-bin @var{identifier}
+@deffnx {Makefile Function} ds-install-data @var{identifier}
+@deffnx {Makefile Function} ds-install-lib @var{identifier}
 These are wrappers for @func{ds-install-module} that set the
 @var{mode} parameter to @code{BIN}, @code{DATA} or @code{LIB}.
 @end deffn
 
 
+@deffn {Makefile Section} ds-default-install-variables @var{identifier} @var{directory}
+Define the variables needed to install a module and initialise them with
+usual values.  For example:
+
+@example
+$(eval $(call
+   ds-default-install-variables,mine,$(pkgdatadir)))
+@end example
+
+@noindent
+expands to:
+
+@example
+mine_INSTLST	= $(mine_TARGETS)
+mine_INSTDIR	= $(pkgdatadir)
+@end example
+@end deffn
+
 @c page
-@node make module install layout
-@subsection Inspecting module's installation layout
+@node make transformers install uninstall
+@subsubsection Uninstalling a module's files and directories
 
 
 In the following the @var{identifier} parameter is always a module's
-identifier.  Notice that the following functions will ignore the
+identifier.  Notice that the following functions make use of the
 variable @code{DESTDIR}.
 
 
-@deffn {Make Function} ds-module-print-files-layout @var{identifier}
-Print to stdout the installation layout of files.  The installation
-directory is taken from the variable @code{<IDENTIFIER>_INSTDIR} and the
-list of files is taken from the variable @code{<IDENTIFIER>_INSTLST}.
-@end deffn
-
-
-@deffn {Make Function} ds-module-print-directories-layout @var{identifier}
-Print to stdout the installation layout of directories.  The
+@deffn {Makefile Function} ds-uninstall-files @var{identifier}
+Uninstall a module's output files using @code{$(RM_FILE)}.  The
 installation directory is taken from the variable
-@code{<IDENTIFIER>_INSTDIR}.
+@code{<IDENTIFIER>_INSTDIR} and prefixed with @code{$(DESTDIR)}; the
+list of files is taken from the variable @code{<IDENTIFIER>_INSTLST}.
+
+Usage example:
+
+@example
+mine_INSTLST    = a b c
+mine_INSTDIR    = $(pkgdatadir)
+
+mine-uninstall-files: ; $(call ds-uninstall-files,mine)
+@end example
 @end deffn
 
 
-@deffn {Make Function} ds-module-print-layout @var{identifier}
-Print to stdout the installation layout of files and directories.  Apply
-both @func{ds-module-print-files-layout} and
-@func{ds-module-print-directories-layout} to @var{identifier}.
+@deffn {Makefile Function} ds-uninstall-directory @var{identifier}
+Uninstall a module's install directory using @code{$(RMDIR)}.  The
+installation directory is taken from the variable
+@code{<IDENTIFIER>_INSTDIR} and prefixed with @code{$(DESTDIR)}.
+
+Usage example:
+
+@example
+mine_INSTDIR    = $(pkgdatadir)
+
+mine-uninstall-dirs: ; $(call ds-uninstall-directory,mine)
+@end example
+@end deffn
+
+
+@deffn {Makefile Function} ds-uninstall-module @var{identifier}
+Uninstall both a module's files and directory.  Apply both
+@func{ds-uninstall-files} and @func{ds-uninstall-directory} to
+@var{identifier}.
 @end deffn
 
 @c page
-@node make module uninstall scripts
-@subsection Producing uninstall scripts
+@node make transformers install layout
+@subsubsection Inspecting module's installation layout
 
 
 In the following the @var{identifier} parameter is always a module's
@@ -3116,7 +4599,55 @@ identifier.  Notice that the following functions will ignore the
 variable @code{DESTDIR}.
 
 
-@deffn {Make Function} ds-module-print-uninstall-files-script @var{identifier}
+@deffn {Makefile Function} ds-print-files-layout @var{identifier}
+Print to stdout the installation layout of files, one file pathname per
+line.  The installation directory is taken from the variable
+@code{<IDENTIFIER>_INSTDIR} and the list of files is taken from the
+variable @code{<IDENTIFIER>_INSTLST}.
+
+Usage example:
+
+@example
+mine_INSTLST    = a b c
+mine_INSTDIR    = $(pkgdatadir)
+
+mine-print-files: ; $(call ds-print-files-layout,mine)
+@end example
+@end deffn
+
+
+@deffn {Makefile Function} ds-print-dirs-layout @var{identifier}
+Print to stdout the installation layout of directories, one directory
+pathname per line.  The installation directory is taken from the
+variable @code{<IDENTIFIER>_INSTDIR}.
+
+Usage example:
+
+@example
+mine_INSTDIR    = $(pkgdatadir)
+
+mine-print-dirs: ; $(call ds-print-dirs-layout,mine)
+@end example
+@end deffn
+
+
+@deffn {Makefile Function} ds-print-layout @var{identifier}
+Print to stdout the installation layout of files and directories.  Apply
+both @func{ds-print-files-layout} and
+@func{ds-print-dirs-layout} to @var{identifier}.
+@end deffn
+
+@c page
+@node make transformers install scripts
+@subsubsection Producing uninstall scripts
+
+
+In the following the @var{identifier} parameter is always a module's
+identifier.  Notice that the following functions will ignore the
+variable @code{DESTDIR}.
+
+
+@deffn {Makefile Function} ds-print-uninstall-files-script @var{identifier}
 Print to stdout a script that uninstalls a module's output files.  The
 installation directory is taken from the variable
 @code{<IDENTIFIER>_INSTDIR} and the list of files is taken from the
@@ -3124,54 +4655,22 @@ variable @code{<IDENTIFIER>_INSTLST}.
 @end deffn
 
 
-@deffn {Make Function} ds-module-print-uninstall-directories-script @var{identifier}
+@deffn {Makefile Function} ds-print-uninstall-dirs-script @var{identifier}
 Print to stdout a script that uninstalls a module's install directory.
 The installation directory is taken from the variable
 @code{<IDENTIFIER>_INSTDIR}.
 @end deffn
 
 
-@deffn {Make Function} ds-module-print-uninstall-script @var{identifier}
+@deffn {Makefile Function} ds-print-uninstall-script @var{identifier}
 Print to stdout the uninstall script for both files and directories.
-Apply both @func{ds-module-print-uninstall-files-script} and
-@func{ds-module-print-uninstall-directories-script} to
-@var{identifier}.
-@end deffn
-
-@c page
-@node make module uninstall
-@subsection Uninstalling a module's files and directories
-
-
-In the following the @var{identifier} parameter is always a module's
-identifier.  Notice that the following functions will ignore the
-variable @code{DESTDIR}.
-
-
-@deffn {Make Function} ds-uninstall-files @var{identifier}
-Uninstall a module's output files using @code{$(RM_FILE)}.  The
-installation directory is taken from the variable
-@code{<IDENTIFIER>_INSTDIR} and the list of files is taken from the
-variable @code{<IDENTIFIER>_INSTLST}.
-@end deffn
-
-
-@deffn {Make Function} ds-uninstall-directories @var{identifier}
-Uninstall a module's install directory using @code{$(RMDIR)}.  The
-installation directory is taken from the variable
-@code{<IDENTIFIER>_INSTDIR}.
-@end deffn
-
-
-@deffn {Make Function} ds-uninstall-module @var{identifier}
-Uninstall a module's both files and directories.  Apply both
-@func{ds-uninstall-files} and @func{ds-uninstall-directories} to
-@var{identifier}.
+Apply both @func{ds-print-uninstall-files-script} and
+@func{ds-print-uninstall-dirs-script} to @var{identifier}.
 @end deffn
 
 @c page
 @node make dist
-@chapter Source and binary distributions
+@section Source and binary distributions
 
 
 @menu
@@ -3184,7 +4683,7 @@ Uninstall a module's both files and directories.  Apply both
 
 @c page
 @node make dist variables
-@section Packaging variables
+@subsection Packaging variables
 
 
 The following variables are always included in the makefile.  Most of
@@ -3302,15 +4801,19 @@ used by the Slackware packaging rules.
 
 @c page
 @node make dist source
-@section Source distribution
+@subsection Source distribution
 
 
 A single source distribution archives can be built; all the files in the
 source tree are collected, with the exception of a list of files that is
 identified through patterns given to @gnu{} tar.
 
+If the makefile variable @code{ds_include_SOURCE_DISTRIBUTION} is set to
+@code{yes}: the makefile section @code{ds-source-distribution} is
+automatically evaluated in the makefile library.
 
-@deffn {Makefile Module} ds-source-distribution
+
+@deffn {Makefile Section} ds-source-distribution
 Include targets and rules to build the source distribution archives.  To
 be evaluated as:
 
@@ -3322,14 +4825,7 @@ This module is included by @func{ds-full-tail}.
 @end deffn
 
 
-@menu
-* make dist source rules::      Phony rules.
-* make dist source variables::  Variables.
-@end menu
-
-@c page
-@node make dist source rules
-@subsection Phony rules
+@subsubheading Phony rules
 
 
 @deffn {Makefile Rule} dist
@@ -3341,16 +4837,14 @@ $ make dist
 @end deffn
 
 
-@c page
-@node make dist source variables
-@subsection Variables
+@subsubheading Variables
 
 
 @defvr {Makefile Variable} ds_dist_ARCHIVE
 The file name of the source distribution archive; defaults to:
 
 @example
-$(PKG_ID)-src.tar.bz2
+$(PKG_ID)-src.tar.$(ds_COMPRESSOR_EXT)
 @end example
 @end defvr
 
@@ -3376,15 +4870,19 @@ $(builddir)/dist.d
 
 @c page
 @node make dist binary
-@section Binary distribution
+@subsection Binary distribution
 
 
 Binary distribution archives can be separately built for the @code{bin},
 @code{doc} and @code{dev} sections.  Additionally a full binary
 distribution archive can be built, including all the enabled sections.
 
+If the makefile variable @code{ds_include_BINARY_DISTRIBUTION} is set to
+@code{yes}: the makefile section @code{ds-binary-distribution} is
+automatically evaluated in the makefile library.
 
-@deffn {Makefile Module} ds-binary-distribution
+
+@deffn {Makefile Section} ds-binary-distribution
 Include targets and rules to build the binary distribution archives.  To
 be evaluated as:
 
@@ -3404,7 +4902,7 @@ This module is included by @func{ds-full-tail}.
 
 @c page
 @node make dist binary rules
-@subsection Phony rules
+@subsubsection Phony rules
 
 
 @subsubheading Building
@@ -3498,14 +4996,14 @@ $ make bindist-install-full
 
 @c page
 @node make dist binary variables
-@subsection Variables
+@subsubsection Variables
 
 
 @defvr {Makefile Variable} ds_bindist_bin_ARCHIVE
 The file name of the @code{bin} section archive; defaults to:
 
 @example
-$(ds_archive_bin_PREFIX).tar.gz
+$(ds_archive_bin_PREFIX).tar.$(ds_COMPRESSOR_EXT)
 @end example
 @end defvr
 
@@ -3514,7 +5012,7 @@ $(ds_archive_bin_PREFIX).tar.gz
 The file name of the @code{doc} section archive; defaults to:
 
 @example
-$(ds_archive_doc_PREFIX).tar.gz
+$(ds_archive_doc_PREFIX).tar.$(ds_COMPRESSOR_EXT)
 @end example
 @end defvr
 
@@ -3523,7 +5021,7 @@ $(ds_archive_doc_PREFIX).tar.gz
 The file name of the @code{dev} section archive; defaults to:
 
 @example
-$(ds_archive_dev_PREFIX).tar.gz
+$(ds_archive_dev_PREFIX).tar.$(ds_COMPRESSOR_EXT)
 @end example
 @end defvr
 
@@ -3532,7 +5030,7 @@ $(ds_archive_dev_PREFIX).tar.gz
 The file name of the full distribution archive; defaults to:
 
 @example
-$(ds_archive_full_PREFIX).tar.gz
+$(ds_archive_full_PREFIX).tar.$(ds_COMPRESSOR_EXT)
 @end example
 @end defvr
 
@@ -3556,10 +5054,9 @@ $(builddir)/bindist.d
 @end example
 @end defvr
 
-
 @c page
 @node make dist binary functions
-@subsection Auxiliary functions
+@subsubsection Auxiliary functions
 
 
 @deffn {Makefile Function} ds-bindist-make-package @var{install_rules} @var{archive_name}
@@ -3605,15 +5102,19 @@ $(ds_bindist_DESTDIR)/@var{archive_name}
 
 @c page
 @node make dist slackware
-@section Slackware packaging
+@subsection Slackware packaging
 
 
 Slackware packages can be separately built for the @code{bin},
 @code{doc} and @code{dev} sections.  Additionally a full Slackware
 distribution archive can be built, including all the enabled sections.
 
+If the makefile variable @code{ds_include_SLACKWARE_DISTRIBUTION} is set
+to @code{yes}: the makefile section @code{ds-slackware-distribution} is
+automatically evaluated in the makefile library.
 
-@deffn {Makefile Module} ds-slackware-distribution
+
+@deffn {Makefile Section} ds-slackware-distribution
 Include targets and rules to build the slackware distribution archives.  To
 be evaluated as:
 
@@ -3626,25 +5127,16 @@ This module is included by @func{ds-full-tail}.
 
 
 @menu
-* make dist slackware rules::      Phony rules.
-* make dist slackware variables::  Variables.
-* make dist slackware functions::  Auxiliary functions.
+* make dist slackware dirs::            Build directories.
+* make dist slackware standard::        Standard packages.
+* make dist slackware local::           Local packages.
+* make dist slackware aux::             Auxiliary rules.
+* make dist slackware variables::       Variables.
+* make dist slackware functions::       Auxiliary functions.
 @end menu
 
 @c page
-@node make dist slackware rules
-@subsection Phony rules
-
-
-@menu
-* make dist slackware rules dirs::      Build directories.
-* make dist slackware rules standard::  Standard packages.
-* make dist slackware rules local::     Local packages.
-* make dist slackware rules aux::       Auxiliary rules.
-@end menu
-
-@c page
-@node make dist slackware rules dirs
+@node make dist slackware dirs
 @subsubsection Build directories
 
 
@@ -3676,7 +5168,7 @@ Invokes both @code{slackware-clean-builddir} and
 
 
 @c page
-@node make dist slackware rules standard
+@node make dist slackware standard
 @subsubsection Standard packages
 
 
@@ -3752,7 +5244,7 @@ description of the @code{slackware-upgrade} rule for details.
 @end deffn
 
 @c page
-@node make dist slackware rules local
+@node make dist slackware local
 @subsubsection Local packages
 
 
@@ -3844,7 +5336,7 @@ description of the @code{local-slackware-upgrade} rule for details.
 
 
 @c page
-@node make dist slackware rules aux
+@node make dist slackware aux
 @subsubsection Auxiliary rules
 
 
@@ -3862,7 +5354,7 @@ files.
 
 @c page
 @node make dist slackware variables
-@subsection Variables
+@subsubsection Variables
 
 
 @defvr {Makefile Variable} ds_slackware_bin_PACKAGE_NAME
@@ -4070,7 +5562,7 @@ The command line for the @command{upgradepkg} invocation.
 
 @c page
 @node make dist slackware functions
-@subsection Auxiliary functions
+@subsubsection Auxiliary functions
 
 
 @deffn {Makefile Function} ds-slackware-get-installed-package @var{package_spec}
@@ -4095,6 +5587,29 @@ $(notdir \
 @end example
 @end deffn
 
+
+@c page
+@node make misc
+@section Miscellaneous functions
+
+
+@deffn {Makefile Function} ds-verbose @var{stuff_for_verbose} @var{stuff_for_silent}
+If the variable @code{ds_config_VERBOSE_MESSAGES} has a non--empty
+value: expand to @var{stuff_for_verbose}, else expand to
+@var{stuff_for_silent}.  It is fine for @var{stuff_for_silent} to be the
+empty string.
+@end deffn
+
+
+@deffn {Makefile Function} ds-echo @var{message}
+Output a message with the shell built in @code{echo}.  The function
+@func{ds-verbose} is used to avoid printing the output in silent
+mode.  Example:
+
+@example
+$(call ds-echo,"installing files...")
+@end example
+@end deffn
 
 @c page
 @node compilers
@@ -4252,7 +5767,6 @@ AC_SYS_POSIX_TERMIOS
 * clang misc::                  Miscellaneous modules.
 @end menu
 
-
 @c page
 @node clang intro
 @section Introduction to C language support
@@ -4266,6 +5780,8 @@ the defaults are accepted, the @file{configure.ac} file should have a
 section like this:
 
 @example
+DS_INCLUDE_SECTION([DEV_RULES])
+DS_INCLUDE_SECTION([C_LANGUAGE])
 DS_COMPILED_STUFF
 DS_SYSTEM_SETUP
 DS_C99_LANGUAGE
@@ -4278,7 +5794,6 @@ numbers; the @file{Makefile.in} or @file{project.make} files should have
 a section like this:
 
 @example
-$(eval $(call ds-c-language))
 $(eval $(call ds-c-library,ucl))
 @end example
 
@@ -4325,8 +5840,8 @@ to inspect the source of the DevelStuff Autoconf library to know what is
 done exactly.
 
 @quotation
-@emph{Note:} These macros append @code{-std=c89} or @code{-std=c99} to
-the definition of the @code{CC} variable itself.
+@emph{Note:} When using @gcc{} these macros append @code{-std=c89} or
+@code{-std=c99} to the definition of the @code{CC} variable itself.
 @end quotation
 @end deffn
 
@@ -4337,12 +5852,8 @@ An all--included macro for C language projects.  Expands to the
 following:
 
 @example
-DS_PREAMBLE
-DS_DEFAULT_SECTIONS_DEV
-DS_OPTIONS
-DS_PROGRAMS
-DS_DIRECTORIES
-DS_PACKAGING
+DS_INCLUDE_SECTION([DEV_RULES])
+DS_INCLUDE_SECTION([C_LANGUAGE])
 DS_COMPILED_STUFF
 DS_SYSTEM_SETUP
 @end example
@@ -4782,9 +6293,8 @@ endif
 @menu
 * clang module objects::        Compiling object files.
 * clang module libs::           Building libraries.
-* clang module programs::       Building programs.
+* clang module progs::          Building programs.
 @end menu
-
 
 @c page
 @node clang module objects
@@ -4810,7 +6320,7 @@ $(eval $(call ds-c-sources,mine))
 @end example
 
 
-@deffn {Makefile Module} ds-c-sources @var{identifier}
+@deffn {Makefile Section} ds-c-sources @var{identifier}
 Define what is needed to compile a set of C source files into object
 files.  All the variables used by the module are prefixed with
 @var{identifier}.
@@ -5066,22 +6576,29 @@ in the directory @file{$(builddir)/meta.d/makefiles}.
 @subsubsection Building shared libraries
 
 
-@deffn {Make Module} ds-c-shared-library @var{identifier}
+@deffn {Makefile Section} ds-c-shared-library @var{identifier}
 Define what is needed to link a set of object files into a shared
-library; it is meant to be used to link a set of object files produced
-with @func{ds-c-sources}.  All the variables and phony rules used by
-the module are prefixed with @code{<@var{identifier}>_shared_library}.
+library.  The expansion of this function is included only if
+@code{ds_config_ENABLE_SHARED} is set to @code{yes}.  @ref{compilers
+options,Command line options}
 
-The expansion of this function is included only if
-@code{ds_config_ENABLE_SHARED} is set to @code{yes}; debugging symbols
-are stripped from the shared library if @code{ds_config_ENABLE_STRIP} is
-set to @code{yes}.  @ref{compilers options} for details on
-configuration.
+This section is meant to link a set of object files produced with
+@func{ds-c-sources}, but notice that the only interface from
+@func{ds-c-sources} to @func{ds-c-shared-library} is the variable
+@code{<@var{identifier}>_TARGETS} which must hold the list of object
+files.
+
+All the variables and phony rules used by the module are prefixed with
+@code{<@var{identifier}>_shlib}.
+
+Debugging symbols are stripped from the shared library if
+@code{ds_config_ENABLE_STRIP} is set to @code{yes}.  @ref{compilers
+options,Command line options}
 
 The command line of the linker is composed with:
 
 @example
-$(eval $(call ds-cc-link-library,<IDENTIFIER>_shared_library))
+$(eval $(call ds-cc-link-library,<IDENTIFIER>_shlib))
 @end example
 
 @noindent
@@ -5090,173 +6607,143 @@ available for customisation; additionally the following variables are
 available to configure the module:
 
 @table @code
-@item <@var{identifier}>_shared_library_BUILDDIR ?= $(builddir)/libraries.d
-select the output directory for the library file;
+@item <IDENTIFIER>_shlib_RULESET ?= bin
+Selects the ruleset this module belongs to.
 
-@item <IDENTIFIER>_shared_library_OBJECTS ?= $(<IDENTIFIER>_OBJECTS)
-the list of object files to be included in the library, prefixed with
-the directory in which they are to be found; the default value is
-consistent with the interface of @func{ds-c-sources}, @ref{clang
-module objects};
+@item <@var{identifier}>_shlib_BUILDDIR ?= $(builddir)/libraries.d
+Select the output directory for the library file.
 
-@item <IDENTIFIER>_shared_library_ID ?= <IDENTIFIER>
-the value of this variable is used to compose the name of the library
-file: @code{lib<libname>.so}, it should be something like @code{ucl2.3}:
-the library nickname with the @code{major.minor} interface version
-number attached;
+@item <IDENTIFIER>_shlib_OBJECTS ?= $(<IDENTIFIER>_TARGETS)
+The list of object files to be included in the library, prefixed with
+the directory in which they are to be found.  The default value is
+consistent with the interface of @func{ds-c-sources}.  @ref{clang module
+objects, Compiling object files}.
 
-@item <IDENTIFIER>_shared_library_LINK_ID ?=
-the value of this variable is used to compose the name of the symbolic
-link to the library file: @code{lib<libname>.so}, it should be something
-like @code{ucl2}: the library nickname with the major interface version
-number attached; if this variable is left empty, the symbolic link will
-@strong{not} be created; the default value is the empty string;
-
-@item <IDENTIFIER>_shared_library_RULESET ?= bin
-selects the main phony rules section this module belongs to;
+@item <IDENTIFIER>_shlib_INSTDIR ?= $(libdir)
+The directory in which to install the files.
 @end table
 
-@noindent
-the following variables are available for inspection:
+The following variables are available for inspection:
 
 @table @code
-@item <IDENTIFIER>_shared_library_NAME
-the file name of the shared library;
+@item <IDENTIFIER>_shlib_NAME
+The file name of the shared library.
 
-@item <IDENTIFIER>_shared_library_PATHNAME
-the file name of the shared library prefixed with the build directory;
+@item <IDENTIFIER>_shlib_PATHNAME
+The file name of the shared library prefixed with the build directory.
 
-@item <IDENTIFIER>_shared_library_LINK_NAME
-the name of the symbolic link to the shared library file;
+@item <IDENTIFIER>_shlib_LINK_NAME
+The name of the symbolic link to the shared library file.
 
-@item <IDENTIFIER>_shared_library_LINK_PATHNAME
-the name of the symbolic link to the shared library file prefixed with
-the build directory;
+@item <IDENTIFIER>_shlib_LINK_PATHNAME
+The name of the symbolic link to the shared library file prefixed with
+the build directory.
 
-@item <IDENTIFIER>_shared_library_TARGETS
-the list of targets for this module; it should be the shared library
+@item <IDENTIFIER>_shlib_TARGETS
+The list of targets for this module.  It should be the shared library
 file name and the symbolic link name, both prefixed with the build
-directory;
+directory.
 
-@item <IDENTIFIER>_shared_library_INSTLST
-the list of files to install, prefixed with the directory in which they
-are to be found; it should be the library file name; notice that the
+@item <IDENTIFIER>_shlib_INSTLST
+The list of files to install, prefixed with the directory in which they
+are to be found.  It should be the library file name; notice that the
 symbolic link is also installed, but it is directly created in the
-destination directory;
-
-@item <IDENTIFIER>_shared_library_INSTDIR
-the directory in which to install the files; defaults to
-@code{$(libdir)};
+destination directory.
 @end table
 
-@noindent
-the following phony targets are available to drive the module:
+The core of the phony rules is generated with:
 
-@table @code
-@item <IDENTIFIER>_shared_library-all
-build all the targets; this rule becomes a prerequisite of
-@code{$(<IDENTIFIER>_shared_library_RULESET)};
-
-@item <IDENTIFIER>_shared_library-clean
-@itemx <IDENTIFIER>_shared_library-realclean
-clean all the produced files; these rules become prerequisites of
-@code{$(<IDENTIFIER>_shared_library_RULESET)-clean} and
-@code{$(<IDENTIFIER>_shared_library_RULESET)-realclean}.
-@end table
+@example
+$(eval $(call ds-module,<@var{identifier}>_shlib,\
+   $(<@var{identifier}>_shlib_RULESET),LIB))
+@end example
 @end deffn
-
 
 @c page
 @node clang module libs static
 @subsubsection Building static libraries
 
 
-@deffn {Make Module} ds-c-static-library @var{identifier} @var{libname}
+@deffn {Makefile Section} ds-c-static-library @var{identifier} @var{libname}
 Define what is needed to archive a set of object files into a static
-library; it is meant to be used to link a set of object files produced
-with @func{ds-c-sources}.  All the variables and phony rules used by
-the module are prefixed with @code{<@var{identifier}>_static_library}.
+library.  The expansion of this function is included only if
+@code{ds_config_ENABLE_SHARED} is set to @code{yes}.  @ref{compilers
+options,Command line options}
 
-The expansion of this function is included only if
-@code{ds_config_ENABLE_STATIC} is set to @code{yes}.  @ref{compilers
-options}.
+This section is meant to link a set of object files produced with
+@func{ds-c-sources}, but notice that the only interface from
+@func{ds-c-sources} to @func{ds-c-static-library} is the variable
+@code{<@var{identifier}>_TARGETS} which must hold the list of object
+files.
+
+All the variables and phony rules used by the module are prefixed with
+@code{<@var{identifier}>_stlib}.
 
 The following variables are available to configure the module:
 
 @table @code
-@item <@var{identifier}>_static_library_BUILDDIR ?= $(builddir)/libraries.d
-select the output directory for the library file;
+@item <IDENTIFIER>_stlib_RULESET ?= dev
+Selects the ruleset this module belongs to.
 
-@item <IDENTIFIER>_static_library_OBJECTS ?= $(<IDENTIFIER>_OBJECTS)
-the list of object files to be included in the library, prefixed with
+@item <@var{identifier}>_stlib_BUILDDIR ?= $(builddir)/libraries.d
+Select the output directory for the library file.
+
+@item <IDENTIFIER>_stlib_OBJECTS ?= $(<IDENTIFIER>_TARGETS)
+The list of object files to be included in the library, prefixed with
 the directory in which they are to be found; the default value is
-consistent with the interface of @func{ds-c-sources}, @ref{clang
-module objects};
+consistent with the interface of @func{ds-c-sources}.  @ref{clang module
+objects, Compiling object files}.
 
-@item <IDENTIFIER>_static_library_ID ?= <IDENTIFIER>
-the value of this variable is used to compose the name of the library
-file: @code{lib<libname>.so}, it should be something like @code{ucl2.3}:
-the library nickname with the @code{major.minor} interface version
-number attached;
-
-@item <IDENTIFIER>_static_library_RULESET ?= dev
-selects the main phony rules section this module belongs to;
+@item <IDENTIFIER>_stlib_INSTDIR ?= $(libdir)
+The directory in which to install the files.
 @end table
 
-@noindent
-the following variables are available for inspection:
+The following variables are available for inspection:
 
 @table @code
-@item <IDENTIFIER>_static_library_NAME
-the file name of the static library;
+@item <IDENTIFIER>_stlib_NAME
+The file name of the static library.
 
-@item <IDENTIFIER>_static_library_PATHNAME
-the file name of the static library prefixed with the build directory;
+@item <IDENTIFIER>_stlib_PATHNAME
+The file name of the static library prefixed with the build directory.
 
-@item <IDENTIFIER>_static_library_TARGETS
-the list of targets for this module; it should be the static library
-file name prefixed with the build directory;
+@item <IDENTIFIER>_stlib_TARGETS
+The list of targets for this module.  It should be the static library
+file name prefixed with the build directory.
 
-@item <IDENTIFIER>_static_library_INSTLST
-the list of files to install, prefixed with the directory in which they
-are to be found; it should be the library file name;
-
-@item <IDENTIFIER>_static_library_INSTDIR
-the directory in which to install the files; defaults to
-@code{$(libdir)};
+@item <IDENTIFIER>_stlib_INSTLST
+The list of files to install, prefixed with the directory in which they
+are to be found.  It should be the library file name.
 @end table
 
-@noindent
-the following phony targets are available to drive the module:
+The core of the phony rules is generated with:
 
-@table @code
-@item <IDENTIFIER>_static_library-all
-build all the targets; this rule becomes a prerequisite of
-@code{$(<IDENTIFIER>_static_library_RULESET)};
-
-@item <IDENTIFIER>_static_library-clean
-@itemx <IDENTIFIER>_static_library-realclean
-clean all the produced files; these rules become prerequisites of
-@code{$(<IDENTIFIER>_static_library_RULESET)-clean} and
-@code{$(<IDENTIFIER>_static_library_RULESET)-realclean}.
-@end table
+@example
+$(eval $(call ds-module,<@var{identifier}>_stlib,\
+   $(<@var{identifier}>_stlib_RULESET),LIB))
+@end example
 @end deffn
 
 @c page
-@node clang module programs
+@node clang module progs
 @subsection Building programs
 
 
 @menu
-* clang module programs single::        Linking several object files
-                                        into a single program.
-* clang module programs multi::         Linking several programs.
-* clang module programs examples::      Building example programs.
-* clang module programs tests::         Building test programs.
+* clang module progs intro::    Introduction.
+* clang module progs single::   Linking several object files
+                                into a single program.
+* clang module progs multi::    Linking several programs.
+* clang module progs examples:: Building example programs.
+* clang module progs tests::    Building test programs.
 @end menu
 
 
-@noindent
+@c page
+@node clang module progs intro
+@subsubsection Introduction
+
+
 To build a single executable program from a set of object files we do:
 
 @example
@@ -5265,10 +6752,18 @@ $(eval $(call ds-c-single-program,mine,my))
 @end example
 
 @noindent
-in which: the first line produces the object files collecting the
-sources with the pattern @code{$(srcdir)/src/*.c} and storing the
-objects into @code{$(builddir)/objects.d}; the second line links the
-objects into the program @code{$(builddir)/programs.d/my}.
+in which:
+
+@itemize
+@item
+The first line produces the object files collecting the sources with the
+pattern @code{$(srcdir)/src/*.c} and storing the objects into
+@code{$(builddir)/objects.d}.
+
+@item
+The second line links the objects into the program
+@code{$(builddir)/programs.d/my}.
+@end itemize
 
 To build an executable for each object file in a set we do:
 
@@ -5278,16 +6773,24 @@ $(eval $(call ds-c-programs,mine))
 @end example
 
 @noindent
-in which: the first line produces the object files collecting the
-sources with the pattern @code{$(srcdir)/src/*.c} and storing the
-objects into @code{$(builddir)/objects.d}; the second line links each
-object file into a program storing the result in
-@code{$(builddir)/programs.d}; the name of the programs is build by
-stripping the extension from the object file name.
+in which:
 
+@itemize
+@item
+The first line produces the object files collecting the sources with the
+pattern @code{$(srcdir)/src/*.c} and storing the objects into
+@code{$(builddir)/objects.d}.
+
+@item
+The second line links each object file into a program storing the result
+in @code{$(builddir)/programs.d}.
+@end itemize
+
+The name of the programs is built by stripping the extension from the
+object file name.
 
 @c page
-@node clang module programs single
+@node clang module progs single
 @subsubsection Linking several object files into a single program
 
 
@@ -5295,21 +6798,29 @@ stripping the extension from the object file name.
 @cindex @func{ds-cc-link-program}, linking several object files into a single program.
 
 
-@deffn {Make Module} ds-c-single-program @var{identifier} @var{progname}
-@deffnx {Make Module} ds-c-single-program-no-install @var{identifier} @var{progname}
-Define what is  needed to link a set of object  files into an executable
-program.  The  no install version  does not install the  linked program.
-All the variables  and phony rules used by the  module are prefixed with
-@code{<@var{identifier}>_program}.
+@deffn {Makefile Section} ds-c-single-program @var{identifier} @var{progname}
+@deffnx {Makefile Section} ds-c-single-program-no-install @var{identifier} @var{progname}
+Define what is needed to link a set of object files into an executable
+program.  The no install version does not define installation rules for
+the output program.
+
+This section is meant to link a set of object files produced with
+@func{ds-c-sources}, but notice that the only interface from
+@func{ds-c-sources} to @func{ds-c-single-program} is the variable
+@code{<@var{identifier}>_TARGETS} which must hold the list of object
+files.
+
+All the variables and phony rules used by the module are prefixed with
+@code{<@var{identifier}>_sinprog}.
 
 Debugging symbols are stripped from the program if
 @code{ds_config_ENABLE_STRIP} is set to @code{yes}.  @ref{compilers
-options} for details.
+options,Command line options}
 
 The command line of the linker is composed with:
 
 @example
-$(eval $(call ds-cc-link-program,<IDENTIFIER>_program))
+$(eval $(call ds-cc-link-program,<IDENTIFIER>_sinprog))
 @end example
 
 @noindent
@@ -5318,78 +6829,62 @@ available for customisation; additionally the following variables are
 available to configure the module:
 
 @table @code
-@item <IDENTIFIER>_program_BUILDDIR ?= $(builddir)/programs.d
-select the output directory for the executable file;
+@item <IDENTIFIER>_sinprog_RULESET ?= bin
+Selects the main phony rules section this module belongs to.
 
-@item <IDENTIFIER>_program_OBJECTS ?= $(<IDENTIFIER>_OBJECTS)
-the list of object files to be linked in the executable, prefixed with
+@item <IDENTIFIER>_sinprog_BUILDDIR ?= $(builddir)/programs.d
+Select the output directory for the executable file.
+
+@item <IDENTIFIER>_sinprog_OBJECTS ?= $(<IDENTIFIER>_TARGETS)
+The list of object files to be linked in the executable, prefixed with
 the directory in which they are to be found; this is exactly what is
-produced by the @func{ds-c-sources} function, @ref{clang module
-objects};
+produced by the @func{ds-c-sources} function.  @ref{clang module
+objects, Compiling object files}.
 
-@item <IDENTIFIER>_program_PREFIX ?=
-a string that is prefixed to the name of the program;
+@item <IDENTIFIER>_sinprog_PREFIX ?=
+A string that is prefixed to @var{PROGNAME} to build the true name of
+the program.
 
-@item <IDENTIFIER>_program_ENV ?=
-the shell compatible definition of a set of environment variables to be
-assigned before evaluating the produced program; it is used by the
-@code{run-<IDENTIFIER>} phony rule (described below);
-
-@item <IDENTIFIER>_program_RULESET ?= bin
-selects the main phony rules section this module belongs to;
+@item <IDENTIFIER>_sinprog_INSTDIR ?= $(pkglibexecdir)
+The directory in which to install the files.
 @end table
 
-@noindent
-the following variables are available for inspection:
+The following variables are available for inspection:
 
 @table @code
-@item <IDENTIFIER>_program_NAME
-this is the @var{progname} argument prefixed with the selected program
-prefix;
+@item <IDENTIFIER>_sinprog_NAME
+The @var{progname} argument prefixed with the selected program prefix.
 
-@item <IDENTIFIER>_program_PATHNAME
-the file name of the program prefixed with the build directory in which
-it is created;
+@item <IDENTIFIER>_sinprog_PATHNAME
+The file name of the program prefixed with the build directory in which
+it is created.
 
-@item <IDENTIFIER>_program_TARGETS
-the list of targets for this module; should be the program file name
-prefixed with its build directory; it is set with @code{+=}, so it is
-possible to add targets by presetting the variable;
+@item <IDENTIFIER>_sinprog_TARGETS
+The list of targets for this module; should be the program file name
+prefixed with its build directory.
 
-@item <IDENTIFIER>_program_INSTLST
-the list of files to install, prefixed with the directory in which they
-are to be found; by default it is set to the executable program, not the
-module's targets;
-
-@item <IDENTIFIER>_program_INSTDIR
-the directory in which to install the files; defaults to
-@code{$(pkglibexecdir)};
+@item <IDENTIFIER>_sinprog_INSTLST
+The list of files to install, prefixed with the directory in which they
+are to be found.
 @end table
 
-@noindent
-the following phony rules are available to drive the module:
+We can think of the core of the phony rules as generated with:
 
-@table @code
-@item <IDENTIFIER>_program-all
-build all the targets; this rule becomes a prerequisite of
-@code{$(<IDENTIFIER>_program_RULESET)};
-
-@item <IDENTIFIER>_program-clean
-@itemx <IDENTIFIER>_program-realclean
-clean all the produced files; these rules become prerequisites of
-@code{$(<IDENTIFIER>_program_RULESET)-clean} and
-@code{$(<IDENTIFIER>_program_RULESET)-realclean};
-
-@item run-<IDENTIFIER>
-evaluates the produced program.
-@end table
+@example
+$(eval $(call ds-module,<@var{identifier}>_sinprog,\
+   $(<@var{identifier}>_sinprog_RULESET),BIN))
+@end example
 @end deffn
+
+@c ------------------------------------------------------------
+
+@subsubheading Wrapper script
 
 Notice that, by default, the program is installed under
 @code{$(pkglibexecdir)}, so, with usual system configurations, it will
-not be found by applications inspecting the @env{PATH} search path. This
-is fine if we install in @code{$(bindir)} a wrapper shell script that
-executes the real program after environment setup.
+not be found by applications inspecting the @env{PATH} search path.
+This is fine if we install in @code{$(bindir)} a wrapper shell script
+that executes the real program after environment setup.
 
 Such a script can be called @var{progname} and it can be subject of
 @gnu{} Autoconf substitutions; so it can be something like:
@@ -5399,8 +6894,8 @@ Such a script can be called @var{progname} and it can be subject of
 #
 # Launcher for '@var{progname}'.
 
-PACKAGE_NAME_LOWERCASE="@@PACKAGE_NAME_LOWERCASE@@"
-PACKAGE_XVERSION="@@PACKAGE_XVERSION@@"
+PACKAGE_NAME="@@PACKAGE_NAME"
+PACKAGE_VERSION="@@PACKAGE_VERSION@@"
 PKG_DIR="@@PKG_DIR@@"
 
 prefix="@@prefix@@"
@@ -5419,9 +6914,8 @@ exec "$pkglibexecdir/$PROGRAM_NAME" "$@@"
 ### end of file
 @end example
 
-
 @c page
-@node clang module programs multi
+@node clang module progs multi
 @subsubsection Linking several programs
 
 
@@ -5429,16 +6923,24 @@ exec "$pkglibexecdir/$PROGRAM_NAME" "$@@"
 @cindex @func{ds-cc-link-program}, linking several object files into a several programs.
 
 
-@deffn {Make Module} ds-c-programs @var{identifier}
-@deffnx {Make Module} ds-c-programs-no-install @var{identifier}
+@deffn {Makefile Section} ds-c-programs @var{identifier}
+@deffnx {Makefile Section} ds-c-programs-no-install @var{identifier}
 Define what is needed to link a set of object files into a set of
-executable programs.  The no install version does not install the linked
-programs.  All the variables and phony rules used by the module are
-prefixed with @code{<@var{identifier}>_programs}.
+executable programs: one object file for each program.  The no install
+version does not install the linked programs.
+
+This section is meant to link a set of object files produced with
+@func{ds-c-sources}, but notice that the only interface from
+@func{ds-c-sources} to @func{ds-c-programs} is the variable
+@code{<@var{identifier}>_TARGETS} which must hold the list of object
+files.
+
+All the variables and phony rules used by the module are prefixed with
+@code{<@var{identifier}>_programs}.
 
 Debugging symbols are stripped from the program if
 @code{ds_config_ENABLE_STRIP} is set to @code{yes}.  @ref{compilers
-options} for details.
+options,Command line options}
 
 The command line of the linker is composed with:
 
@@ -5452,82 +6954,62 @@ available for customisation; additionally the following variables are
 available to configure the module:
 
 @table @code
+@item <IDENTIFIER>_programs_RULESET ?= bin
+Select the ruleset this module belongs to.
+
 @item <IDENTIFIER>_programs_SRCDIR ?= $(<IDENTIFIER>_BUILDDIR)
-the source directory in which the object files are to be found; all the
-object files have to be in the same directory; the deafult value is
-exactly what is defined by @func{ds-c-sources}, @ref{clang module
-objects};
+The source directory in which the object files are to be found; all the
+object files have to be in the same directory.  The deafult value is
+exactly what is defined by @func{ds-c-sources}.  @ref{clang module
+objects, Compiling object files}.
 
 @item <IDENTIFIER>_programs_BUILDDIR ?= $(builddir)/programs.d
-select the output directory for the executable files;
+Select the output directory for the executable files.
 
-@item <IDENTIFIER>_programs_OBJECTS ?= $(<IDENTIFIER>_OBJECTS)
-the list of object files to be linked in the executables, prefixed with
-the directory in which they are to be found; this is exactly what is
-produced by the @func{ds-c-sources} function, @ref{clang module
-objects};
+@item <IDENTIFIER>_programs_OBJECTS ?= $(<IDENTIFIER>_TARGETS)
+The list of object files to be linked in the executables, prefixed with
+the directory in which they are to be found.  This is exactly what is
+produced by the @func{ds-c-sources} function.  @ref{clang module
+objects, Compiling object files}.
 
 @item <IDENTIFIER>_programs_PREFIX ?=
-a string that is prefixed to the name of the programs;
+A string that is prefixed to the name of the programs.
 
-@item <IDENTIFIER>_programs_ENV ?=
-the shell compatible definition of a set of environment variables to be
-assigned before evaluating the produced programs; it is used by the
-@code{run-<IDENTIFIER>} phony rule (described below);
-
-@item <IDENTIFIER>_programs_RULESET ?= bin
-select the main phony rules section this module belongs to;
+@item <IDENTIFIER>_programs_INSTDIR ?= $(pkglibexecdir)
+The directory in which to install the files.
 @end table
 
-@noindent
-the following variables are available for inspection:
+The following variables are available for inspection:
 
 @table @code
 @item <IDENTIFIER>_programs_NAMES
-the list of names of the produced programs; it is built by stripping the
-extension from the object file names and prefixing the selected prefix;
+The list of names of the produced programs; it is built by stripping the
+extension from the object file names and prefixing with the selected
+prefix.
 
 @item <IDENTIFIER>_programs_PATHNAMES
-the file name of the program prefixed with the build directory in which
-it is created;
+The list of file pathnames.
 
 @item <IDENTIFIER>_programs_TARGETS
-the list of targets for this module; should be the list of executable
-programs pathnames; it is set with @code{+=}, so it is possible to add
-targets by presetting the variable;
+The list of targets for this module.  It should be the list of
+executable programs pathnames.
 
 @item <IDENTIFIER>_programs_INSTLST
-the list of files to install, prefixed with the directory in which they
-are to be found; by default it is set to the executable programs, not
-the module's targets;
-
-@item <IDENTIFIER>_programs_INSTDIR
-the directory in which to install the files; defaults to
-@code{$(pkglibexecdir)};
+The list of files to install, prefixed with the directory in which they
+are to be found.
 @end table
 
-@noindent
-the following phony rules are available to drive the module:
+We can think of the core of the phony rules as generated with:
 
-@table @code
-@item <IDENTIFIER>_programs-all
-build all the targets; this rule becomes a prerequisite of
-@code{$(<IDENTIFIER>_programs_RULESET)};
-
-@item <IDENTIFIER>_programs-clean
-@itemx <IDENTIFIER>_programs-realclean
-clean all the produced files; these rules become prerequisites of
-@code{$(<IDENTIFIER>_programs_RULESET)-clean} and
-@code{$(<IDENTIFIER>_programs_RULESET)-realclean};
-
-@item run-<IDENTIFIER>
-evaluates the produced programs.
-@end table
+@example
+$(eval $(call ds-module,<@var{identifier}>_programs,\
+   $(<@var{identifier}>_programs_RULESET),BIN))
+@end example
 @end deffn
 
 
 @c page
-@node clang module programs examples
+@node clang module progs examples
 @subsubsection Linking example programs
 
 
@@ -5621,7 +7103,7 @@ $(eval $(call ds-c-example-programs,mine))
 
 
 @c page
-@node clang module programs tests
+@node clang module progs tests
 @subsubsection Building test programs
 
 
@@ -7153,8 +8635,30 @@ to permit their use in free software.
 
 
 @c page
-@node References
+@node references
 @appendix Bibliography and references
+
+
+@noindent
+The @gnu{} coding standards guide.
+@xref{Top, The @gnu{} coding standards, The @gnu{} coding standards,
+gnu-coding-standards}.
+
+
+@noindent
+The @gnu{} Autoconf documentation.
+@xref{Top, @gnu{} Autoconf, @gnu{} Autoconf, autoconf}.
+
+
+@noindent
+The @gnu{} Automake documentation.
+@xref{Top, @gnu{} Automake, @gnu{} Automake, automake}.
+
+
+@noindent
+Shared library support for @gnu{}.
+@xref{Top, @gnu{} Libtool, @gnu{} Libtool, libtool}.
+
 
 
 @c page

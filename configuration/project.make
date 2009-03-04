@@ -9,6 +9,7 @@
 GSL_CFLAGS			= @GSL_CFLAGS@
 GSL_LIBS			= @GSL_LIBS@
 
+annealing_SRCDIR		= $(srcdir)/src/lib
 annealing_PREREQUISITES		= internal.h annealing.h
 annealing_CC_COMPILE_CPPFLAGS	= $(DEFS) $(CPPFLAGS) $(GSL_CFLAGS)
 annealing_CC_SHLIB_LIBS		= $(LIBS) $(GSL_LIBS)
@@ -18,88 +19,50 @@ $(eval $(call ds-c-library-extended,annealing))
 
 #page
 ## ------------------------------------------------------------
-## Tests with shared library.
+## Tests.
 ## ------------------------------------------------------------
 
-# shared_tests_MAIN_SECTION	= nop
-# shared_tests_BUILDDIR		= $(builddir)/shared-tests.d
-# shared_tests_CC_COMPILE		= $(CC) $(ALL_CFLAGS) -I$(annealing_SRCDIR) $(CFLAGS) $(CC_COMPILE_OUTPUT)
-# shared_tests_PREREQUISITES	= $(annealing_SRCDIR)/annealing.h
+anntests_RULESET		= tests
+anntests_SRCDIR			= $(srcdir)/tests
+anntests_BUILDDIR		= $(builddir)/tests.d
+anntests_PREREQUISITES		= annealing.h
+anntests_CC_COMPILE_INCLUDES	= -I$(annealing_SRCDIR)
 
-# shared_tests_programs_MAIN_SECTION	= nop
-# shared_tests_programs_BUILDDIR		= $(shared_tests_BUILDDIR)
+anntests_programs_RULESET		= tests
+anntests_programs_BUILDDIR		= $(builddir)/tests.d
+anntests_programs_CC_PROGRAM_LDFLAGS	= -L$(annealing_shlib_BUILDDIR)
+anntests_programs_CC_PROGRAM_LIBS	= $(GSL_LIBS) -l$(annealing_LIBRARY_ID)
 
-# $(eval $(call ds-c-test-programs,shared))
-# 	-l$(annealing_LIBRARY_ID) -L$(annealing_shared_library_BUILDDIR)))
+$(eval $(call ds-c-sources,anntests))
+$(eval $(call ds-c-programs-no-install,anntests))
 
-## ------------------------------------------------------------
+tests:
+	$(foreach f,$(anntests_programs_PATHNAMES),\
+	LD_LIBRARY_PATH=$(annealing_shlib_BUILDDIR) $(f);)
 
-# ifeq ($(strip $(ds_config_ENABLE_STATIC)),yes)
-
-# static_tests_BUILDDIR		= $(builddir)/static-tests.d
-# static_tests_CC_COMPILE		= $(CC) $(ALL_CFLAGS) -I$(annealing_SRCDIR) $(CFLAGS) $(CC_COMPILE_OUTPUT)
-# static_tests_PREREQUISITES	= $(annealing_SRCDIR)/annealing.h
-# static_tests_test_programs_BUILDDIR = $(static_tests_BUILDDIR)
-
-# $(eval $(call ds-c-sources-nop,static_tests,$(srcdir)/tests,*.c))
-# $(eval $(call ds-c-test-programs,static_tests,$(static_tests_TARGETS),$(annealing_static_library_LIBRARY)))
-
-# endif
-
-## ------------------------------------------------------------
-
-# shared_test_NAMES	= $(basename $(notdir $(shared_tests_SOURCES)))
-
-# .PHONY: test-shared
-
-# test-shared: shared_tests_test_programs-all
-# 	$(foreach f,$(shared_test_NAMES),\
-# 	LD_LIBRARY_PATH=$(annealing_shared_library_BUILDDIR) $(shared_tests_test_programs_BUILDDIR)/$(f);)
-
-# test:		test-shared
-# test-clean:	shared_tests_test_programs-clean
-
-# ## ------------------------------------------------------------
-
-# ifeq ($(strip $(ds_config_ENABLE_STATIC)),yes)
-
-# static_test_NAMES	= $(basename $(notdir $(static_tests_SOURCES)))
-
-# .PHONY: test-static
-
-# test-static: static_tests_test_programs-all
-# 	$(foreach f,$(static_test_NAMES),\
-# 	LD_LIBRARY_PATH=$(annealing_static_library_BUILDDIR) $(static_tests_test_programs_BUILDDIR)/$(f);)
-
-# test:		test-static
-# test-clean:	static_tests_test_programs-clean
-
-# endif
-
-# ## ------------------------------------------------------------
+tests-mostlyclean:	anntests_programs-mostlyclean
+tests-clean:		anntests_programs-clean
 
 #page
 ## ------------------------------------------------------------
 ## Miscelleous stuff.
 ## ------------------------------------------------------------
 
-# $(eval $(call ds-cc-build-program-no-libs,compute_iterations_program_CC_BUILD,\
-# 	-L$(builddir)/library.d -l$(annealing_LIBRARY_ID)))
+compute_iterations_SRCDIR		= $(srcdir)/src/other
+compute_iterations_RULESET		= nop
+compute_iterations_BUILDDIR		= $(builddir)/other.d
+compute_iterations_sinprog_RULESET	= nop
+compute_iterations_sinprog_BUILDDIR	= $(compute_iterations_BUILDDIR)
 
-# compute_iterations_BUILDDIR		= $(builddir)/misc.d
-# compute_iterations_program_BUILDDIR	= $(compute_iterations_BUILDDIR)
-# compute_iterations_PREREQUISITES	= $(annealing_SRCDIR)/annealing.h
+$(eval $(call ds-c-sources,compute_iterations))
+$(eval $(call ds-c-single-program-no-install,compute_iterations,compute-iterations))
 
-# $(eval $(call ds-c-sources-nop,compute_iterations,$(srcdir)/other,compute_outer_iterations.c))
-# $(eval $(call ds-c-program-no-install,compute_iterations,compute_iterations,$(compute_iterations_TARGETS)))
+.PHONY: compute-iterations
 
-# .PHONY: compute_iterations
-
-# compute_iterations : compute_iterations_program-all
-# 	@LD_LIBRARY_PATH=$(annealing_shared_library_BUILDDIR) $(compute_iterations_program_BUILDDIR)/compute_iterations
-
+compute-iterations : compute_iterations_sinprog-all
+	$(compute_iterations_sinprog_BUILDDIR)/compute-iterations
 
 ### end of file
 # Local Variables:
-# mode: makefile
+# mode: makefile-gmake
 # End:

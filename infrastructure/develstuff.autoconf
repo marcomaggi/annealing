@@ -36,23 +36,17 @@ dnl Infrastructure setup.
 dnl --------------------------------------------------------------------
 
 AC_DEFUN_ONCE([DS_BEGIN],
-  [DS_PREAMBLE
-   DS_DEFAULT_SECTIONS
-   DS_OPTIONS
-   DS_DIRECTORIES
-   DS_PROGRAMS
-   DS_PACKAGING])
-
-AC_DEFUN_ONCE([DS_BEGIN_DEV],
-  [DS_PREAMBLE
-   DS_DEFAULT_SECTIONS_DEV
+  [AC_PREREQ(2.63)
+   AC_CONFIG_SRCDIR([$1])
+   DS_PREAMBLE
+   DS_DECLARE_SECTIONS
    DS_OPTIONS
    DS_DIRECTORIES
    DS_PROGRAMS
    DS_PACKAGING])
 
 AC_DEFUN_ONCE([DS_PREAMBLE],
-  [AC_SUBST([PKG_ID],[\${PACKAGE_NAME}_\${PACKAGE_VERSION}])
+  [AC_SUBST([PKG_ID],[\${PACKAGE_NAME}-\${PACKAGE_VERSION}])
    DS_FIND_INFRASTRUCTURE
    DS_FIND_CONFIGURATION
    AC_REQUIRE_AUX_FILE([develstuff.autoconf])
@@ -88,27 +82,13 @@ AC_DEFUN_ONCE([DS_FIND_CONFIGURATION],
    CONFIGURATIONDIR=${develstuff_cv_CONFIGURATIONDIR}
    AC_SUBST([CONFIGURATIONDIR])])
 
-AC_DEFUN([DS_INCLUDE_SECTION],
-  [AC_SUBST([DS_INCLUDE_$1],[$2])])
-
-AC_DEFUN_ONCE([DS_DEFAULT_SECTIONS],
-  [DS_INCLUDE_SECTION([BIN_RULES],[yes])
-   DS_INCLUDE_SECTION([DOC_RULES],[yes])
-   DS_INCLUDE_SECTION([DEV_RULES],[no])
-   DS_INCLUDE_SECTION([AUTOCONF_DIRS],[yes])
-   DS_INCLUDE_SECTION([DEVELSTUFF_DIRS],[yes])])
-
-AC_DEFUN_ONCE([DS_DEFAULT_SECTIONS_DEV],
-  [DS_INCLUDE_SECTION([BIN_RULES],[yes])
-   DS_INCLUDE_SECTION([DOC_RULES],[yes])
-   DS_INCLUDE_SECTION([DEV_RULES],[yes])
-   DS_INCLUDE_SECTION([AUTOCONF_DIRS],[yes])
-   DS_INCLUDE_SECTION([DEVELSTUFF_DIRS],[yes])])
-
 AC_DEFUN_ONCE([DS_OPTIONS],
   [DS_WITH_OPTION([DS_CONFIG_ABI],[abi],[direct],
      [rules for abi and abu shortcuts],
      [select rules for abi and abu shortcuts])
+   DS_WITH_OPTION([DS_CONFIG_COMPRESSOR],[compressor],[bzip],
+     [compressor to use to compress archives],
+     [compressor to use to compress archives])
    DS_ENABLE_OPTION([DS_CONFIG_USE_SUDO],[use-sudo],[no],
      [whether abi and abu rules will use sudo],
      [enable use of sudo when invoking abi and abu rules])
@@ -133,6 +113,90 @@ AC_DEFUN_ONCE([DS_OPTIONS],
    DS_ENABLE_OPTION([DS_CONFIG_ENABLE_DOC_PS],[doc-ps],[no],
      [whether documentation in PS format will be installed],
      [enable installation of PS documentation])])
+
+dnl page
+dnl --------------------------------------------------------------------
+dnl Infrastructure conclusion.
+dnl --------------------------------------------------------------------
+
+AC_DEFUN_ONCE([DS_END],
+  [DS_SUBST_SECTION_VARIABLES
+   DS_COMMON_CONFIG_FILES
+   AC_OUTPUT])
+
+AC_DEFUN_ONCE([DS_COMMON_CONFIG_FILES],
+  [AC_CONFIG_FILES([meta.d/makefiles/develstuff.make:${INFRASTRUCTUREDIR}/develstuff.make])
+   AC_CONFIG_FILES([meta.d/makefiles/project.make:${CONFIGURATIONDIR}/project.make])
+   AC_CONFIG_FILES([Makefile])])
+
+AC_DEFUN_ONCE([DS_CONFIG_FILE_INSPECTION_SCRIPT],
+  [AC_CONFIG_FILES([meta.d/${PACKAGE_NAME}-config:meta/${PACKAGE_NAME}-config.in])])
+
+AC_DEFUN_ONCE([DS_CONFIG_FILE_PKGCONFIG],
+  [AC_CONFIG_FILES([meta.d/${PACKAGE_NAME}.pc:meta/${PACKAGE_NAME}.pc.in])])
+
+AC_DEFUN_ONCE([DS_CONFIG_FILE_SLACKWARE_BIN_DESC],
+  [AC_CONFIG_FILES([meta.d/slackware/bin/slack-desc:meta/slackware/bin/slack-desc.in])])
+
+AC_DEFUN_ONCE([DS_CONFIG_FILE_SLACKWARE_DOC_DESC],
+  [AC_CONFIG_FILES([meta.d/slackware/doc/slack-desc:meta/slackware/doc/slack-desc.in])])
+
+AC_DEFUN_ONCE([DS_CONFIG_FILE_SLACKWARE_DEV_DESC],
+  [AC_CONFIG_FILES([meta.d/slackware/dev/slack-desc:meta/slackware/dev/slack-desc.in])])
+
+dnl page
+dnl --------------------------------------------------------------------
+dnl Sections handling.
+dnl --------------------------------------------------------------------
+
+AC_DEFUN([DS_INCLUDE_SECTION],
+  [DS_INCLUDE_$1=yes])
+
+AC_DEFUN([DS_EXCLUDE_SECTION],
+  [DS_INCLUDE_$1=no])
+
+AC_DEFUN_ONCE([DS_DEFAULT_SECTIONS_DEV],
+  [DS_INCLUDE_SECTION([BIN_RULES])
+   DS_INCLUDE_SECTION([DOC_RULES])
+   DS_INCLUDE_SECTION([DEV_RULES])
+   DS_INCLUDE_SECTION([AUTOCONF_DIRS])
+   DS_INCLUDE_SECTION([DEVELSTUFF_DIRS])])
+
+AC_DEFUN_ONCE([DS_DECLARE_SECTIONS],
+  [DS_INCLUDE_BIN_RULES=yes
+   DS_INCLUDE_DOC_RULES=yes
+   DS_INCLUDE_DEV_RULES=no
+   DS_INCLUDE_AUTOCONF_DIRS=yes
+   DS_INCLUDE_DEVELSTUFF_DIRS=yes
+   DS_INCLUDE_C_LANGUAGE=no
+   DS_INCLUDE_GENERIC_DOCUMENTATION=yes
+   DS_INCLUDE_TEXINFO_DOCUMENTATION=yes
+   DS_INCLUDE_META_SCRIPTS=yes
+   DS_INCLUDE_PKGCONFIG=yes
+   DS_INCLUDE_AUTOCONF=yes
+   DS_INCLUDE_CONFIG_INSPECTION_SCRIPT=yes
+   DS_INCLUDE_SOURCE_DISTRIBUTION=yes
+   DS_INCLUDE_BINARY_DISTRIBUTION=yes
+   DS_INCLUDE_SLACKWARE_DISTRIBUTION=yes
+   DS_INCLUDE_UNINSTALL_SCRIPTS=yes])
+
+AC_DEFUN_ONCE([DS_SUBST_SECTION_VARIABLES],
+  [AC_SUBST([DS_INCLUDE_BIN_RULES])
+   AC_SUBST([DS_INCLUDE_DOC_RULES])
+   AC_SUBST([DS_INCLUDE_DEV_RULES])
+   AC_SUBST([DS_INCLUDE_AUTOCONF_DIRS])
+   AC_SUBST([DS_INCLUDE_DEVELSTUFF_DIRS])
+   AC_SUBST([DS_INCLUDE_C_LANGUAGE])
+   AC_SUBST([DS_INCLUDE_GENERIC_DOCUMENTATION])
+   AC_SUBST([DS_INCLUDE_TEXINFO_DOCUMENTATION])
+   AC_SUBST([DS_INCLUDE_META_SCRIPTS])
+   AC_SUBST([DS_INCLUDE_PKGCONFIG])
+   AC_SUBST([DS_INCLUDE_AUTOCONF])
+   AC_SUBST([DS_INCLUDE_CONFIG_INSPECTION_SCRIPT])
+   AC_SUBST([DS_INCLUDE_SOURCE_DISTRIBUTION])
+   AC_SUBST([DS_INCLUDE_BINARY_DISTRIBUTION])
+   AC_SUBST([DS_INCLUDE_SLACKWARE_DISTRIBUTION])
+   AC_SUBST([DS_INCLUDE_UNINSTALL_SCRIPTS])])
 
 dnl page
 dnl ------------------------------------------------------------
@@ -264,12 +328,8 @@ AC_DEFUN_ONCE([DS_C99_LANGUAGE_COMMON_SETUP],
    DS_C99_LANGUAGE])
 
 AC_DEFUN_ONCE([DS_P_C_LANGUAGE_COMMON_SETUP],
-  [DS_PREAMBLE
-   DS_DEFAULT_SECTIONS_DEV
-   DS_OPTIONS
-   DS_PROGRAMS
-   DS_DIRECTORIES
-   DS_PACKAGING
+  [DS_INCLUDE_SECTION([DEV_RULES])
+   DS_INCLUDE_SECTION([C_LANGUAGE])
    DS_COMPILED_STUFF
    DS_SYSTEM_SETUP])
 
@@ -461,11 +521,6 @@ AC_DEFUN([DS_WITH_SAVED_VARIABLE],
   [ds_private_$1=${$1}
    $2
    $1=${ds_private_$1}])
-
-AC_DEFUN_ONCE([DS_CONFIG_FILES],
-  [AC_CONFIG_FILES([meta.d/makefiles/develstuff.make:${srcdir}/infrastructure/develstuff.make])
-   AC_CONFIG_FILES([meta.d/makefiles/project.make:${srcdir}/configuration/project.make])
-   AC_CONFIG_FILES([Makefile])])
 
 
 dnl end of file

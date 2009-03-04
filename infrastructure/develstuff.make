@@ -32,12 +32,22 @@
 ## Modules inclusion and configuration.
 ## --------------------------------------------------------------------
 
-ds_include_BIN_RULES		= @DS_INCLUDE_BIN_RULES@
-ds_include_DOC_RULES		= @DS_INCLUDE_DOC_RULES@
-ds_include_DEV_RULES		= @DS_INCLUDE_DEV_RULES@
-
-ds_include_AUTOCONF_DIRS	= @DS_INCLUDE_AUTOCONF_DIRS@
-ds_include_DEVELSTUFF_DIRS	= @DS_INCLUDE_DEVELSTUFF_DIRS@
+ds_include_BIN_RULES			= @DS_INCLUDE_BIN_RULES@
+ds_include_DOC_RULES			= @DS_INCLUDE_DOC_RULES@
+ds_include_DEV_RULES			= @DS_INCLUDE_DEV_RULES@
+ds_include_AUTOCONF_DIRS		= @DS_INCLUDE_AUTOCONF_DIRS@
+ds_include_DEVELSTUFF_DIRS		= @DS_INCLUDE_DEVELSTUFF_DIRS@
+ds_include_C_LANGUAGE			= @DS_INCLUDE_C_LANGUAGE@
+ds_include_GENERIC_DOCUMENTATION	= @DS_INCLUDE_GENERIC_DOCUMENTATION@
+ds_include_TEXINFO_DOCUMENTATION	= @DS_INCLUDE_TEXINFO_DOCUMENTATION@
+ds_include_META_SCRIPTS			= @DS_INCLUDE_META_SCRIPTS@
+ds_include_PKGCONFIG			= @DS_INCLUDE_PKGCONFIG@
+ds_include_AUTOCONF			= @DS_INCLUDE_AUTOCONF@
+ds_include_CONFIG_INSPECTION_SCRIPT	= @DS_INCLUDE_CONFIG_INSPECTION_SCRIPT@
+ds_include_SOURCE_DISTRIBUTION		= @DS_INCLUDE_SOURCE_DISTRIBUTION@
+ds_include_BINARY_DISTRIBUTION		= @DS_INCLUDE_BINARY_DISTRIBUTION@
+ds_include_SLACKWARE_DISTRIBUTION	= @DS_INCLUDE_SLACKWARE_DISTRIBUTION@
+ds_include_UNINSTALL_SCRIPTS		= @DS_INCLUDE_UNINSTALL_SCRIPTS@
 
 ds_config_ABI			?= @DS_CONFIG_ABI@
 ds_config_USE_SUDO		?= @DS_CONFIG_USE_SUDO@
@@ -62,15 +72,7 @@ ds_config_ENABLE_PTHREADS	?= @ds_config_ENABLE_PTHREADS@
 ds_config_ENABLE_GCC_WARNING	?= @ds_config_ENABLE_GCC_WARNING@
 ds_config_ENABLE_SHLIB_SYMLINK	?= @ds_config_ENABLE_SHLIB_SYMLINK@
 
-# Compressor  to be  used when  creating a  tarball; it  is used  by the
-# binary distribution rules.  Supported values:
-#
-#   bzip2		selects the Bzip2 compressor
-#   gzip		selects the Gzip compressor
-#
-# if a different value is set, the compressor will default to 'gzip'.
-#
-ds_config_COMPRESSOR		?= @GZIP@
+ds_config_COMPRESSOR		?= @DS_CONFIG_COMPRESSOR@
 
 #page
 ## --------------------------------------------------------------------
@@ -84,6 +86,109 @@ PKG_DIR			?= @PKG_DIR@
 
 #page
 ## ---------------------------------------------------------------------
+## Directories.
+## ---------------------------------------------------------------------
+
+ds_meta_srcdir		?= $(srcdir)/meta
+ds_meta_builddir	?= $(builddir)/meta.d
+infrastructuredir	?= @INFRASTRUCTUREDIR@
+configurationdir	?= @CONFIGURATIONDIR@
+
+ifeq ($(strip $(TMPDIR)),)
+TMPDIR		= /tmp
+endif
+
+ifeq ($(ds_include_AUTOCONF_DIRS),yes)
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+bindir		= @bindir@
+datarootdir	= @datarootdir@
+datadir		= @datadir@
+docdir		= @datarootdir@/doc
+includedir	= @includedir@
+infodir		= @infodir@
+htmldir		= @htmldir@
+pdfdir		= @pdfdir@
+psdir		= @psdir@
+dvidir		= @dvidir@
+libdir		= @libdir@
+libexecdir	= @libexecdir@
+localstatedir	= @localstatedir@
+mandir		= @mandir@
+sbindir		= @sbindir@
+sharedstatedir	= @sharedstatedir@
+sysconfdir	= @sysconfdir@
+endif
+
+ifeq ($(ds_include_DEVELSTUFF_DIRS),yes)
+pkgdatadir	?= @pkgdatadir@
+pkgdocdir	?= @pkgdocdir@
+pkgexampledir	?= @pkgexampledir@
+pkginfodir	?= @pkginfodir@
+pkghtmldir	?= @pkghtmldir@
+pkgpdfdir	?= @pkgpdfdir@
+pkgpsdir	?= @pkgpsdir@
+pkgdvidir	?= @pkgdvidir@
+pkgincludedir	?= @pkgincludedir@
+pkglibdir	?= @pkglibdir@
+pkglibexecdir	?= @pkglibexecdir@
+pkgsysconfdir	?= @pkgsysconfdir@
+endif
+
+#page
+## ---------------------------------------------------------------------
+## Programs.
+## ---------------------------------------------------------------------
+
+BASH_PROGRAM	= @BASH_PROGRAM@
+SHELL		= @SHELL@
+@SET_MAKE@
+MAKE_SILENT	= $(MAKE) --silent
+MAKE_NODIR	= $(MAKE) --no-print-directory
+BZIP		= @BZIP@
+CAT		= @CAT@
+CP		= @CP@ --force --verbose --preserve=mode,timestamp --
+DATE		= @DATE@
+GREP		= @GREP@
+GAWK		= @GAWK@
+GZIP		= @GZIP@
+M4		= @M4@
+MAKEINFO	= @MAKEINFO@
+MKDIR		= @MKDIR@ --parents --verbose
+MV		= @MV@ --verbose --
+RM		= @RM@ --force --recursive --verbose --
+RM_FILE		= @RM@ --force --verbose --
+RM_SILENT	= @RM@ --force --recursive --
+RMDIR		= @RMDIR@ --parents --ignore-fail-on-non-empty --
+SED		= @SED@
+SYMLINK		= @SYMLINK@ --symbolic
+TAR		= @TAR@
+TEXI2PDF	= @TEXI2PDF@
+DVIPS		= @DVIPS@
+SUDO		= @SUDO@
+
+INSTALL		= @INSTALL@
+INSTALL_DIR_MODE	?= 0755
+INSTALL_BIN_MODE	?= 0555
+INSTALL_DATA_MODE	?= 0444
+INSTALL_LIB_MODE	?= 0444
+
+INSTALL_DIR	= $(INSTALL) -p -m $(INSTALL_DIR_MODE) -d
+INSTALL_BIN	= $(INSTALL) -p -m $(INSTALL_BIN_MODE)
+INSTALL_DATA	= $(INSTALL) -p -m $(INSTALL_DATA_MODE)
+
+ifeq ($(ds_config_COMPRESSOR),gzip)
+ds_COMPRESSOR_PROGRAM	= $(GZIP)
+ds_COMPRESSOR_TAR	= --gzip
+ds_COMPRESSOR_EXT	= gz
+else ifeq ($(ds_config_COMPRESSOR),bzip)
+ds_COMPRESSOR_PROGRAM	= $(BZIP)
+ds_COMPRESSOR_TAR	= --bzip2
+ds_COMPRESSOR_EXT	= bz2
+endif
+
+#page
+## ---------------------------------------------------------------------
 ## Main rules.
 ## ---------------------------------------------------------------------
 
@@ -91,7 +196,7 @@ define ds-included-phony-rules
 $(1):	$$(addsuffix -$(1),$$(ds_RULESETS))
 endef
 
-define ds-section-rules
+define ds-ruleset
 .PHONY: $(1)							\
 	$(1)-clean	$(1)-mostlyclean			\
 	$(1)-install	$(1)-uninstall				\
@@ -109,8 +214,6 @@ $(1)-clean:
 $(1)-mostlyclean:
 $(1)-install:
 $(1)-uninstall:
-$(1)-install-aux:
-$(1)-uninstall-aux:
 
 $(1)-print-install-layout:
 $(1)-print-install-dirs-layout:
@@ -154,9 +257,9 @@ $(eval $(call ds-included-phony-rules,print-uninstall-script))
 $(eval $(call ds-included-phony-rules,print-uninstall-dirs-script))
 $(eval $(call ds-included-phony-rules,print-uninstall-files-script))
 
-$(eval $(call ds-section-rules,bin))
-$(eval $(call ds-section-rules,doc))
-$(eval $(call ds-section-rules,dev))
+$(eval $(call ds-ruleset,bin))
+$(eval $(call ds-ruleset,doc))
+$(eval $(call ds-ruleset,dev))
 
 .PHONY: info html dvi pdf ps man
 
@@ -256,61 +359,6 @@ ds-upgrade-infrastructure:
 .NOEXPORT:
 
 #page
-## ---------------------------------------------------------------------
-## Directories.
-## ---------------------------------------------------------------------
-
-ds_meta_srcdir		?= $(srcdir)/meta
-ds_meta_builddir	?= $(builddir)/meta.d
-infrastructuredir	?= @INFRASTRUCTUREDIR@
-configurationdir	?= @CONFIGURATIONDIR@
-
-ifeq ($(strip $(TMPDIR)),)
-TMPDIR		= /tmp
-endif
-
-ifeq ($(ds_include_AUTOCONF_DIRS),yes)
-prefix		= @prefix@
-exec_prefix	= @exec_prefix@
-bindir		= @bindir@
-datarootdir	= @datarootdir@
-datadir		= @datadir@
-docdir		= @datarootdir@/doc
-includedir	= @includedir@
-infodir		= @infodir@
-htmldir		= @htmldir@
-pdfdir		= @pdfdir@
-psdir		= @psdir@
-dvidir		= @dvidir@
-libdir		= @libdir@
-libexecdir	= @libexecdir@
-localstatedir	= @localstatedir@
-mandir		= @mandir@
-sbindir		= @sbindir@
-sharedstatedir	= @sharedstatedir@
-sysconfdir	= @sysconfdir@
-endif
-
-ifeq ($(ds_include_DEVELSTUFF_DIRS),yes)
-pkgdatadir	?= @pkgdatadir@
-pkgdocdir	?= @pkgdocdir@
-pkgexampledir	?= @pkgexampledir@
-pkginfodir	?= @pkginfodir@
-pkghtmldir	?= @pkghtmldir@
-pkgpdfdir	?= @pkgpdfdir@
-pkgpsdir	?= @pkgpsdir@
-pkgdvidir	?= @pkgdvidir@
-pkgincludedir	?= @pkgincludedir@
-pkglibdir	?= @pkglibdir@
-pkglibexecdir	?= @pkglibexecdir@
-pkgsysconfdir	?= @pkgsysconfdir@
-endif
-
-#page
-## ---------------------------------------------------------------------
-## Miscellaneous.
-## ---------------------------------------------------------------------
-
 define ds-verbose
 $(if $(ds_config_VERBOSE_MESSAGES),$(1),$(2))
 endef
@@ -319,9 +367,7 @@ define ds-echo
 @$(call ds-verbose,echo $(1))
 endef
 
-## ---------------------------------------------------------------------
-## File system inspection.
-
+#page
 define ds-drop-backup-files
 $(filter-out %~,$(1))
 endef
@@ -348,136 +394,18 @@ $(if $($(1)_SRCDIR),\
 	$(error null source directory variable "$(1)_SRCDIR"))
 endef
 
-## ---------------------------------------------------------------------
-## Source directory handling.
-
-define ds-srcdir
-$(1)_SRCDIR	?= $$(if $(2),$(2),$$(srcdir)/$(1))
-# do not indenti this call
-$$(call ds-assert-srcdir,$(1))
-endef
-
-define ds-assert-srcdir
-$(if $($(1)_SRCDIR),\
-	$(shell test -d $($(1)_SRCDIR) || \
-		printf "*warning*: missing srcdir '%s'\n" $($(1)_SRCDIR) >&2),\
-	$(error null source directory variable "$(1)_SRCDIR"))
-endef
-
-## ---------------------------------------------------------------------
-## Build directory handling.
-
-define ds-builddir
-$(1)_BUILDDIR	?= $$(if $(2),$(2),$$(builddir)/$(1).d)
-
-.PHONY: $(1)-make-builddir
-
-$(1)-make-builddir:
-# do not indenti this call
-$$(call ds-make-builddir,$(1))
-$(1)-all: $(1)-make-builddir
-endef
-
-define ds-make-builddir
-$(if $($(1)_BUILDDIR),\
-	$(shell test -d "$($(1)_BUILDDIR)" || $(MKDIR) "$($(1)_BUILDDIR)"),\
-	$(error null build directory variable "$(1)_BUILDDIR"))
-endef
-
-## ---------------------------------------------------------------------
-## Clean files
-
-define ds-clean-files
-$(if $($(1)_CLEANFILES),$(RM) $($(1)_CLEANFILES),\
-	$(warning empty clean variable "$(1)_CLEANFILES"))
-endef
-
-define ds-mostlyclean-files
-$(if $($(1)_MOSTLYCLEANFILES),$(RM) $($(1)_MOSTLYCLEANFILES),\
-	$(warning empty mostly clean variable "$(1)_MOSTLYCLEANFILES"))
-endef
-
-define ds-default-clean-files-variables
-$(1)_MOSTLYCLEANFILES	+= $$($(1)_TARGETS)
-$(1)_CLEANFILES		+= $$($(1)_MOSTLYCLEANFILES)
-endef
-
 #page
-## ---------------------------------------------------------------------
-## Shortcuts for common module sets.
-## ---------------------------------------------------------------------
+define ds-module-with-defaults
+# $(1) - is the module identifier
+# $(2) - is the ruleset: bin, dev, doc, nop, test, or whatever
+# $(3) - is the installation mode, second argument to 'ds-install-module'
+# $(4) - is the installation directory
 
-define ds-full-head
-$(eval $(call ds-common-programs))
-$(eval $(call ds-tests))
-$(eval $(call ds-generic-documentation))
+$$(eval $$(call ds-default-clean-variables,$(1)))
+$$(eval $$(call ds-default-install-variables,$(1),$(4)))
+$$(eval $$(call ds-module,$(1),$(2)))
 endef
 
-define ds-full-tail
-$(eval $(call ds-texinfo-documentation))
-$(eval $(call ds-meta-scripts))
-$(eval $(call ds-pkg-config))
-$(eval $(call ds-autoconf))
-$(eval $(call ds-config-inspection-script))
-$(eval $(call ds-source-distribution))
-$(eval $(call ds-binary-distribution))
-$(eval $(call ds-slackware-distribution))
-$(eval $(call ds-uninstall-scripts))
-endef
-
-#page
-## ---------------------------------------------------------------------
-## Programs.
-## ---------------------------------------------------------------------
-
-define ds-common-programs
-BASH_PROGRAM	= @BASH_PROGRAM@
-SHELL		= @SHELL@
-@SET_MAKE@
-MAKE_SILENT	= $$(MAKE) --silent
-MAKE_NODIR	= $$(MAKE) --no-print-directory
-BZIP		= @BZIP@
-CAT		= @CAT@
-CP		= @CP@ --force --verbose --preserve=mode,timestamp --
-DATE		= @DATE@
-GREP		= @GREP@
-GAWK		= @GAWK@
-GZIP		= @GZIP@
-M4		= @M4@
-MAKEINFO	= @MAKEINFO@
-MKDIR		= @MKDIR@ --parents --verbose
-MV		= @MV@ --verbose --
-RM		= @RM@ --force --recursive --verbose --
-RM_FILE		= @RM@ --force --verbose --
-RM_SILENT	= @RM@ --force --recursive --
-RMDIR		= @RMDIR@ --parents --ignore-fail-on-non-empty --
-SED		= @SED@
-SYMLINK		= @SYMLINK@ --symbolic
-TAR		= @TAR@
-TEXI2PDF	= @TEXI2PDF@
-DVIPS		= @DVIPS@
-SUDO		= @SUDO@
-
-ifeq ($$(ds_config_COMPRESSOR),gzip)
-ds_COMPRESSOR_PROGRAM	= @GZIP@
-ds_COMPRESSOR_TAR	= --gzip
-else ifeq ($$(ds_config_COMPRESSOR),bzip)
-ds_COMPRESSOR_PROGRAM	= @BZIP@
-ds_COMPRESSOR_TAR	= --bzip2
-endif
-
-INSTALL			= @INSTALL@
-INSTALL_DIR_MODE	?= 0755
-INSTALL_BIN_MODE	?= 0555
-INSTALL_DATA_MODE	?= 0444
-INSTALL_LIB_MODE	?= 0444
-
-INSTALL_DIR	= $$(INSTALL) -p -m $$(INSTALL_DIR_MODE) -d
-INSTALL_BIN	= $$(INSTALL) -p -m $$(INSTALL_BIN_MODE)
-INSTALL_DATA	= $$(INSTALL) -p -m $$(INSTALL_DATA_MODE)
-endef
-
-#page
 define ds-module
 # $(1) - is the module identifier
 # $(2) - is the ruleset: bin, dev, doc, nop, test, or whatever
@@ -490,14 +418,25 @@ endef
 define ds-module-no-install
 # $(1) - is the module identifier
 # $(2) - is the ruleset: bin, dev, doc, nop, test, or whatever
-.PHONY: $$(addprefix $(1)-,all mostlyclean clean)
+$$(eval $$(call ds-module-all-rule,$(1),$(2)))
+$$(eval $$(call ds-module-clean-rules,$(1),$(2)))
+endef
 
-$(1)-all: $$($(1)_TARGETS)
+define ds-module-all-rule
+# $(1) - is the module identifier
+# $(2) - is the ruleset: bin, dev, doc, nop, test, or whatever
+.PHONY: $(1)-all
+$(1)-all:	$$($(1)_TARGETS)
+$(2):		$(1)-all
+endef
+
+define ds-module-clean-rules
+# $(1) - is the module identifier
+# $(2) - is the ruleset: bin, dev, doc, nop, test, or whatever
+.PHONY: $$(addprefix $(1)-,mostlyclean clean)
 $(1)-mostlyclean:	; -@$$(call ds-mostlyclean-files,$(1))
-$(1)-clean:		; -@$$(call ds-clean-files,$(1))
-
-$(2):			$(1)-all
 $(2)-mostlyclean:	$(1)-mostlyclean
+$(1)-clean:		; -@$$(call ds-clean-files,$(1))
 $(2)-clean:		$(1)-clean
 endef
 
@@ -524,7 +463,7 @@ $(1)-uninstall-post:
 $(1)-print-install-files-layout:	\
 	$$(addprefix $(1)-print-install-files-layout-,pre body post)
 $(1)-print-install-files-layout-pre:
-$(1)-print-install-files-layout-body: ; @$$(call ds-module-print-files-layout,$(1))
+$(1)-print-install-files-layout-body: ; @$$(call ds-print-files-layout,$(1))
 $(1)-print-install-files-layout-post:
 
 .PHONY: $$(addprefix $(1)-print-install-dirs-,layout layout-pre layout-body layout-post)
@@ -532,7 +471,7 @@ $(1)-print-install-files-layout-post:
 $(1)-print-install-dirs-layout:		\
 	$$(addprefix $(1)-print-install-dirs-layout-,pre body post)
 $(1)-print-install-dirs-layout-pre:
-$(1)-print-install-dirs-layout-body: ; @$$(call ds-module-print-dirs-layout,$(1))
+$(1)-print-install-dirs-layout-body: ; @$$(call ds-print-dirs-layout,$(1))
 $(1)-print-install-dirs-layout-post:
 
 .PHONY: $$(addprefix $(1)-print-install-,layout layout-pre layout-body layout-post)
@@ -551,7 +490,7 @@ $(1)-print-install-layout-post:	\
 $(1)-print-uninstall-files-script:	\
 	$$(addprefix $(1)-print-uninstall-files-script,pre body post)
 $(1)-print-uninstall-files-script-pre:
-$(1)-print-uninstall-files-script-body: ; @$$(call ds-module-print-uninstall-files-script,$(1))
+$(1)-print-uninstall-files-script-body: ; @$$(call ds-print-uninstall-files-script,$(1))
 $(1)-print-uninstall-files-script-post:
 
 .PHONY: $$(addprefix $(1)-print-uninstall-dirs-,script script-pre script-body script-post)
@@ -559,7 +498,7 @@ $(1)-print-uninstall-files-script-post:
 $(1)-print-uninstall-dirs-script:	\
 	$$(addprefix $(1)-print-uninstall-dirs-script, pre body post)
 $(1)-print-uninstall-dirs-script-pre:
-$(1)-print-uninstall-dirs-script-body: ; @$$(call ds-module-print-uninstall-dirs-script,$(1))
+$(1)-print-uninstall-dirs-script-body: ; @$$(call ds-print-uninstall-dirs-script,$(1))
 $(1)-print-uninstall-dirs-script-post:
 
 .PHONY: $$(addprefix $(1)-print-uninstall-,script script-pre script-body script-post)
@@ -589,19 +528,64 @@ endif
 endef
 
 #page
-## ---------------------------------------------------------------------
-## Canned installation commands.
-## ---------------------------------------------------------------------
-
-define ds-permissions
-$(1)_OWNER	= $(2)
-$(1)_GROUP	= $(3)
-$(1)_FMODE	= $(4)
-$(1)_DMODE	= $(5)
+define ds-srcdir
+$(1)_SRCDIR	?= $$(if $(2),$(2),$$(srcdir)/$(1))
+# do not indenti this call
+$$(call ds-assert-srcdir,$(1))
 endef
 
-## ---------------------------------------------------------------------
-## Module's directory and files installation.
+define ds-assert-srcdir
+$(if $($(1)_SRCDIR),\
+	$(shell test -d $($(1)_SRCDIR) || \
+		printf "*warning*: missing srcdir '%s'\n" $($(1)_SRCDIR) >&2),\
+	$(error null source directory variable "$(1)_SRCDIR"))
+endef
+
+define ds-builddir
+$(1)_BUILDDIR	?= $$(if $(2),$(2),$$(builddir)/$(1).d)
+
+.PHONY: $(1)-make-builddir
+
+$(1)-make-builddir:
+# do not indenti this call
+$$(call ds-make-builddir,$(1))
+$(1)-all: $(1)-make-builddir
+endef
+
+define ds-make-builddir
+$(if $($(1)_BUILDDIR),\
+	$(shell test -d "$($(1)_BUILDDIR)" || $(MKDIR) "$($(1)_BUILDDIR)"),\
+	$(error null build directory variable "$(1)_BUILDDIR"))
+endef
+
+#page
+define ds-clean-files
+$(if $($(1)_CLEANFILES),$(RM) $($(1)_CLEANFILES),\
+	$(warning empty clean variable "$(1)_CLEANFILES"))
+endef
+
+define ds-mostlyclean-files
+$(if $($(1)_MOSTLYCLEANFILES),$(RM) $($(1)_MOSTLYCLEANFILES),\
+	$(warning empty mostly clean variable "$(1)_MOSTLYCLEANFILES"))
+endef
+
+define ds-default-clean-variables
+$(1)_MOSTLYCLEANFILES	+= $$($(1)_TARGETS)
+$(1)_CLEANFILES		+= $$($(1)_MOSTLYCLEANFILES)
+endef
+
+#page
+define ds-default-install-variables
+$(1)_INSTLST	= $$($(1)_TARGETS)
+$(1)_INSTDIR	?= $(2)
+endef
+
+define ds-permissions
+$(1)_OWNER	= $(strip $(2))
+$(1)_GROUP	= $(strip $(3))
+$(1)_FMODE	= $(strip $(4))
+$(1)_DMODE	= $(strip $(5))
+endef
 
 define ds-install-directory
 $(if $($(1)_INSTDIR),$(INSTALL) \
@@ -624,9 +608,6 @@ $(if $($(1)_INSTLST),\
 	$(error empty install list variable "$(1)_INSTLST"))
 endef
 
-## ---------------------------------------------------------------------
-## Module's installation functions.
-
 define ds-install-module
 $(call ds-echo,'## ---------------------------------------------------------------------')
 $(call ds-echo,'## Installing $(1) files...')
@@ -647,75 +628,67 @@ define ds-install-lib
 $(call ds-install-module,$(1),LIB)
 endef
 
-## ---------------------------------------------------------------------
-## Module's uninstall functions.
+#page
+define ds-uninstall-module
+$(call ds-uninstall-files,$(1))
+$(call ds-uninstall-directory,$(1))
+endef
 
 define ds-uninstall-files
 $(foreach f,$($(1)_INSTLST),$(RM_FILE) $(DESTDIR)$($(1)_INSTDIR)/$(notdir $(f));)
 endef
 
-define ds-uninstall-dirs
+define ds-uninstall-directory
 $(RMDIR) $(DESTDIR)$($(1)_INSTDIR)
 endef
 
-define ds-uninstall-module
-$(call ds-uninstall-files,$(1))
-$(call ds-uninstall-dirs,$(1))
+define ds-print-layout
+$(call ds-print-files-layout,$(1))
+$(call ds-print-dirs-layout,$(1))
 endef
 
-## ---------------------------------------------------------------------
-## Module's installation layout inspection.
-
-define ds-module-print-files-layout
+define ds-print-files-layout
 $(foreach f,$($(1)_INSTLST),echo $($(1)_INSTDIR)/$(notdir $(f));)
 endef
 
-define ds-module-print-dirs-layout
+define ds-print-dirs-layout
 echo $($(1)_INSTDIR)
 endef
 
-define ds-module-print-layout
-$(call ds-module-print-files-layout,$(1))
-$(call ds-module-print-dirs-layout,$(1))
+define ds-print-uninstall-script
+$(call ds-print-uninstall-files-script,$(1))
+$(call ds-print-uninstall-dirs-script,$(1))
 endef
 
-## ---------------------------------------------------------------------
-## Module's uninstall scripts.
-
-define ds-module-print-uninstall-files-script
+define ds-print-uninstall-files-script
 $(foreach f,$($(1)_INSTLST),echo $(RM_FILE) $($(1)_INSTDIR)/$(notdir $(f));)
 endef
 
-define ds-module-print-uninstall-dirs-script
+define ds-print-uninstall-dirs-script
 echo $(RMDIR) $($(1)_INSTDIR)
-endef
-
-define ds-module-print-uninstall-script
-$(call ds-module-print-uninstall-files-script,$(1))
-$(call ds-module-print-uninstall-dirs-script,$(1))
 endef
 
 #page
 define ds-generic-documentation
-$$(eval $$(call ds-srcdir,ds_doc_generic,$$(srcdir)))
-$$(eval $$(call ds-builddir,ds_doc_generic,$$(builddir)/doc-generic.d))
+ifeq ($$(ds_config_ENABLE_DOC),yes)
 
-ds_doc_generic_PATTERNS	?= README* COPYING license.terms INSTALL* BUGS \
+$$(eval $$(call ds-srcdir,ds_gendoc,$$(srcdir)))
+$$(eval $$(call ds-builddir,ds_gendoc,$$(builddir)/doc-generic.d))
+
+ds_gendoc_PATTERNS	?= README* COPYING license.terms INSTALL* BUGS \
 			   NEWS ChangeLog DESCRIPTION.txt TODO
-ds_doc_generic_SOURCES	= $$(call ds-glob,ds_doc_generic,$$(ds_doc_generic_PATTERNS))
-ds_doc_generic_TARGETS	= $$(call ds-replace-dir,$$(ds_doc_generic_BUILDDIR),\
-				$$(ds_doc_generic_SOURCES:=.gz))
-ds_doc_generic_INSTLST	= $$(ds_doc_generic_TARGETS)
-ds_doc_generic_INSTDIR	= $$(pkgdocdir)
+ds_gendoc_SOURCES	= $$(call ds-glob,ds_gendoc,$$(ds_gendoc_PATTERNS))
+ds_gendoc_TARGETS	= $$(call ds-replace-dir,$$(ds_gendoc_BUILDDIR),\
+				$$(ds_gendoc_SOURCES:=.gz))
 
-ds_doc_generic_MOSTLYCLEANFILES	= $$(ds_doc_generic_TARGETS)
-ds_doc_generic_CLEANFILES	= $$(ds_doc_generic_MOSTLYCLEANFILES)
+$$(eval $$(call ds-default-install-variables,ds_gendoc,$$(pkgdocdir)))
+$$(eval $$(call ds-default-clean-variables,ds_gendoc))
+$$(eval $$(call ds-module,ds_gendoc,doc,DATA))
 
-$$(eval $$(call ds-module,ds_doc_generic,doc,DATA))
-
-$$(ds_doc_generic_TARGETS): $$(ds_doc_generic_BUILDDIR)/%.gz : $$(ds_doc_generic_SRCDIR)/%
+$$(ds_gendoc_TARGETS): $$(ds_gendoc_BUILDDIR)/%.gz : $$(ds_gendoc_SRCDIR)/%
 	$$(GZIP) --best --stdout $$(<) >$$(@)
 
+endif # ds_config_ENABLE_DOC = yes
 endef
 
 #page
@@ -808,7 +781,7 @@ ds_texi_HTML_TARGETS	= $$(call ds-replace-dir,$$(ds_texi_BUILDDIR),\
 				$$(ds_texi_SOURCES:.texi=.html))
 ds_texi_HTML_INSTLST	= $$(ds_texi_HTML_TARGETS)
 ds_texi_HTML_INSTDIR	= \
-	$$(if $$(filter yes,$$(ds_config_VERSIONED_LAYOUT)),$$(pkginfodir),$$(infodir))
+	$$(if $$(filter yes,$$(ds_config_VERSIONED_LAYOUT)),$$(pkghtmldir),$$(htmldir))
 
 ds_texi_HTML_MOSTLYCLEANFILES	= $$(ds_texi_HTML_TARGETS)
 ds_texi_HTML_CLEANFILES		= $$(ds_texi_HTML_MOSTLYCLEANFILES) \
@@ -828,7 +801,7 @@ ds_texi_DVI_TARGETS	= $$(call ds-replace-dir,$$(ds_texi_BUILDDIR),\
 				$$(ds_texi_SOURCES:.texi=.dvi))
 ds_texi_DVI_INSTLST	= $$(ds_texi_DVI_TARGETS)
 ds_texi_DVI_INSTDIR	= \
-	$$(if $$(filter yes,$$(ds_config_VERSIONED_LAYOUT)),$$(pkginfodir),$$(infodir))
+	$$(if $$(filter yes,$$(ds_config_VERSIONED_LAYOUT)),$$(pkgdvidir),$$(dvidir))
 
 ds_texi_DVI_MOSTLYCLEANFILES	= $$(ds_texi_DVI_TARGETS)
 ds_texi_DVI_CLEANFILES		= $$(ds_texi_DVI_MOSTLYCLEANFILES) \
@@ -849,7 +822,7 @@ ds_texi_PDF_TARGETS	= $$(call ds-replace-dir,$$(ds_texi_BUILDDIR),\
 				$$(ds_texi_SOURCES:.texi=.pdf))
 ds_texi_PDF_INSTLST	= $$(ds_texi_PDF_TARGETS)
 ds_texi_PDF_INSTDIR	= \
-	$$(if $$(filter yes,$$(ds_config_VERSIONED_LAYOUT)),$$(pkginfodir),$$(infodir))
+	$$(if $$(filter yes,$$(ds_config_VERSIONED_LAYOUT)),$$(pkgpdfdir),$$(pdfdir))
 
 ds_texi_PDF_MOSTLYCLEANFILES	= $$(ds_texi_PDF_TARGETS)
 ds_texi_PDF_CLEANFILES		= $$(ds_texi_PDF_MOSTLYCLEANFILES) \
@@ -870,7 +843,7 @@ ds_texi_PS_TARGETS	= $$(call ds-replace-dir,$$(ds_texi_BUILDDIR),\
 				$$(ds_texi_SOURCES:.texi=.ps.gz))
 ds_texi_PS_INSTLST	= $$(ds_texi_PS_TARGETS)
 ds_texi_PS_INSTDIR	= \
-	$$(if $$(filter yes,$$(ds_config_VERSIONED_LAYOUT)),$$(pkginfodir),$$(infodir))
+	$$(if $$(filter yes,$$(ds_config_VERSIONED_LAYOUT)),$$(pkgpsdir),$$(psdir))
 
 ds_texi_PS_MOSTLYCLEANFILES	= $$(ds_texi_PS_TARGETS)
 ds_texi_PS_CLEANFILES		= $$(ds_texi_PS_MOSTLYCLEANFILES) \
@@ -889,33 +862,6 @@ endif # ds_config_ENABLE_DOC = yes
 endef
 
 #page
-## ---------------------------------------------------------------------
-## Predefined modules: meta scripts.
-## ---------------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-meta-scripts))
-#
-# Description:
-#
-#  Add a module to install package handling scripts. Meta scripts are:
-#
-#	preinstall		to be executed before installing the package
-#				(for example to add users and groups)
-#
-#	postinstall		to be executed after package installation
-#				(for example to configure the pakcage)
-#
-#	preremoval		to be executed before removing the package
-#				(for example to remove programs from menu
-#				infrastructures)
-#
-#	postremoval		to be executed after removing the package
-#				(for example to remove users and groups)
-#
-#  It is fine if only some (or none) of the scripts exist in the source tree.
-
 define ds-meta-scripts
 $$(eval $$(call ds-srcdir,ds_meta_scripts,$$(ds_meta_srcdir)))
 $$(eval $$(call ds-builddir,ds_meta_scripts,$$(ds_meta_builddir)))
@@ -926,101 +872,55 @@ ds_meta_scripts_INSTLST	= $$(call ds-replace-dir,$$(ds_meta_scripts_BUILDDIR),$$
 ds_meta_scripts_INSTDIR	= $$(pkglibexecdir)
 
 ifneq ($$(strip $$(ds_meta_scripts_SOURCES)),)
-$$(eval $$(call ds-module,ds_meta_scripts,bin,BIN))
+$$(eval $$(call ds-module-install-rules,ds_meta_scripts,bin,BIN))
 endif
-
 endef
-
-## ---------------------------------------------------------------------
-
-#page
-## ---------------------------------------------------------------------
-## Predefined modules: pkg-config meta data files.
-## ---------------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-pkg-config,<NAMES>))
-#
-# Description:
-#
-#  Add a module to install the meta data files for pkg-config.
-#  More than one meta file can be selected by setting the
-#  <NAMES> parameter to the list of file names with the ".pc"
-#  extension stripped.
-#
-#  Each of the file names will be "$(builddir)/meta.d/<NAME>.pc",
-#  and it should be produced by "configure" by putting the line
-#
-#	AC_CONFIG_FILES(meta.d/<NAME>.pc:meta/<NAME>.pc.in)
-#
-#  in the "configure.ac" file. It is fine if the files do not
-#  not exist. If <NAMES> is not used: by default an attempt
-#  is done to use "$(PACKAGE_NAME).pc".
-
-define ds-pkg-config
-$$(eval $$(call ds-srcdir,ds_pkg_config,$$(ds_meta_srcdir)))
-$$(eval $$(call ds-builddir,ds_pkg_config,$$(ds_meta_builddir)))
-
-ds_pkg_config_NAMES	= $$(addsuffix .pc,$$(if $(2),$(2),$$(PACKAGE_NAME)))
-ds_pkg_config_SOURCES	= $$(call ds-glob,ds_pkg_config,$$(addsuffix .in,$$(ds_pkg_config_NAMES)))
-ds_pkg_config_INSTLST	= $$(call ds-replace-dir,$$(ds_pkg_config_BUILDDIR),$$(ds_pkg_config_SOURCES:.in=))
-ds_pkg_config_INSTDIR	= $$(libdir)/pkgconfig
-
-ifneq ($$(strip $$(ds_pkg_config_SOURCES)),)
-$$(eval $$(call ds-module,ds_pkg_config,bin,DATA))
-endif
-
-endef
-
-## ---------------------------------------------------------------------
-
-#page
-## ---------------------------------------------------------------------
-## Predefined modules: GNU Autoconf macro files.
-## ---------------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-autoconf,<NAMES>))
-#
-# Description:
-#
-#  Add a module to install macro files GNU Autoconf. These
-#  files are meant to be included in foreign packages that
-#  depend on this pakcage.
-#
-#  More than one macro file can be selected by setting the
-#  <NAMES> parameter to the list of file names with the ".m4"
-#  extension stripped.
-#
-#  The files are searched  in the directory "$(srcdir)/autoconf".  It is
-#  fine  if the  files do  not not  exist. If  <NAMES> is  not  used: by
-#  default an attempt is done to install "$(PACKAGE_NAME).m4".
 
 define ds-autoconf
 $$(eval $$(call ds-srcdir,ds_autoconf,$$(ds_meta_srcdir)/autoconf))
 
-ds_autoconf_NAMES	= $$(addsuffix .m4,$$(if $(2),$(2),$$(PACKAGE_NAME)))
-ds_autoconf_INSTLST	= $$(call ds-glob,ds_autoconf,$$(ds_autoconf_NAMES))
+ds_autoconf_NAMES	= $$(addsuffix .m4,$$(if $(1),$(1),$$(PACKAGE_NAME)))
+ds_autoconf_SOURCES	= $$(call ds-glob,ds_autoconf,$$(ds_autoconf_NAMES))
+ds_autoconf_INSTLST	= $$(ds_autoconf_SOURCES)
 ds_autoconf_INSTDIR	= $$(datadir)/aclocal/$$(PKG_DIR)
 
 ifneq ($$(strip $$(ds_autoconf_INSTLST)),)
-$$(eval $$(call ds-module,ds_autoconf,dev,DATA))
+$$(eval $$(call ds-module-install-rules,ds_autoconf,dev,DATA))
 endif
+endef
 
+define ds-pkg-config
+$$(eval $$(call ds-srcdir,ds_pkgconfig,$$(ds_meta_srcdir)))
+$$(eval $$(call ds-builddir,ds_pkgconfig,$$(ds_meta_builddir)))
+
+ds_pkgconfig_NAMES	= $$(addsuffix .pc,$$(if $(1),$(1),$$(PACKAGE_NAME)))
+ds_pkgconfig_SOURCES	= $$(call ds-glob,ds_pkgconfig,$$(addsuffix .in,$$(ds_pkgconfig_NAMES)))
+ds_pkgconfig_INSTLST	= $$(call ds-replace-dir,$$(ds_pkgconfig_BUILDDIR),$$(ds_pkgconfig_SOURCES:.in=))
+ds_pkgconfig_INSTDIR	= $$(libdir)/pkgconfig
+
+ifneq ($$(strip $$(ds_pkgconfig_SOURCES)),)
+$$(eval $$(call ds-module-install-rules,ds_pkgconfig,bin,DATA))
+endif
+endef
+
+define ds-config-inspection-script
+$$(eval $$(call ds-srcdir,ds_config_script,$$(ds_meta_srcdir)))
+$$(eval $$(call ds-builddir,ds_config_script,$$(ds_meta_builddir)))
+
+ds_config_script_NAMES   = $$(if $(1),$(1),$$(PACKAGE_NAME)-config)
+ds_config_script_SOURCES = $$(call ds-glob,ds_config_script,$$(addsuffix .in,$$(ds_config_script_NAMES)))
+ds_config_script_INSTLST = $$(call ds-replace-dir,$$(ds_config_script_BUILDDIR),$$(ds_config_script_SOURCES:.in=))
+ds_config_script_INSTDIR = $$(bindir)
+
+ifneq ($$(strip $$(ds_config_script_SOURCES)),)
+$$(eval $$(call ds-module-install-rules,ds_config_script,bin,BIN))
+endif
 endef
 
 #page
-## ---------------------------------------------------------------------
-## Predefined modules: uninstall scripts.
-## ---------------------------------------------------------------------
-
-# *** WARNING ***
-#
-#  When using this function: it must be the last thing of the Makefile.
-
 define ds-uninstall-scripts
+$$(eval $$(call ds-builddir,ds_uninstall,$$(builddir)/uninstall.d))
+
 ifeq ($$(ds_include_BIN_RULES),yes)
 $$(eval $$(call ds-private-uninstall-scripts,bin))
 endif
@@ -1034,25 +934,17 @@ $$(eval $$(call ds-private-uninstall-scripts,dev,dev-))
 endif
 endef
 
-## ---------------------------------------------------------------------
-
+define ds-private-uninstall-scripts
 # 1 - the section identifier
 # 2 - the package name section
-define ds-private-uninstall-scripts
-
-$$(eval $$(call ds-builddir,ds_uninstall_$(1),$$(builddir)/uninstall.d))
 
 ds_uninstall_$(1)_PACKAGE	= $$(PACKAGE_NAME)-$(2)$$(PACKAGE_VERSION)
 ds_uninstall_$(1)_NAME		= uninstall-$$(ds_uninstall_$(1)_PACKAGE).sh
-ds_uninstall_$(1)_PATHNAME	= $$(ds_uninstall_$(1)_BUILDDIR)/$$(ds_uninstall_$(1)_NAME)
-
+ds_uninstall_$(1)_PATHNAME	= $$(ds_uninstall_BUILDDIR)/$$(ds_uninstall_$(1)_NAME)
 ds_uninstall_$(1)_TARGETS	= $$(ds_uninstall_$(1)_PATHNAME)
-ds_uninstall_$(1)_INSTLST	= $$(ds_uninstall_$(1)_TARGETS)
-ds_uninstall_$(1)_INSTDIR	= $$(pkglibexecdir)
 
-ds_uninstall_$(1)_MOSTLYCLEANFILES	= $$(ds_uninstall_$(1)_TARGETS)
-ds_uninstall_$(1)_CLEANFILES		= $$(ds_uninstall_$(1)_MOSTLYCLEANFILES)
-
+$$(eval $$(call ds-default-install-variables,ds_uninstall_$(1),$$(pkglibexecdir)))
+$$(eval $$(call ds-default-clean-variables,ds_uninstall_$(1)))
 $$(eval $$(call ds-module,ds_uninstall_$(1),$(1),BIN))
 
 $$(ds_uninstall_$(1)_PATHNAME):
@@ -1078,37 +970,9 @@ $$(ds_uninstall_$(1)_PATHNAME):
 endef
 
 #page
-## ---------------------------------------------------------------------
-## Predefined modules: package config inspection script.
-## ---------------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-config-inspection-sript))
-#
-# Description:
-#
-#  Install the configuration inspection script: a program that
-#  outputs the installation directory, include files directory,
-#  package version, etc.
-
-define ds-config-inspection-script
-$$(eval $$(call ds-srcdir,ds_config_script,$$(ds_meta_srcdir)))
-$$(eval $$(call ds-builddir,ds_config_script,$$(ds_meta_builddir)))
-
-ds_config_script_NAME	 = $$(PACKAGE_NAME)-config
-ds_config_script_INSTLST = $$(ds_config_script_BUILDDIR)/$$(ds_config_script_NAME)
-ds_config_script_INSTDIR = $$(bindir)
-
-$$(eval $$(call ds-module,ds_config_script,bin,BIN))
-endef
-
-## ---------------------------------------------------------------------
-
 # Synopsis:
 #
 #	$(eval $(call ds-tcl-programs))
-#	$(eval $(call ds-tests))
 #	$(eval $(call ds-tcl-tests))
 #
 # Description:
@@ -1146,13 +1010,17 @@ test-mostlyclean:	tcltest-mostlyclean
 endef
 
 #page
-define ds-c-language
+## --------------------------------------------------------------------
+## C language support.
+## --------------------------------------------------------------------
+
+ifeq ($(ds_include_C_LANGUAGE),yes)
 
 CC			= @CC@
 CPP			= @CPP@
 AR			= @AR@ rc
 RANLIB			= @RANLIB@
-ifeq ($$(ds_config_ENABLE_STRIP),yes)
+ifeq ($(ds_config_ENABLE_STRIP),yes)
 STRIP			= @STRIP@
 else
 STRIP			= :
@@ -1174,22 +1042,29 @@ GCC_WARNINGS		= -Wall -W -Wextra -pedantic			\
 			   -Wpointer-arith -Wcast-qual -Wcast-align	\
 			   -Wwrite-strings -Wnested-externs		\
 			   -Wstrict-prototypes -Wshadow -fno-common
-endif
+endif # ds_config_ENABLE_GCC_WARNING = yes
 
 ifeq (@USING_GCC@,yes)
 GCC_PIPE		= -pipe
 GCC_SHARED		= -shared -fPIC
-endif
+endif # USING_GCC = yes
 
-CC_COMPILE_OUTPUT	?= $$(if @NO_MINUS_C_MINUS_O@,-o,-c -o)
+CC_COMPILE_OUTPUT	?= $(if @NO_MINUS_C_MINUS_O@,-o,-c -o)
 CC_LINK_OUTPUT		?= -o
 
-endef
+endif # ds_include_C_LANGUAGE = yes
 
-define ds-cxx-language
+#page
+## --------------------------------------------------------------------
+## CXX language support.
+## --------------------------------------------------------------------
+
+ifeq ($(ds_include_CXX_LANGUAGE),yes)
+
 CXX			?= @CXX@
 CXXFLAGS		?= @CXXFLAGS@
-endef
+
+endif # ds_include_CXX_LANGUAGE = yes
 
 #page
 define ds-cc-compile
@@ -1248,8 +1123,8 @@ $(1)_BUILDDIR		?= $$(builddir)/objects.d
 $(1)_PATTERNS		?= *.c
 $(1)_PREREQUISITES	?=
 
-$$(eval $$(call ds-srcdir,$(1),$$($(1)_SRCDIR)))
-$$(eval $$(call ds-builddir,$(1),$$($(1)_BUILDDIR)))
+$$(eval $$(call ds-srcdir,$(1)))
+$$(eval $$(call ds-builddir,$(1)))
 
 vpath	%.h		$$($(1)_SRCDIR)
 vpath	%.@OBJEXT@	$$($(1)_BUILDDIR)
@@ -1260,7 +1135,7 @@ $$(eval $$(call ds-cc-compile,$(1)))
 $(1)_SOURCES	= $$(call ds-glob,$(1),$$($(1)_PATTERNS))
 $(1)_TARGETS	= $$(call ds-replace-dir,$$($(1)_BUILDDIR),$$($(1)_SOURCES:.c=.@OBJEXT@))
 
-$$(eval $$(call ds-default-clean-files-variables,$(1)))
+$$(eval $$(call ds-default-clean-variables,$(1)))
 $$(eval $$(call ds-module-no-install,$(1),$$($(1)_RULESET)))
 
 $$($(1)_TARGETS) : $$($(1)_BUILDDIR)/%.@OBJEXT@ : $$($(1)_SRCDIR)/%.c $$($(1)_PREREQUISITES)
@@ -1275,19 +1150,18 @@ $(1)_shlib_RULESET	?= bin
 $(1)_shlib_BUILDDIR	?= $$(builddir)/libraries.d
 $(1)_shlib_OBJECTS	?= $$($(1)_TARGETS)
 
-$$(eval $$(call ds-builddir,$(1)_shlib,$$($(1)_shlib_BUILDDIR)))
+$$(eval $$(call ds-builddir,$(1)_shlib))
 
 $(1)_shlib_NAME		= $$($(1)_SHARED_LIBRARY_NAME)
 $(1)_shlib_PATHNAME	= $$($(1)_shlib_BUILDDIR)/$$($(1)_shlib_NAME)
 $(1)_shlib_LINK_NAME	= $$($(1)_SHARED_LIBRARY_LINK_NAME)
 $(1)_shlib_LINK_PATHNAME= $$($(1)_shlib_BUILDDIR)/$$($(1)_shlib_LINK_NAME)
-
 $(1)_shlib_TARGETS	= $$($(1)_shlib_PATHNAME) $$($(1)_shlib_LINK_PATHNAME)
 $(1)_shlib_INSTLST	= $$($(1)_shlib_PATHNAME)
 $(1)_shlib_INSTDIR	?= $(libdir)
 
 $$(eval $$(call ds-cc-link-shared-library,$(1)_shlib))
-$$(eval $$(call ds-default-clean-files-variables,$(1)_shlib))
+$$(eval $$(call ds-default-clean-variables,$(1)_shlib))
 $$(eval $$(call ds-module,$(1)_shlib,$$($(1)_shlib_RULESET),LIB))
 
 $$($(1)_shlib_PATHNAME) : $$($(1)_shlib_OBJECTS)
@@ -1328,16 +1202,15 @@ $(1)_stlib_RULESET	?= dev
 $(1)_stlib_BUILDDIR	?= $$(builddir)/libraries.d
 $(1)_stlib_OBJECTS	?= $$($(1)_TARGETS)
 
-$$(eval $$(call ds-builddir,$(1)_stlib,$$($(1)_stlib_BUILDDIR)))
+$$(eval $$(call ds-builddir,$(1)_stlib))
 
 $(1)_stlib_NAME		= $$($(1)_STATIC_LIBRARY_NAME)
 $(1)_stlib_PATHNAME	= $$($(1)_stlib_BUILDDIR)/$$($(1)_stlib_NAME)
-
 $(1)_stlib_TARGETS	= $$($(1)_stlib_PATHNAME)
 $(1)_stlib_INSTLST	= $$($(1)_stlib_TARGETS)
 $(1)_stlib_INSTDIR	?= $(libdir)
 
-$$(eval $$(call ds-default-clean-files-variables,$(1)_stlib))
+$$(eval $$(call ds-default-clean-variables,$(1)_stlib))
 $$(eval $$(call ds-module,$(1)_stlib,$$($(1)_stlib_RULESET),LIB))
 
 $$($(1)_stlib_PATHNAME) : $$($(1)_stlib_OBJECTS)
@@ -1351,134 +1224,70 @@ endef
 
 #page
 define ds-c-single-program
-$(1)_program_BUILDDIR	?= $$(builddir)/programs.d
-$(1)_program_OBJECTS	?= $$($(1)_TARGETS)
-$(1)_program_PREFIX	?=
-$(1)_program_ENV	?=
-$(1)_program_RULESET	?= bin
-
-$(1)_program_NAME	= $$($(1)_program_PREFIX)$(2)
-$(1)_program_PATHNAME	= $$($(1)_program_BUILDDIR)/$$($(1)_program_NAME)
-
-$$(eval $$(call ds-cc-link-program,$(1)_program))
-$$(eval $$(call ds-builddir,$(1)_program,$$(if $$($(1)_program_BUILDDIR),$$($(1)_program_BUILDDIR),$$(builddir)/programs.d)))
-
-$(1)_program_TARGETS	+= $$($(1)_program_PATHNAME)
-$(1)_program_INSTLST	= $$($(1)_program_PATHNAME)
-$(1)_program_INSTDIR	?= $(pkglibexecdir)
-
-$$(eval $$(call ds-default-clean-files-variables,$(1)_program))
-$$(eval $$(call ds-module,$(1)_program,$$($(1)_program_RULESET),LIB))
-
-$$($(1)_program_PATHNAME) : $$($(1)_program_OBJECTS)
-	$$($(1)_program_CC_PROGRAM)
-	$$(STRIP) $$(@)
-
-.PHONY: run-$(1)
-
-run-$(1): $(1)_program-all
-	$$($(1)_program_ENV) $$($(1)_program_PATHNAME)
+# $(1) - the identifier of the module
+# $(2) - the name of the program
+$$(eval $$(call ds-c-single-program-no-install,$(1),$(2)))
+$$(eval $$(call ds-default-install-variables,$(1),$(pkglibexecdir)))
+$$(eval $$(call ds-module-install-rules,$(1),$$($(1)_sinprog_RULESET),BIN))
 endef
 
-#page
 define ds-c-single-program-no-install
-# $(1) is the identifier of the module
-# $(2) is the name of the program
-$(1)_program_RULESET	?= bin
-$(1)_program_BUILDDIR	?= $$(builddir)/programs.d
-$(1)_program_OBJECTS	?= $$($(1)_TARGETS)
-$(1)_program_PREFIX	?=
-$(1)_program_ENV	?=
+# $(1) - the identifier of the module
+# $(2) - the name of the program
 
-$(1)_program_NAME	= $$($(1)_program_PREFIX)$(2)
-$(1)_program_PATHNAME	= $$($(1)_program_BUILDDIR)/$$($(1)_program_NAME)
+$(1)_sinprog_RULESET	?= bin
+$(1)_sinprog_BUILDDIR	?= $$(builddir)/programs.d
+$(1)_sinprog_OBJECTS	?= $$($(1)_TARGETS)
 
-$$(eval $$(call ds-builddir,$(1)_program,$$($(1)_program_BUILDDIR)))
-$$(eval $$(call ds-cc-link-program,$(1)_program))
+$$(eval $$(call ds-builddir,$(1)_sinprog))
 
-$(1)_program_TARGETS	= $$($(1)_program_PATHNAME)
+$(1)_sinprog_PREFIX	?=
+$(1)_sinprog_NAME	= $$($(1)_sinprog_PREFIX)/$(2)
+$(1)_sinprog_PATHNAME	= $$($(1)_sinprog_BUILDDIR)/$$($(1)_sinprog_NAME)
+$(1)_sinprog_TARGETS	= $$($(1)_sinprog_PATHNAME)
 
-$$(eval $$(call ds-default-clean-files-variables,$(1)_program))
-$$(eval $$(call ds-module-no-install,$(1)_program,$$($(1)_program_RULESET)))
+$$(eval $$(call ds-cc-link-program,$(1)_sinprog))
+$$(eval $$(call ds-default-clean-variables,$(1)_sinprog))
+$$(eval $$(call ds-module-no-install,$(1)_sinprog,$$($(1)_sinprog_RULESET)))
 
-$$($(1)_program_PATHNAME) : $$($(1)_program_OBJECTS)
-	$$($(1)_program_CC_PROGRAM)
-ifeq ($$(ds_config_ENABLE_STRIP),yes)
+$$($(1)_sinprog_PATHNAME) : $$($(1)_sinprog_OBJECTS)
+	$$($(1)_sinprog_CC_PROGRAM)
 	$$(STRIP) $$(@)
-endif
-
-.PHONY: run-$(1)
-
-run-$(1): $(1)_program-all
-	$$($(1)_program_ENV) $$($(1)_program_PATHNAME)
 endef
 
 #page
 define ds-c-programs
-$(1)_programs_RULESET	?= bin
-$(1)_programs_SRCDIR	?= $$($(1)_BUILDDIR)
-$(1)_programs_BUILDDIR	?= $$(builddir)/programs.d
-$(1)_programs_OBJECTS	?= $$($(1)_TARGETS)
-$(1)_programs_PREFIX	?=
-$(1)_programs_ENV	?=
-
-$(1)_programs_NAMES	= $$(addprefix $$($(1)_programs_PREFIX),$$(notdir $$($(1)_programs_OBJECTS:.@OBJEXT@=)))
-$(1)_programs_PATHNAMES	= $$(addprefix $$($(1)_programs_BUILDDIR)/,$$($(1)_programs_NAMES))
-
-$$(eval $$(call ds-builddir,$(1)_programs,$$($(1)_programs_BUILDDIR)))
-$$(eval $$(call ds-cc-link-program,$(1)_programs))
-
-$(1)_programs_TARGETS	= $$($(1)_programs_PATHNAMES)
-$(1)_programs_INSTLST	= $$($(1)_programs_PATHNAMES)
-$(1)_programs_INSTDIR	?= $(pkglibexecdir)
-
-$$(eval $$(call ds-default-clean-files-variables,$(1)_programs))
-$$(eval $$(call ds-module,$(1)_programs,$$($(1)_programs_RULESET)))
-
-$$($(1)_programs_PATHNAMES) : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% : $$($(1)_programs_SRCDIR)/%.@OBJEXT@
-	$$($(1)_programs_CC_PROGRAM)
-	$$(STRIP) $$(@)
-
-.PHONY: run-$(1) $$(addprefix run-,$$($(1)_programs_NAMES))
-
-run-$(1): $$(addprefix run-,$$($(1)_programs_NAMES))
-
-$$(addprefix run-,$$($(1)_programs_NAMES)): run-% : $$($(1)_programs_BUILDDIR)/%
-	$$($(1)_programs_ENV) $$(<)
-
+# $(1) - the identifier of the module
+$$(eval $$(call ds-c-programs-no-install,$(1)))
+$$(eval $$(call ds-default-install-variables,$(1),$(pkglibexecdir)))
+$$(eval $$(call ds-module-install-rules,$(1),$$($(1)_programs_RULESET),BIN))
 endef
 
-#page
 define ds-c-programs-no-install
+# $(1) - the identifier of the module
+
 $(1)_programs_RULESET	?= bin
 $(1)_programs_SRCDIR	?= $$($(1)_BUILDDIR)
-$(1)_programs_OBJECTS	?= $$($(1)_TARGETS)
 $(1)_programs_BUILDDIR	?= $$(builddir)/programs.d
+$(1)_programs_OBJECTS	?= $$($(1)_TARGETS)
+
+$$(eval $$(call ds-builddir,$(1)_programs))
+
 $(1)_programs_PREFIX	?=
-$(1)_programs_ENV	?=
-
-$(1)_programs_NAMES	= $$(addprefix $$($(1)_programs_PREFIX),$$(notdir $$($(1)_programs_OBJECTS:.@OBJEXT@=)))
+$(1)_programs_NAMES	= $$(addprefix $$($(1)_programs_PREFIX),\
+				$$(notdir $$($(1)_programs_OBJECTS:.@OBJEXT@=)))
 $(1)_programs_PATHNAMES	= $$(addprefix $$($(1)_programs_BUILDDIR)/,$$($(1)_programs_NAMES))
-
-$$(eval $$(call ds-builddir,$(1)_programs,$$($(1)_programs_BUILDDIR)))
-$$(eval $$(call ds-cc-link-program,$(1)_programs))
-
 $(1)_programs_TARGETS	= $$($(1)_programs_PATHNAMES)
 
-$$(eval $$(call ds-default-clean-files-variables,$(1)_programs))
+$$(eval $$(call ds-cc-link-program,$(1)_programs))
+$$(eval $$(call ds-default-clean-variables,$(1)_programs))
 $$(eval $$(call ds-module-no-install,$(1)_programs,$$($(1)_programs_RULESET)))
 
-$$($(1)_programs_PATHNAMES) : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% : $$($(1)_programs_SRCDIR)/%.@OBJEXT@
+$$($(1)_programs_PATHNAMES) \
+   : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% \
+   : $$($(1)_programs_SRCDIR)/%.@OBJEXT@
 	$$($(1)_programs_CC_PROGRAM)
 	$$(STRIP) $$(@)
-
-.PHONY: run-$(1) $$(addprefix run-,$$($(1)_programs_NAMES))
-
-run-$(1): $$(addprefix run-,$$($(1)_programs_NAMES))
-
-$$(addprefix run-,$$($(1)_programs_NAMES)): run-% : $$($(1)_programs_BUILDDIR)/%
-	$$($(1)_programs_ENV) $$(<)
-
 endef
 
 #page
@@ -1511,7 +1320,7 @@ $$(eval $$(call ds-srcdir,$(1),$$($(1)_c_headers_SRCDIR)))
 $(1)_c_headers_INSTLST	= \
 	$$(call ds-glob,$(1),$$(if $$($(1)_c_headers_PATTERNS),$$($(1)_c_headers_PATTERNS),*.h))
 $(1)_c_headers_INSTDIR	?= $$(pkgincludedir)
-$$(eval $$(call ds-module,$(1)_c_headers,$$($(1)_c_headers_RULESET)))
+$$(eval $$(call ds-module-install-rules,$(1)_c_headers,$$($(1)_c_headers_RULESET)))
 endef
 
 define ds-c-library
@@ -1560,7 +1369,7 @@ endif
 #page
 define ds-source-distribution
 ds_dist_TMPDIR		?= $$(TMPDIR)/$$(PKG_ID)
-ds_dist_ARCHIVE		?= $$(PKG_ID)-src.tar.bz2
+ds_dist_ARCHIVE		?= $$(PKG_ID)-src.tar.$$(ds_COMPRESSOR_EXT)
 ds_dist_DESTDIR		= $$(builddir)/dist.d
 
 ds_dist_REPOSITORY	?= /usr/local/src
@@ -1591,8 +1400,9 @@ dist:
 		--exclude=.arch-ids		--exclude=\+\+\*                \
 		--exclude=\=\*                                                  \
 		. | $$(TAR) --directory=$$(ds_dist_TMPDIR) --extract --file=-
-	$$(TAR) --directory=$$(TMPDIR) --verbose \
-		--create --bzip2 --file=$$(ds_dist_DESTDIR)/$$(ds_dist_ARCHIVE) $$(PKG_ID)
+	$$(TAR) --directory=$$(TMPDIR) --verbose				\
+		--create $$(ds_COMPRESSOR_TAR)					\
+		--file=$$(ds_dist_DESTDIR)/$$(ds_dist_ARCHIVE) $$(PKG_ID)
 	$$(RM_SILENT) $$(ds_dist_TMPDIR)
 
 dist-store:
@@ -1605,9 +1415,9 @@ define ds-binary-distribution
 ds_bindist_TMPDIR	= $$(TMPDIR)/$$(PKG_ID)
 ds_bindist_DESTDIR	= $$(builddir)/bindist.d
 
-ds_bindist_bin_ARCHIVE	= $$(ds_archive_bin_PREFIX).tar.gz
-ds_bindist_doc_ARCHIVE	= $$(ds_archive_doc_PREFIX).tar.gz
-ds_bindist_dev_ARCHIVE	= $$(ds_archive_dev_PREFIX).tar.gz
+ds_bindist_bin_ARCHIVE	= $$(ds_archive_bin_PREFIX).tar.$$(ds_COMPRESSOR_EXT)
+ds_bindist_doc_ARCHIVE	= $$(ds_archive_doc_PREFIX).tar.$$(ds_COMPRESSOR_EXT)
+ds_bindist_dev_ARCHIVE	= $$(ds_archive_dev_PREFIX).tar.$$(ds_COMPRESSOR_EXT)
 
 .PHONY: bindist         bindist-bin         bindist-doc         bindist-dev
 .PHONY: bindist-install bindist-bin-install bindist-doc-install bindist-dev-install
@@ -1633,7 +1443,7 @@ bindist-install-doc:
 bindist-install-dev:
 	$$(call ds-bindist-install,$$(ds_bindist_dev_ARCHIVE))
 
-ds_bindist_ARCHIVE_FULL	= $$(ds_archive_FULL_PREFIX).tar.gz
+ds_bindist_ARCHIVE_FULL	= $$(ds_archive_FULL_PREFIX).tar.$$(ds_COMPRESSOR_EXT)
 
 .PHONY: bindist-full bindist-install-full
 
@@ -1652,14 +1462,14 @@ test -d $(ds_bindist_DESTDIR) || $(MKDIR) $(ds_bindist_DESTDIR)
 $(RM_SILENT) $(ds_bindist_TMPDIR)
 $(MAKE) $(1) DESTDIR=$(ds_bindist_TMPDIR)
 $(TAR) --directory=$(ds_bindist_TMPDIR) \
-	--create --gzip --verbose \
+	--create $(ds_COMPRESSOR_TAR) --verbose \
 	--file=$(ds_bindist_DESTDIR)/$(strip $(2)) .
 $(RM_SILENT) $(ds_bindist_TMPDIR)
 endef
 
 define ds-bindist-install
 $(TAR) --directory=/						\
-	--extract --gzip --verbose				\
+	--extract $(ds_COMPRESSOR_TAR) --verbose		\
 	--no-overwrite-dir --no-same-owner --same-permissions	\
 	--file=$(ds_bindist_DESTDIR)/$(1)
 endef
@@ -1863,8 +1673,48 @@ $$(eval $$(call ds-private-slackware-targets,dev))
 
 endef
 
+#page
+ifeq ($(ds_include_GENERIC_DOCUMENTATION),yes)
+$(eval $(call ds-generic-documentation))
+endif
+
+ifeq ($(ds_include_TEXINFO_DOCUMENTATION),yes)
+$(eval $(call ds-texinfo-documentation))
+endif
+
+ifeq ($(ds_include_META_SCRIPTS),yes)
+$(eval $(call ds-meta-scripts))
+endif
+
+ifeq ($(ds_include_PKGCONFIG),yes)
+$(eval $(call ds-pkg-config))
+endif
+
+ifeq ($(ds_include_AUTOCONF),yes)
+$(eval $(call ds-autoconf))
+endif
+
+ifeq ($(ds_include_CONFIG_INSPECTION_SCRIPT),yes)
+$(eval $(call ds-config-inspection-script))
+endif
+
+ifeq ($(ds_include_SOURCE_DISTRIBUTION),yes)
+$(eval $(call ds-source-distribution))
+endif
+
+ifeq ($(ds_include_BINARY_DISTRIBUTION),yes)
+$(eval $(call ds-binary-distribution))
+endif
+
+ifeq ($(ds_include_SLACKWARE_DISTRIBUTION),yes)
+$(eval $(call ds-slackware-distribution))
+endif
+
+ifeq ($(ds_include_UNINSTALL_SCRIPTS),yes)
+$(eval $(call ds-uninstall-scripts))
+endif
 
 ### end of file
 # Local Variables:
-# mode: makefile
+# mode: makefile-gmake
 # End:

@@ -1,18 +1,17 @@
 dnl @configure_input@
 dnl
 
-AC_INIT([annealing],[0.4a0])
-AC_PREREQ(2.63)
-AC_CONFIG_SRCDIR([./src/annealing.h])
+AC_INIT([annealing],[0.4a0],[marcomaggi@gna.org])
+DS_BEGIN([./src/lib/annealing.h])
 DS_C99_LANGUAGE_COMMON_SETUP
 DS_C_LANGUAGE_LIBRARY([annealing],1,1,[annealing])
 AX_PATH_GSL(1.9)
-AC_CONFIG_FILES([meta.d/annealing-config:meta/annealing-config.in])
-AC_CONFIG_FILES([meta.d/annealing.pc:meta/annealing.pc.in])
-AC_CONFIG_FILES([meta.d/slackware/bin/slack-desc:meta/slackware/bin/slack-desc.in])
-AC_CONFIG_FILES([meta.d/slackware/doc/slack-desc:meta/slackware/doc/slack-desc.in])
-AC_CONFIG_FILES([meta.d/slackware/dev/slack-desc:meta/slackware/dev/slack-desc.in])
-DS_CONFIG_FILES
+DS_CONFIG_FILE_PKGCONFIG
+DS_CONFIG_FILE_INSPECTION_SCRIPT
+DS_CONFIG_FILE_SLACKWARE_BIN_DESC
+DS_CONFIG_FILE_SLACKWARE_DOC_DESC
+DS_CONFIG_FILE_SLACKWARE_DEV_DESC
+DS_END
 AC_OUTPUT
 
 dnl end of file

@@ -5,12 +5,7 @@ srcdir		= @srcdir@
 builddir	= @builddir@
 
 include meta.d/makefiles/develstuff.make
-$(eval $(call ds-full-head))
-$(eval $(call ds-c-language))
 include meta.d/makefiles/project.make
-$(eval $(call ds-full-tail))
+$(eval $(call ds-common-modules))
 
 ### end of file
-# Local Variables:
-# mode: makefile
-# End:
