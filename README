@@ -70,7 +70,7 @@ then do it:
 
     $ ../configure [options]
     $ make
-    $ make test
+    $ make tests
     $ make install
 
   Notice that, by default, only the shared library is built,
