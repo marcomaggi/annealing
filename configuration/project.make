@@ -12,7 +12,7 @@ GSL_LIBS			= @GSL_LIBS@
 annealing_SRCDIR		= $(srcdir)/src/lib
 annealing_PREREQUISITES		= internal.h annealing.h
 annealing_CC_COMPILE_CPPFLAGS	= $(DEFS) $(CPPFLAGS)
-annealing_CC_SHLIB_LIBS		= $(LIBS)
+annealing_shlib_CC_SHLIB_LIBS	= $(LIBS)
 annealing_c_headers_PATTERNS	= annealing.h
 
 $(eval $(call ds-c-library-extended,annealing))
