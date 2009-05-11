@@ -1477,7 +1477,7 @@ Optional Features:
                           enable creation of Slackware packages with root as
                           file owner (default: yes)
   --enable-slackware-linkadd
-                          enable creation of symboliclinks in Slackware
+                          enable creation of symbolic links in Slackware
                           packages by doinst.sh (default: yes)
   --enable-slackware-prefix-tools
                           use Slackware tools under installation prefix for

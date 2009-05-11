@@ -368,6 +368,9 @@ define ds-echo
 @$(call ds-verbose,echo $(1))
 endef
 
+define ds-if-yes
+$(if $(filter yes,$(1)),$(2),$(3))
+endef
 #page
 define ds-drop-backup-files
 $(filter-out %~,$(1))
@@ -706,7 +709,8 @@ ds_texi_SOURCES		= $$(call ds-glob,ds_texi,*.texi)
 
 DS_TEXI_FLAGS		= -I $$(ds_texi_SRCDIR)		\
 			  -I $$(ds_texi_BUILDDIR)	\
-			  -I $$(infrastructuredir)
+			  -I $$(infrastructuredir)	\
+			  $$(texi_MORE_FLAGS)
 DS_TEXI2INFO_FLAGS	= $$(DS_TEXI_FLAGS) --no-split
 DS_TEXI2HTML_FLAGS	= $$(DS_TEXI_FLAGS) --no-split --html
 DS_TEXI2DVI_FLAGS	= $$(DS_TEXI_FLAGS) --dvi --tidy \
@@ -1293,8 +1297,8 @@ $(1)_examples_SRCDIR		?= $$(srcdir)/examples
 $(1)_examples_BUILDDIR		?= $$(builddir)/examples.d
 $(1)_examples_programs_RULESET	= examples
 $(1)_examples_programs_BUILDDIR	?= $$($(1)_examples_BUILDDIR)
-$$(eval $$(call ds-c-sources,$(1)))
-$$(eval $$(call ds-c-programs-no-install,$(1)))
+$$(eval $$(call ds-c-sources,$(1)_examples))
+$$(eval $$(call ds-c-programs-no-install,$(1)_examples))
 endef
 
 define ds-c-test-programs
@@ -1772,6 +1776,10 @@ private-slackware-make-$(1): slackware-builddir
 		$$(ds_slackware_PACKAGE_BUILDDIR)/install
 	$$(ds_archive_SUDO) $$(INSTALL_DATA)					\
 		$$(ds_meta_builddir)/slackware/$(1)/slack-desc			\
+		$$(ds_slackware_PACKAGE_BUILDDIR)/install
+	-test -f $$(ds_meta_builddir)/slackware/$(1)/doinst.sh &&		\
+	$$(ds_archive_SUDO) $$(INSTALL_DATA)					\
+		$$(ds_meta_builddir)/slackware/$(1)/doinst.sh			\
 		$$(ds_slackware_PACKAGE_BUILDDIR)/install
 	$$(ds_archive_SUDO) $$(MAKE) slackware-aux-$(1)
 	cd $$(ds_slackware_PACKAGE_BUILDDIR);					\
