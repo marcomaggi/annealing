@@ -76,11 +76,10 @@ directory of Annealing:
     $ cd annealing
     $ sh autogen.sh
 
-for  this  we  need  to  have installed  the  GNU  Autotools:  Automake,
-Autoconf, Libtool.  We should now  see the executable "configure" script
-and the "Makefile.in"  file.  From now on everything is  the same as for
-building  from  a  proper  release  tarball, but  we  have  to  run  the
-"configure" script enabling the maintainer mode:
+we  should   now  see   the  executable   "configure"  script   and  the
+"Makefile.in" file.  From now on everything  is the same as for building
+from a proper release tarball, but we have to run the "configure" script
+enabling the maintainer mode:
 
     $ mkdir build
     $ cd build
@@ -104,6 +103,10 @@ to really do it:
 
 Read the documentation in Info format.
 
+  Notice that under the directory  "examples" there are 2 full projects,
+one for the C language and one for the C++ language, showing how to make
+use of Annealing.
+
 
 A. Credits
 ----------
@@ -113,7 +116,7 @@ distributed in the GSL.
 
   The code is a reworking of  the files "gsl_siman.h" and "siman.c" from
 the  GSL  1.9 distribution  (Thu  Feb  22, 2007).   The  TSP  test is  a
-reworking  of "siman_tsp.c".  The documentation  is a  reworking of  the
+reworking of  "siman_tsp.c".  The  documentation is  a reworking  of the
 "Simulated Annealing" node in the GSL's Texinfo source.
 
 
@@ -132,6 +135,10 @@ C. Resources
 The GNU Project software can be found here:
 
 			 <http://www.gnu.org/>
+
+the latest revision of the GNU Scientific Library can be found here:
+
+		   <http://www.gnu.org/software/gsl/>
 
 the development of this package takes place at:
 

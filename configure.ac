@@ -1,7 +1,7 @@
 dnl @configure_input@
 dnl
 
-AC_INIT([Annealing],[0.5a0],[marco.maggi-ipsu@poste.it],[annealing],[http://github.com/marcomaggi/annealing/])
+AC_INIT([Annealing],[0.5.0],[marco.maggi-ipsu@poste.it],[annealing],[http://github.com/marcomaggi/annealing/])
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_MACRO_DIR([autotools])
 AC_CONFIG_AUX_DIR([autotools])
