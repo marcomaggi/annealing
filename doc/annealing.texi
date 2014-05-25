@@ -4,13 +4,11 @@
 @settitle Annealing
 @c %**end of header
 
+@include version.texi
+
 @c page
 @c ------------------------------------------------------------
 @c Macros.
-@c ------------------------------------------------------------
-
-@include version.texiinc
-
 @c ------------------------------------------------------------
 
 @macro gnu{}
@@ -69,37 +67,24 @@
 @c distribution tarball or the web address.
 @set PACKAGE_NICKNAME           annealing
 
-@c To be used as @value{AUTHOR} whenever we need to include the list of
-@c authors of this document.
-@set AUTHOR                     Mark Galassi and Marco Maggi
-
-@c To be used as @value{AUTHOR_EMAIL} whenever we need to include the
-@c email of the *single* author of this document.
-@set AUTHOR_EMAIL               @email{marcomaggi@@gna.org}
-
-@c To be used as @value{COPYRIGHT_YEARS} whenever we need to include the
-@c list of copyright years.
-@set COPYRIGHT_YEARS            1996, 1997, 1998, 1999, 2000, 2007, 2009
-
 @c page
 @c ------------------------------------------------------------
 @c Copyright notice.
 @c ------------------------------------------------------------
 
 @copying
-This document describes version @version{} of @value{PACKAGE}, a C
+This document describes version @value{VERSION} of @value{PACKAGE}, a C
 language library extension the for @gsl{}, the @gnu{} Scientific
 Library, attempting a redesign of the simulated annealing module.
 
 The package is distributed under the terms of the @gnu{} General Public
 License (@gpl{}) and can be downloaded from:
 
-@center @url{http://gna.org/projects/@value{PACKAGE_NICKNAME}}
-@center @url{http://github.com/marcomaggi/@value{PACKAGE_NICKNAME}/tree/master}
+@center @url{http://github.com/marcomaggi/annealing}
 
 @noindent
 Copyright @copyright{} 1996, 1997, 1998, 1999, 2000 by Mark Galassi@*
-Copyright @copyright{} 2007, 2009 by Marco Maggi @value{AUTHOR_EMAIL}
+Copyright @copyright{} 2007, 2009, 2014 by Marco Maggi @email{marco.maggi-ipsu@@poste.it}
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -119,7 +104,7 @@ entitled ``@gnu{} Free Documentation License''.
 
 @titlepage
 @title @value{TITLE}
-@subtitle Revision @version{}
+@subtitle Revision @value{VERSION}
 @author @value{AUTHOR}
 @page
 @vskip 0pt plus 1filll
@@ -131,7 +116,7 @@ entitled ``@gnu{} Free Documentation License''.
 @ifinfo
 @dircategory Mathematics
 @direntry
-* annealing: (annealin).        A reworking of GSL's simulated
+* annealing: (annealing).       A reworking of GSL's simulated
                                 annealing module.
 @end direntry
 @end ifinfo
@@ -169,33 +154,8 @@ Indexes
 * Function Index::              An entry for each function.
 * Variable Index::              An entry for each variable.
 * Type Index::                  An entry for each type.
-
-@detailmenu
- --- The Detailed Node Listing ---
-
-Overview of the package
-
-* overview using::              Using the library.
-* overview autoconf::           Using @gnu{} Autoconf.
-* overview pkgconfig::          Using pkgconfig.
-
-Simulated annealing
-
-* annealing algorithm::         The basic algorithm.
-* annealing types::             Data types.
-* annealing basic::             Interface to the basic algorithm.
-* annealing multi::             Interface to the multi-best algorithm.
-* annealing many::              Interface to the many-tries algorithm.
-
-Miscellaneous functions
-
-* misc version::                Version functions.
-
-@end detailmenu
 @end menu
-
 @end ifnottex
-
 
 @c page
 @node overview
@@ -1746,8 +1706,8 @@ Return an integer representing the interface minor number version.
 
 @c page
 
-@include fdl-1.3.texiinc
-@include gpl-3.0.texiinc
+@include fdl-1.3.texi
+@include gpl-3.0.texi
 
 @c page
 @node library version

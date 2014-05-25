@@ -1,6 +1,6 @@
 
-			 Annealing
-			 =========
+			       Annealing
+			       =========
 
 
 Topics
@@ -18,49 +18,45 @@ Topics
 1. Introduction
 ---------------
 
-Annealing is a C language extension library for GSL, the GNU
-Scientific Library,  attempting a redesign  of the simulated
-annealing module.
+Annealing is a C language extension  library for GSL, the GNU Scientific
+Library, attempting a redesign of the simulated annealing module.
 
-  *NOTE* The  last time the  author bothered to  update this
-paragraph he had tested GSL 1.9.
+  *NOTE* The last  time the author bothered to update  this paragraph he
+had tested GSL 1.16.
 
-  *NOTE* The author supports  only the GNU infrastructure on
-a Linux+GNU  system: GNU C  Compiler; GNU Make;  GNU command
-line utilities like 'rm', 'tar' and 'gzip'; GNU arch.
+  This package makes use of the GNU Autotools.
 
 
 2. License
 ----------
 
-Copyright (c) 2007, 2009 Marco Maggi <marcomaggi@gna.org>.
+Copyright (c) 2007, 2009, 2014 Marco Maggi <marco.maggi-ipsu@poste.it>.
 Copyright (C) 1996, 1997, 1998, 1999, 2000 Mark Galassi
 
-This  program  is free  software:  you  can redistribute  it
-and/or modify it  under the terms of the  GNU General Public
-License as published by the Free Software Foundation, either
-version  3 of  the License,  or (at  your option)  any later
-version.
+This program is free software: you  can redistribute it and/or modify it
+under the  terms of the GNU  General Public License as  published by the
+Free Software Foundation,  either version 3 of the License,  or (at your
+option) any later version.
 
-This  program is  distributed in  the hope  that it  will be
-useful, but  WITHOUT ANY WARRANTY; without  even the implied
-warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
-PURPOSE.   See  the  GNU  General Public  License  for  more
-details.
+This program  is distributed  in the  hope that it  will be  useful, but
+WITHOUT   ANY   WARRANTY;  without   even   the   implied  warranty   of
+MERCHANTABILITY  or  FITNESS FOR  A  PARTICULAR  PURPOSE.  See  the  GNU
+General Public License for more details.
 
-You should  have received a  copy of the GNU  General Public
-License   along   with    this   program.    If   not,   see
-<http://www.gnu.org/licenses/>.
+You should have received a copy  of the GNU General Public License along
+with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 3. Install
 ----------
 
-Do this:
+First install the latest revision of the GNU Scientific Library.  From a
+proper  distribution  tarball, we  can  do  this, after  extracting  the
+archive:
 
-    $ cd annealing-0.4.0
-    $ mkdir "=build"
-    $ cd "=build"
+    $ cd annealing-0.5.0
+    $ mkdir build
+    $ cd build
 
 to inspect the available configuration options:
 
@@ -70,22 +66,37 @@ then do it:
 
     $ ../configure [options]
     $ make
-    $ make tests
+    $ make check
     $ make install
 
-  Notice that, by default, only the shared library is built,
-the static library is not.  To  build it we have to give the
-"--enable-static" option to "configure".
+  To build  the code from a  repository checkout, we must  first install
+the GNU Autotools.  Then we run the following script from the top source
+directory of Annealing:
 
-  The Makefile supports  the DESTDIR environment variable to
-install files in a  temporary location, example: to see what
-will happen:
+    $ cd annealing
+    $ sh autogen.sh
 
-    $ make -n install DESTDIR=/tmp/marco/annealing
+for  this  we  need  to  have installed  the  GNU  Autotools:  Automake,
+Autoconf, Libtool.  We should now  see the executable "configure" script
+and the "Makefile.in"  file.  From now on everything is  the same as for
+building  from  a  proper  release  tarball, but  we  have  to  run  the
+"configure" script enabling the maintainer mode:
+
+    $ mkdir build
+    $ cd build
+    $ ../configure --enable-maintainer-mode [options]
+    $ make
+    $ make check
+    $ make install
+
+  The  Makefile supports  the  DESTDIR environment  variable to  install
+files in a temporary location, example: to see what will happen:
+
+    $ make -n install DESTDIR=/tmp/annealing
 
 to really do it:
 
-    $ make install DESTDIR=/tmp/marco/annealing
+    $ make install DESTDIR=/tmp/annealing
 
 
 4. Usage
@@ -97,21 +108,22 @@ Read the documentation in Info format.
 A. Credits
 ----------
 
-Annealing was written by  Marco Maggi reworking code by Mark
-Galassi distributed in the GSL.
+Annealing  was written  by Marco  Maggi reworking  code by  Mark Galassi
+distributed in the GSL.
 
-  The  code is a  reworking of  the files  "gsl_siman.h" and
-"siman.c"  from  the  GSL  1.9  distribution  (Thu  Feb  22,
-2007).  The TSP test  is a  reworking of  "siman_tsp.c". The
-documentation  is a reworking  of the  "Simulated Annealing"
-node in the GSL's Texinfo source.
+  The code is a reworking of  the files "gsl_siman.h" and "siman.c" from
+the  GSL  1.9 distribution  (Thu  Feb  22, 2007).   The  TSP  test is  a
+reworking  of "siman_tsp.c".  The documentation  is a  reworking of  the
+"Simulated Annealing" node in the GSL's Texinfo source.
 
 
 B. Bugs
 -------
 
-Bug  reports  are appreciated:  register  them  at the  GNA!
-project site of Annealing.
+Bug reports  are appreciated.   Register issues  at the  Annealing issue
+tracker:
+
+	    <http://github.com/marcomaggi/annealing/issues>
 
 
 C. Resources
@@ -119,16 +131,16 @@ C. Resources
 
 The GNU Project software can be found here:
 
-		   <http://www.gnu.org/>
+			 <http://www.gnu.org/>
 
-the latest version of this package can be at:
+the development of this package takes place at:
 
-	    <http://gna.org/projects/annealing/>
+	       <http://github.com/marcomaggi/annealing/>
 
 
 ### end of file
 # Local Variables:
 # mode: text
-# fill-column: 60
+# fill-column: 72
 # paragraph-start: "*"
 # End:
