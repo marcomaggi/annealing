@@ -63,7 +63,8 @@ AC_SUBST([annealing_VERSION_INTERFACE_REVISION])
 AC_SUBST([annealing_VERSION_INTERFACE_AGE])
 
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile]
+  [meta/annealing.pc])
 AC_OUTPUT
 
 dnl end of file

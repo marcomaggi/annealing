@@ -37,12 +37,9 @@ include_HEADERS			= src/annealing.h
 
 #page
 #### interface to "make check"
-
+#
 # Read "Parallel Test Harness" in the documentation of GNU Automake to
 # understand how to use this interface for "make check".
-#
-# We must make sure that this ends with a semicolon!!!
-#AM_TESTS_ENVIRONMENT	=
 
 tests_fitting_CPPFLAGS		= -I$(top_srcdir)/src
 tests_many_sinc_CPPFLAGS	= -I$(top_srcdir)/src
@@ -58,7 +55,7 @@ tests_sinc_LDADD		= libannealing.la
 tests_sinxy_LDADD		= libannealing.la
 tests_tsp_LDADD			= libannealing.la
 
-check_PROGRAMS		= \
+check_PROGRAMS			= \
 	tests/fitting			\
 	tests/many_sinc			\
 	tests/multi_sinc		\
@@ -66,6 +63,20 @@ check_PROGRAMS		= \
 	tests/sinxy			\
 	tests/tsp
 
-TESTS			= $(check_PROGRAMS)
+TESTS				= $(check_PROGRAMS)
+
+installcheck-local: $(check_PROGRAMS)
+	tests/fitting
+	tests/many_sinc
+	tests/multi_sinc
+	tests/sinc
+	tests/sinxy
+	tests/tsp
+
+#page
+#### package infrastructure
+
+pkgconfigdir		= $(libdir)/pkgconfig
+nodist_pkgconfig_DATA	= meta/annealing.pc
 
 ### end of file
