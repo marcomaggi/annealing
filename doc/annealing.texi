@@ -146,7 +146,6 @@ Appendices
 * References::                  Bibliography and references.
 * Documentation License::       GNU Free Documentation License.
 * Package License::             GNU General Public License.
-* library version::             How to interpret the library version.
 
 Indexes
 
@@ -166,219 +165,19 @@ Annealing is a C language extension library for @gsl{}, the @gnu{}
 Scientific Library, attempting a redesign of the simulated annealing
 module.
 
-The library is developed and tested under the Linux+@gnu{} system and
-officially it supports only the @gnu{} infrastructure: requires the
-@gnu{} C library and compiles fine with the @gnu{} C compiler
-(@code{-std=c99 -pedantic} switches).  The building infrastructure
-requires @gnu{} Make, @gnu{} Bash and the other common tools
-(@command{rm}, @command{mkdir}, @dots{}).
+The library is developed and tested under the @gnu{}+Linux system and
+officially it supports only the @gnu{} infrastructure.  The package
+makes use of the @gnu{} Autotools.
 
 Notice that Annealing's @api{} violates the @gsl{}'s Design Document;
 specifically the requirement of section 3.18: ``Algorithm
-decomposition''.  Annealing uses callbacks everywhere, while the Document
-requires for the algorithm to be split into an initialise, iterate, test
-form.
+decomposition''.  Annealing uses callbacks everywhere, while the
+Document requires for the algorithm to be split into an initialise,
+iterate, test form.
 
-@menu
-* overview using::              Using the library.
-* overview autoconf::           Using @gnu{} Autoconf.
-* overview pkgconfig::          Using pkgconfig.
-@end menu
-
-@c page
-@node overview using
-@section Using the library
-
-
-In the following we assume that the library is installed under the
-@file{/usr/local} hierarchy.
-
-A shell script is installed on the system to provide informations about
-version numbers and installation directories; it should be
-@file{/usr/local/bin/annealing-config}.  Run @command{annealing-config} without
-arguments for the usage screen.  An example of output for the important
-options is:
-
-@example
-$ annealing-config --package-version
-0.2.0
-
-$ annealing-config --library-interface-version
-1.0
-
-$ annealing-config --pkgincludedir
-/usr/local/include/annealing/0.2a1
-
-$ annealing-config --libdir
-/usr/local/lib
-
-$ annealing-config --library-id
-annealing1.0
-@end example
-
-There is a single header file that must be included in C sources:
-@file{annealing.h}; in our source code we can put:
-
-@example
-#include <annealing.h>
-@end example
-
-@noindent
-and use the output of @code{annealing-config --pkgincludedir} as argument to
-the @code{-I} option of the C preprocessor.
-
-The libraries (shared and static) are installed under the directory
-obtained by running @code{annealing-config --libdir}; we can use its
-output as argument of the @code{-L} option to the linker.
-
-If we want to link with the shared or static library we take the output
-of @code{annealing-config --library-id} and use it as value for the @code{-l}
-option to the linker.
-
-
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-@c page
-@node overview autoconf
-@section Using @gnu{} Autoconf
-
-
-If we use @gnu{} Autoconf to configure our application we can embed in
-our project the file @file{annealing.m4}, installed under
-@file{$prefix/share/aclocal}, and load it in our @file{configure.ac} by
-putting:
-
-@example
-m4_include(annealing.m4)
-@end example
-
-@noindent
-in @file{aclocal.m4}.  Notice that @gsl{} distributes its own Autoconf
-plug--in, a file named @file{gsl.m4}.  The @file{annealing.m4} macro
-file defines a macro that can be invoked with:
-
-@example
-ANNEALING_LIBRARY(1,0)
-@end example
-
-@noindent
-it finds and invokes @command{annealing-config} to acquire installation
-directories and library names.  The macro accepts two arguments: the
-major and minor interface version numbers that are needed (@ref{library
-version}); both of the arguments are optional, but it is recommended to
-specify them.
-
-@code{ANNEALING_LIBRARY} defines the following symbols:
-
-@table @code
-@item @@ANNEALING_INCLUDEDIR@@
-The directory under which header files are installed, example:
-
-@example
-/usr/local/include/annealing/0.2a1
-@end example
-
-
-@item @@ANNEALING_CPPFLAGS@@
-The preprocessor option @option{-I} with the value of
-@code{@@ANNEALING_INCLUDEDIR@@} attached, example:
-
-@example
--I/usr/local/include/annealing/0.2a1
-@end example
-
-@item @@ANNEALING_LIBDIR@@
-The directory under which shared and static libraries are installed,
-example: @file{/usr/local/lib}.
-
-@item @@ANNEALING_LDFLAGS@@
-The linker option @code{-L} with the value of
-@code{@@ANNEALING_LIBDIR@@} appended, example: @file{-L/usr/local/lib}.
-
-@item @@ANNEALING_LIBRARY_ID@@
-The identifier of the shared or static library, example:
-@code{annealing1.0}.
-
-@item @@ANNEALING_LIBS@@
-The linker option @code{-l} with the value of
-@code{@@ANNEALING_LIBRARY_ID@@} appended, example:
-@code{-lannealing1.0}.
-@end table
-
-@c page
-@node overview pkgconfig
-@section Using pkgconfig
-
-
-@pkgconfig{} is a program (a compiled executable) that inspects a
-database of package meta informations and prints to its standard output
-channel informations about installed packages and libraries.  Annealing
-installs a meta data file for use with @pkgconfig{}, it should be:
-
-@example
-$@{libdir@}/pkgconfig/annealing.pc
-@end example
-
-@noindent
-notice that the @gsl{} distributes its own @pkgconfig{} meta file, a
-file named @file{gsl.pc}.
-
-For the full list of available informations look in the file itself, and
-remember that the value of all the variables set in the meta file can be
-printed with:
-
-@example
-$ pkg-config annealing --variable=<VARNAME>
-@end example
-
-@noindent
-an example of output for the important variables is:
-
-@example
-$ pkg-config annealing --variable=PACKAGE_VERSION
-0.2.0
-
-$ pkg-config annealing --variable=library_interface_version
-1.0
-
-$ pkg-config annealing --variable=pkgincludedir
-/usr/local/include/annealing/0.2a1
-
-$ pkg-config annealing --variable=libdir
-/usr/local/lib
-
-$ pkg-config annealing --variable=library_id
-annealing1.0
-@end example
-
-The @option{--libs} option outputs something like:
-
-@example
-$ pkg-config annealing --libs
--L/usr/local/lib -lannealing1.0 -lgsl -lgslcblas -lm
-@end example
-
-@noindent
-while the list of preprocessor options is:
-
-@example
-$ pkg-config annealing --cflags
--I/usr/local/include/annealing/0.2a1 -I/usr/local/include
-@end example
-
-Notice that:
-
-@example
-$ pkg-config annealing --modversion
-1.0
-@end example
-
-@noindent
-because what matters is the version of the @api{}, not the package
-distribution version.
-
-
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Notice that under the directory @file{examples} there are 2 full
+projects, one for the C language and one for the C++ language, showing
+how to make use of Annealing.
 
 @c page
 @node annealing
@@ -1676,22 +1475,23 @@ copy_function (void * dummy, void * dst_configuration, void * src_configuration)
 @section Version functions
 
 
-@ref{library version} for details on version numbers.
+The installed C library follows version numbering as established by the
+@gnu{} Autotools.  For an explanation of interface numbers as managed by
+@gnu{} Libtool @xref{Libtool versioning, interface, Libtool's versioning
+system, libtool, Shared library support for @gnu{}}.
+
+
+@deftypefun int annealing_version_interface_current (void)
+@deftypefunx int annealing_version_interface_revision (void)
+@deftypefunx int annealing_version_interface_age (void)
+Return an integer representing a version number.
+@end deftypefun
 
 
 @deftypefun {const char *} annealing_version (void)
-Return a statically allocated string representing the package version.
+Return astring representing the version number.
 @end deftypefun
 
-
-@deftypefun int annealing_library_major_version (void)
-Return an integer representing the interface major number version.
-@end deftypefun
-
-
-@deftypefun int annealing_library_minor_version (void)
-Return an integer representing the interface minor number version.
-@end deftypefun
 
 @c page
 @node References
@@ -1708,121 +1508,6 @@ Return an integer representing the interface minor number version.
 
 @include fdl-1.3.texi
 @include gpl-3.0.texi
-
-@c page
-@node library version
-@appendix How to interpret the library version
-
-
-@quotation
-@strong{NOTE} This section is not specific to this package; it is an
-explanation of library interface version numbering that the author uses
-for all its C libraries.
-@end quotation
-
-@noindent
-This package is distributing one or more libraries; this package has a
-version number and each library has an interface version number, package
-and interface versions are independent.
-
-
-@appendixsec Package version
-
-@noindent
-The package version tracks the development of the source code: every
-time the source code is modified the package version is
-incremented.  There are three numbers: major, minor, patch level.
-
-@table @code
-@item major
-Incremented before big rewritings or additions.
-@item minor
-Incremented to track incremental development of the code.
-@item patch level
-For stable versions: incremented for bug fixes and very small additions
-that were forgotten in the last minor update.
-@end table
-
-The package has also a letter that indicates the status of the release:
-@code{a} for experimental or ``alpha'', @code{b} for testing or
-``beta'', @code{.} for stable.
-
-A full version number looks like this:
-
-@table @code
-@item 1.2a3
-major @code{1}, minor @code{2}, patch level @code{3}, status alpha;
-@item 10.23b34
-major @code{10}, minor @code{23}, patch level @code{34}, status beta;
-@item 1.2.3
-major @code{1}, minor @code{2}, patch level @code{3}, status stable.
-@end table
-
-The reason for the letter to be between the minor number and the patch
-level is that it is more important:
-
-@itemize
-@item
-when starting to develop version @code{1.2} (major @code{1}, minor
-@code{2}), the last stable version of the @code{1.1} branch is taken and
-the project starts with alpha versions; each alpha has a patch level:
-@code{1.2a0}, @code{1.2a1}, @dots{};
-@item
-when experimental development, is finished the package is moved to
-testing and the status to beta: @code{1.2b0}, @code{1.2b1}, @dots{} so
-the first beta version is newer than the last alpha version;
-@item
-when testing is finished, the package is moved to stable status:
-@code{1.2.0}, @code{1.2.1}, @dots{} so the first stable version is newer
-than the last beta version.
-@end itemize
-
-@noindent
-summary:
-
-@example
-1.1.x < 1.2a0 < 1.2a1 < ... < 1.2b0 < 1.2b1 < ... < 1.2.0 < 1.2.1
-@end example
-
-
-@appendixsec Interface version
-
-@noindent
-The interface version changes only when the public interface of a
-library (public function prototypes and data types) is modified.  There
-are two numbers: major and minor.
-
-@table @code
-@item major
-Establishes a set of: functions, data types, code behaviour that will
-not change until the next major number update.  Code written for the
-first release of the library with a major interface number (@code{1.0}),
-will work unchanged with all the libraries with the same major interface
-number (@code{1.1}, @code{1.2}, @dots{}); if it does not: it is a
-library bug, please signal this to the author using the bug tracking
-system.
-
-The only exception to this rule is the wrong behaviour caused by bugs;
-code that relies on buggy behaviour of a package version may not work
-with subsequent package versions with the same major interface number.
-
-@item minor
-Establishes a set of: functions, data types, code behaviour that will
-not change until the next major number update.  This set is added to the
-set of the previous interface version.
-@end table
-
-The library file installed on our system has name composed with the
-interface number; example: if the package has version @code{1.2.3} and
-the interface has version @code{1.1}, the library file is called
-@file{libmy1.1.so}.
-
-Even if the interface number has not changed, and the library file has
-the same name: when an installed shared library is updated to a new
-package version, programs and libraries depending on it will have to be
-recompiled, because the internals of the library file will have changed.
-
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c page
 @node Concept Index
