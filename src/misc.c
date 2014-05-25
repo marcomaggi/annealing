@@ -7,7 +7,8 @@
 
 
 
-   Copyright (c) 2008, 2009 Marco Maggi <marcomaggi@gna.org>
+   Copyright (c) 2008, 2009, 2014 Marco Maggi
+   <marco.maggi-ipsu@poste.it>
 
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -21,7 +22,6 @@
 
    You should  have received  a copy of  the GNU General  Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 */
 
 
@@ -36,21 +36,25 @@
  ** Version functions.
  ** ----------------------------------------------------------*/
 
+int
+annealing_version_interface_current (void)
+{
+  return annealing_VERSION_INTERFACE_CURRENT;
+}
+int
+annealing_version_interface_revision (void)
+{
+  return annealing_VERSION_INTERFACE_REVISION;
+}
+int
+annealing_version_interface_age (void)
+{
+  return annealing_VERSION_INTERFACE_AGE;
+}
 const char *
 annealing_version (void)
 {
-  return PACKAGE_VERSION;
+  return annealing_VERSION_INTERFACE_STRING;
 }
-int
-annealing_library_major_version (void)
-{
-  return annealing_INTERFACE_MAJOR_VERSION;
-}
-int
-annealing_library_minor_version (void)
-{
-  return annealing_INTERFACE_MINOR_VERSION;
-}
-
 
 /* end of file */

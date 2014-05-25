@@ -1,8 +1,7 @@
 dnl @configure_input@
 dnl
 
-AC_INIT([Annealing],[0.5a0],[marco.maggi-ipsu@poste.it],
-  [annealing],[http://github.com/marcomaggi/annealing/])
+AC_INIT([Annealing],[0.5a0],[marco.maggi-ipsu@poste.it],[annealing],[http://github.com/marcomaggi/annealing/])
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_MACRO_DIR([autotools])
 AC_CONFIG_AUX_DIR([autotools])
@@ -33,11 +32,20 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_SIZE_T
 
-AX_PATH_GSL(1.16)
+PKG_CHECK_MODULES([GSL],[gsl >= 1.16],[gsl=yes],[gsl=no])
 
-annealing_VERSION_INTERFACE_CURRENT=$2
-annealing_VERSION_INTERFACE_REVISION=$3
-annealing_VERSION_INTERFACE_AGE=$4
+GSL_CPPFLAGS=$(pkg-config gsl --cflags)
+GSL_LDFLAGS=$(pkg-config gsl --libs)
+
+AS_IF([test "x$gsl" = "xyes"],
+  [AC_DEFINE([HAVE_GSL_H],[1],[true if GSL header file is present])
+   CPPFLAGS="$CPPFLAGS $GSL_CPPFLAGS"
+   LIBS="$LIBS $GSL_LDFLAGS"],
+  [AC_MSG_FAILURE([unable to find required version of GSL],[1])])
+
+annealing_VERSION_INTERFACE_CURRENT=1
+annealing_VERSION_INTERFACE_REVISION=1
+annealing_VERSION_INTERFACE_AGE=1
 AC_DEFINE_UNQUOTED([annealing_VERSION_INTERFACE_CURRENT],
   [$annealing_VERSION_INTERFACE_CURRENT],
   [current interface number])
