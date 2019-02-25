@@ -16,8 +16,61 @@
  * program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __ANNEALING_H__
-#define __ANNEALING_H__
+#ifndef ANNEALING_H
+#define ANNEALING_H
+
+
+/** --------------------------------------------------------------------
+ ** Preliminary definitions.
+ ** ----------------------------------------------------------------- */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* The  macro  ANNEALING_UNUSED  indicates  that a  function,  function  argument  or
+   variable may potentially be unused. Usage examples:
+
+   static int unused_function (char arg) ANNEALING_UNUSED;
+   int foo (char unused_argument ANNEALING_UNUSED);
+   int unused_variable ANNEALING_UNUSED;
+*/
+#ifdef __GNUC__
+#  define ANNEALING_UNUSED		__attribute__((__unused__))
+#else
+#  define ANNEALING_UNUSED		/* empty */
+#endif
+
+#ifndef __GNUC__
+#  define __attribute__(...)	/* empty */
+#endif
+
+/* I found  the following chunk on  the Net.  (Marco Maggi;  Sun Feb 26,
+   2012) */
+#if defined _WIN32 || defined __CYGWIN__
+#  ifdef BUILDING_DLL
+#    ifdef __GNUC__
+#      define annealing_decl		__attribute__((__dllexport__)) extern
+#    else
+#      define annealing_decl		__declspec(dllexport) extern
+#    endif
+#  else
+#    ifdef __GNUC__
+#      define annealing_decl		__attribute__((__dllimport__)) extern
+#    else
+#      define annealing_decl		__declspec(dllimport) extern
+#    endif
+#  endif
+#  define annealing_private_decl	extern
+#else
+#  if __GNUC__ >= 4
+#    define annealing_decl		__attribute__((__visibility__("default"))) extern
+#    define annealing_private_decl	__attribute__((__visibility__("hidden")))  extern
+#  else
+#    define annealing_decl		extern
+#    define annealing_private_decl	extern
+#  endif
+#endif
 
 
 /** ------------------------------------------------------------
@@ -26,30 +79,6 @@
 
 #include <stdlib.h>
 #include <gsl/gsl_rng.h>
-
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
-__BEGIN_DECLS
-
-/* ------------------------------------------------------------ */
-
-#ifndef annealing_decl
-#  define annealing_decl		extern
-#endif
-
-#ifdef __GNUC__
-#define ANNEALING_UNUSED __attribute__ ((unused))
-#else
-#define ANNEALING_UNUSED
-#endif
 
 
 /** ------------------------------------------------------------
@@ -188,10 +217,15 @@ annealing_decl void annealing_simple_solve    (annealing_simple_workspace_t * S)
 annealing_decl void annealing_multibest_solve (annealing_multibest_workspace_t * S);
 annealing_decl void annealing_manytries_solve (annealing_manytries_workspace_t * S);
 
+
+/** --------------------------------------------------------------------
+ ** Done.
+ ** ----------------------------------------------------------------- */
 
-__END_DECLS
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
-#endif /* __ANNEALING_H__ */
-
+#endif /* ANNEALING_H */
 
 /* end of file */
