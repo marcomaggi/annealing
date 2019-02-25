@@ -40,11 +40,11 @@ libannealing_la_CFLAGS		= $(AM_CFLAGS) $(GSL_CFLAGS)
 libannealing_la_LDFLAGS		= -version-info $(annealing_CURRENT):$(annealing_REVISION):$(annealing_AGE) \
 				  $(AM_LDFLAGS) $(GSL_LIBS)
 libannealing_la_SOURCES	= \
-	src/misc.c			\
-	src/basic.c			\
-	src/manytries.c			\
-	src/multibest.c			\
-	src/internal.h			\
+	src/annealing-version.c		\
+	src/annealing-basic.c		\
+	src/annealing-manytries.c	\
+	src/annealing-multibest.c	\
+	src/annealing-internals.h	\
 	src/annealing.h
 
 
