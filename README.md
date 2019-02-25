@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/marcomaggi/annealing.svg?branch=master)](https://travis-ci.org/marcomaggi/annealing)
 [![codecov](https://codecov.io/gh/marcomaggi/annealing/branch/master/graph/badge.svg)](https://codecov.io/gh/marcomaggi/annealing)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b07b27b019014a2198d498e2e623ad5a)](https://www.codacy.com/app/marcomaggi/annealing?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marcomaggi/annealing&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/ca8b5003bea64d5288dcf0d882f8e527)](https://www.codacy.com/app/marcomaggi/annealing?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marcomaggi/annealing&amp;utm_campaign=Badge_Grade)
 
 ## Introduction
 
