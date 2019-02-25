@@ -35,8 +35,8 @@ annealing_AGE		= @annealing_VERSION_INTERFACE_AGE@
 include_HEADERS			= src/annealing.h
 
 lib_LTLIBRARIES			= libannealing.la
-libannealing_la_CPPFLAGS	= $(AM_CPPFLAGS)
-libannealing_la_CFLAGS		= $(AM_CFLAGS) $(GSL_CFLAGS)
+libannealing_la_CPPFLAGS	= $(AM_CPPFLAGS) $(GSL_CFLAGS)
+libannealing_la_CFLAGS		= $(AM_CFLAGS)
 libannealing_la_LDFLAGS		= -version-info $(annealing_CURRENT):$(annealing_REVISION):$(annealing_AGE) \
 				  $(AM_LDFLAGS) $(GSL_LIBS)
 libannealing_la_SOURCES	= \
@@ -61,9 +61,9 @@ check_PROGRAMS	= \
 
 TESTS				= $(check_PROGRAMS)
 
-annealing_tests_cppflags	= $(AM_CPPFLAGS) -I$(srcdir)/tests
-annealing_tests_cflags		= $(AM_CFLAGS) $(GSL_CFLAGS)
-annealing_tests_ldadd		= $(AM_LDFLAGS) libannealing.la
+annealing_tests_cppflags	= $(AM_CPPFLAGS) -I$(srcdir)/tests $(GSL_CFLAGS)
+annealing_tests_cflags		= $(AM_CFLAGS)
+annealing_tests_ldadd		= $(AM_LDFLAGS) libannealing.la $(GSL_LIBS)
 
 ## --------------------------------------------------------------------
 
