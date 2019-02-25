@@ -5,51 +5,7 @@
 @c %**end of header
 
 @include version.texi
-
-@c page
-@c ------------------------------------------------------------
-@c Macros.
-@c ------------------------------------------------------------
-
-@macro gnu{}
-@acronym{GNU}
-@end macro
-
-@macro gpl{}
-@acronym{GPL}
-@end macro
-
-@macro gsl{}
-@acronym{GSL}
-@end macro
-
-@macro api{}
-@acronym{API}
-@end macro
-
-@c ---------------------------------------------------------------------
-
-@macro cfunc{NAME}
-@code{\NAME\()}
-@end macro
-
-@macro cnull{}
-@code{NULL}
-@end macro
-
-@macro pkgconfig{}
-@command{pkg-config}
-@end macro
-
-@c ---------------------------------------------------------------------
-
-@macro gslref{NODE}
-@xref{\NODE\,\NODE\,gsl-ref,gsl-ref}
-@end macro
-
-@macro autoconfref{NODE}
-@xref{\NODE\,\NODE\,autoconf,autoconf}
-@end macro
+@include macros.texi
 
 @c page
 @c ------------------------------------------------------------
@@ -67,33 +23,77 @@
 @c distribution tarball or the web address.
 @set PACKAGE_NICKNAME           annealing
 
+@c ------------------------------------------------------------------------
+
+@set GslVersion                 2.5
+
+@c ------------------------------------------------------------
+
+@set PackageAutoconfPrefix              ANNEALING
+@set PackagePkgconfigModule             annealing
+@set PackageLibsVar                     @env{ANNEALING_LIBS}
+@set PackageCflagsVar                   @env{ANNEALING_CFLAGS}
+@c This is the stem of the library in "libannealing.so".
+@set PackageLibstem                     annealing
+@set PackageApiPrefixLower              annealing_
+@set PackageApiPrefixUpper              ANNEALING_
+
+@set PackageHeader                      annealing.h
+@set PackageHeaderFile                  @file{@value{PackageHeader}}
+
+@set GithubUrl                 @url{https://github.com/marcomaggi/@value{PACKAGE_NICKNAME}}
+@set BitbucketUrl              @url{https://bitbucket.org/marcomaggi/@value{PACKAGE_NICKNAME}}
+@set DownloadUrl               @url{https://bitbucket.org/marcomaggi/@value{PACKAGE_NICKNAME}/downloads}
+@set DocumentationUrl          @url{https://marcomaggi.github.io/docs/@value{PACKAGE_NICKNAME}.html}
+
+@c page
+@c ------------------------------------------------------------------------
+@c Macros.
+@c ------------------------------------------------------------------------
+
+@macro gsl{}
+@acronym{GSL}
+@end macro
+
 @c page
 @c ------------------------------------------------------------
 @c Copyright notice.
 @c ------------------------------------------------------------
 
 @copying
-This document describes version @value{VERSION} of @value{PACKAGE}, a C
-language library extension the for @gsl{}, the @gnu{} Scientific
-Library, attempting a redesign of the simulated annealing module.
+This document describes version @value{VERSION} of @value{PACKAGE}, a C11 language library extension
+the for @gsl{}, the @gnu{} Scientific Library, attempting a redesign of the simulated annealing
+module.
 
-The package is distributed under the terms of the @gnu{} General Public
-License (@gpl{}) and can be downloaded from:
+The library supports @posix{} platforms.  The last time the author bothered to update this paragraph
+he had tested GSL @value{GslVersion}.
 
-@center @url{http://github.com/marcomaggi/annealing}
+The package is distributed under the terms of the @gnu{} General Public License (@gpl{}).
+
+The latest release can be downloaded from:
+
+@center @value{DownloadUrl}
 
 @noindent
+development takes place at:
+
+@center @value{GithubUrl}
+
+@noindent
+and as backup at:
+
+@center @value{BitbucketUrl}
+
+@noindent
+Copyright @copyright{} 2007, 2009, 2014, 2019 by Marco Maggi @email{marco.maggi-ipsu@@poste.it}
 Copyright @copyright{} 1996, 1997, 1998, 1999, 2000 by Mark Galassi@*
-Copyright @copyright{} 2007, 2009, 2014 by Marco Maggi @email{marco.maggi-ipsu@@poste.it}
 
 @quotation
-Permission is granted to copy, distribute and/or modify this document
-under the terms of the @gnu{} Free Documentation License, Version 1.3 or
-any later version published by the Free Software Foundation; with
-Invariant Sections being ``@gnu{} Free Documentation License'' and
-``@gnu{} General Public License'', no Front--Cover Texts, and no
-Back--Cover Texts.  A copy of the license is included in the section
-entitled ``@gnu{} Free Documentation License''.
+Permission is granted to copy, distribute and/or modify this document under the terms of the @gnu{}
+Free Documentation License, Version 1.3 or any later version published by the Free Software
+Foundation; with Invariant Sections being ``@gnu{} Free Documentation License'' and ``@gnu{} General
+Public License'', no Front--Cover Texts, and no Back--Cover Texts.  A copy of the license is
+included in the section entitled ``@gnu{} Free Documentation License''.
 @end quotation
 @end copying
 
@@ -105,7 +105,7 @@ entitled ``@gnu{} Free Documentation License''.
 @titlepage
 @title @value{TITLE}
 @subtitle Revision @value{VERSION}
-@author @value{AUTHOR}
+@author Marco Maggi and Mark Galassi
 @page
 @vskip 0pt plus 1filll
 @insertcopying
@@ -138,21 +138,21 @@ entitled ``@gnu{} Free Documentation License''.
 
 @menu
 * overview::                    Overview of the package.
+* version::                     Version functions.
 * annealing::                   Simulated annealing.
-* misc::                        Miscellaneous functions.
 
 Appendices
 
-* References::                  Bibliography and references.
-* Documentation License::       GNU Free Documentation License.
 * Package License::             GNU General Public License.
+* Documentation License::       GNU Free Documentation License.
+* references::                  Bibliography and references.
 
 Indexes
 
-* Concept Index::               An entry for each concept.
-* Function Index::              An entry for each function.
-* Variable Index::              An entry for each variable.
-* Type Index::                  An entry for each type.
+* concept index::               An entry for each concept.
+* function index::              An entry for each function.
+* variable index::              An entry for each variable.
+* type index::                  An entry for each type.
 @end menu
 @end ifnottex
 
@@ -161,23 +161,61 @@ Indexes
 @chapter Overview of the package
 
 
-Annealing is a C language extension library for @gsl{}, the @gnu{}
-Scientific Library, attempting a redesign of the simulated annealing
-module.
+Annealing is a C11 language extension library for @gsl{}, the @gnu{} Scientific Library, attempting
+a redesign of the simulated annealing module.
 
-The library is developed and tested under the @gnu{}+Linux system and
-officially it supports only the @gnu{} infrastructure.  The package
-makes use of the @gnu{} Autotools.
+The library supports @posix{} platforms.  The last time the author bothered to update this paragraph
+he had tested GSL @value{GslVersion}.
 
-Notice that Annealing's @api{} violates the @gsl{}'s Design Document;
-specifically the requirement of section 3.18: ``Algorithm
-decomposition''.  Annealing uses callbacks everywhere, while the
-Document requires for the algorithm to be split into an initialise,
-iterate, test form.
+Notice that Annealing's @api{} violates the @gsl{}'s Design Document; specifically the requirement
+of section 3.18: ``Algorithm decomposition''.  Annealing uses callbacks everywhere, while the
+Document requires for the algorithm to be split into an initialise, iterate, test form.
 
-Notice that under the directory @file{examples} there are 2 full
-projects, one for the C language and one for the C++ language, showing
-how to make use of Annealing.
+@cindex @value{PackageHeaderFile}, header file
+@cindex Header file @value{PackageHeaderFile}
+@value{PACKAGE} installs the single header file @value{PackageHeaderFile}.  All the function names
+in the @api{} are prefixed with @code{@value{PackageApiPrefixLower}}; all the preprocessor symbol
+names are prefixed with @code{@value{PackageApiPrefixUpper}}; all the type names are prefixed with
+@code{@value{PackageApiPrefixLower}} and suffixed with @code{_t}.
+
+Notice that under the directory @file{examples} there are 2 full projects, one for the C language
+and one for the C++ language, showing how to make use of Annealing.
+
+@menu
+* overview linking::            Linking code with the library.
+@end menu
+
+@include overview-linking.texi
+
+@c page
+@node version
+@chapter Version functions
+
+
+The installed libraries follow version numbering as established by the @gnu{} Autotools.  For an
+explanation of interface numbers as managed by @gnu{} Libtool @xref{Libtool versioning, interface,
+Libtool's versioning system, libtool, Shared library support for @gnu{}}.
+
+
+@deftypefun {char const *} annealing_version_string (void)
+Return a pointer to a statically allocated @asciiz{} string representing the interface version
+number.
+@end deftypefun
+
+
+@deftypefun int annealing_version_interface_current (void)
+Return an integer representing the library interface current number.
+@end deftypefun
+
+
+@deftypefun int annealing_version_interface_revision (void)
+Return an integer representing the library interface current revision number.
+@end deftypefun
+
+
+@deftypefun int annealing_version_interface_age (void)
+Return an integer representing the library interface current age.
+@end deftypefun
 
 @c page
 @node annealing
@@ -1458,74 +1496,64 @@ copy_function (void * dummy, void * dst_configuration, void * src_configuration)
 /* end of file */
 @end example
 
+@c page
+@c ------------------------------------------------------------
+@c Appendices.
+@c ------------------------------------------------------------
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@include gpl-3.0.texi
+@include fdl-1.3.texi
 
 @c page
-@node misc
-@chapter Miscellaneous functions
-
-
-@menu
-* misc version::                Version functions.
-@end menu
-
-@c page
-@node misc version
-@section Version functions
-
-
-The installed C library follows version numbering as established by the
-@gnu{} Autotools.  For an explanation of interface numbers as managed by
-@gnu{} Libtool @xref{Libtool versioning, interface, Libtool's versioning
-system, libtool, Shared library support for @gnu{}}.
-
-
-@deftypefun int annealing_version_interface_current (void)
-@deftypefunx int annealing_version_interface_revision (void)
-@deftypefunx int annealing_version_interface_age (void)
-Return an integer representing a version number.
-@end deftypefun
-
-
-@deftypefun {const char *} annealing_version (void)
-Return astring representing the version number.
-@end deftypefun
-
-
-@c page
-@node References
+@node references
 @appendix Bibliography and references
 
 
-@noindent
-``Boltzmann distribution.'' Wikipedia, The Free Encyclopedia.  24 Jan
-2007, 14:52 UTC.  Wikimedia Foundation, Inc. 26 Feb 2007
+``Boltzmann distribution.'' Wikipedia, The Free Encyclopedia.  24 Jan 2007, 14:52 UTC.  Wikimedia
+Foundation, Inc. 26 Feb 2007
 @url{http://en.wikipedia.org/w/index.php?title=Boltzmann_distribution&oldid=102908405}.
 
+The documentation of @value{PACKAGE} is available online:
+
+@center @value{DocumentationUrl}
+
+@noindent
+the latest release of this package can be downloaded from:
+
+@center @value{DownloadUrl}
+
+@noindent
+development takes place at:
+
+@center @value{GithubUrl}
+
+@noindent
+and as backup at:
+
+@center @value{BitbucketUrl}
+
+@noindent
+the latest revision of the @gnu{} Scientific Library can be found here:
+
+@center @url{http://www.gnu.org/software/gsl/}
 
 @c page
-
-@include fdl-1.3.texi
-@include gpl-3.0.texi
-
-@c page
-@node Concept Index
+@node concept index
 @appendix An entry for each concept
 
 @printindex cp
 
-@node Function Index
+@node function index
 @appendix An entry for each function.
 
 @printindex fn
 
-@node Variable Index
+@node variable index
 @appendix An entry for each variable.
 
 @printindex vr
 
-@node Type Index
+@node type index
 @appendix An entry for each type.
 
 @printindex tp

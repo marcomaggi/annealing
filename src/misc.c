@@ -7,7 +7,7 @@
 
 
 
-   Copyright (c) 2008, 2009, 2014 Marco Maggi
+   Copyright (c) 2008, 2009, 2014, 2019 Marco Maggi
    <marco.maggi-ipsu@poste.it>
 
    This program is free software:  you can redistribute it and/or modify
@@ -52,7 +52,7 @@ annealing_version_interface_age (void)
   return annealing_VERSION_INTERFACE_AGE;
 }
 const char *
-annealing_version (void)
+annealing_version_string (void)
 {
   return annealing_VERSION_INTERFACE_STRING;
 }

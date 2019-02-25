@@ -1,3 +1,4 @@
+-*- coding: utf-8-unix -*-
 
 			       Annealing
 			       =========
@@ -21,16 +22,18 @@ Topics
 Annealing is a C language extension  library for GSL, the GNU Scientific
 Library, attempting a redesign of the simulated annealing module.
 
-  *NOTE* The last  time the author bothered to update  this paragraph he
-had tested GSL 1.16.
+  The library targets POSIX systems.   The last time the author bothered
+to update this paragraph he had tested GSL 2.5.
 
-  This package makes use of the GNU Autotools.
+  The package uses the GNU Autotools  and it is tested, using Travis CI,
+on both Ubuntu  GNU+Linux systems and OS X systems.   The package relies
+on "pkg-config" to find the dependencies installed on the system.
 
 
 2. License
 ----------
 
-Copyright (c) 2007, 2009, 2014 Marco Maggi <marco.maggi-ipsu@poste.it>.
+Copyright (c) 2007, 2009, 2014, 2019 Marco Maggi <marco.maggi-ipsu@poste.it>.
 Copyright (C) 1996, 1997, 1998, 1999, 2000 Mark Galassi
 
 This program is free software: you  can redistribute it and/or modify it
@@ -54,7 +57,7 @@ First install the latest revision of the GNU Scientific Library.  From a
 proper  distribution  tarball, we  can  do  this, after  extracting  the
 archive:
 
-    $ cd annealing-0.5.0
+    $ cd annealing-0.6.0
     $ mkdir build
     $ cd build
 
@@ -62,31 +65,12 @@ to inspect the available configuration options:
 
     $ ../configure --help
 
-then do it:
+  The Makefile is designed to allow parallel builds, so we can do:
 
-    $ ../configure [options]
-    $ make
-    $ make check
-    $ make install
+   $ make -j4 all && make -j4 check
 
-  To build  the code from a  repository checkout, we must  first install
-the GNU Autotools.  Then we run the following script from the top source
-directory of Annealing:
-
-    $ cd annealing
-    $ sh autogen.sh
-
-we  should   now  see   the  executable   "configure"  script   and  the
-"Makefile.in" file.  From now on everything  is the same as for building
-from a proper release tarball, but we have to run the "configure" script
-enabling the maintainer mode:
-
-    $ mkdir build
-    $ cd build
-    $ ../configure --enable-maintainer-mode [options]
-    $ make
-    $ make check
-    $ make install
+which,  on  a  4-core  CPU,   should  speed  up  building  and  checking
+significantly.
 
   The  Makefile supports  the  DESTDIR environment  variable to  install
 files in a temporary location, example: to see what will happen:
@@ -97,11 +81,44 @@ to really do it:
 
     $ make install DESTDIR=/tmp/annealing
 
+  After the installation it is  possible to verify the installed library
+against the test suite with:
+
+    $ make installcheck
+
+  From  a repository  checkout or  snapshot  (the ones  from the  GitHub
+site): we  must install the  GNU Autotools (GNU Automake,  GNU Autoconf,
+GNU Libtool),  then we must first  run the script "autogen.sh"  from the
+top source directory, to generate the needed files:
+
+    $ cd annealing
+    $ sh autogen.sh
+
+notice  that  "autogen.sh"  will   run  the  programs  "autoreconf"  and
+"libtoolize"; the  latter is  selected through the  environment variable
+"LIBTOOLIZE",  whose  value  can  be  customised;  for  example  to  run
+"glibtoolize" rather than "libtoolize" we do:
+
+   $ LIBTOOLIZE=glibtoolize sh autogen.sh
+
+  After this the  procedure is the same  as the one for  building from a
+proper release tarball, but we have to enable maintainer mode:
+
+    $ ../configure --enable-maintainer-mode [options]
+    $ make
+    $ make check
+    $ make install
+
 
 4. Usage
 --------
 
-Read the documentation in Info format.
+Read the documentation generated from  the Texinfo sources.  The package
+installs the documentation  in Info format; we can  generate and install
+documentation in HTML format by running:
+
+   $ make html
+   $ make install-html
 
   Notice that under the directory  "examples" there are 2 full projects,
 one for the C language and one for the C++ language, showing how to make
@@ -123,26 +140,91 @@ reworking of  "siman_tsp.c".  The  documentation is  a reworking  of the
 B. Bugs
 -------
 
-Bug reports  are appreciated.   Register issues  at the  Annealing issue
-tracker:
-
-	    <http://github.com/marcomaggi/annealing/issues>
+Bug  and vulnerability  reports are  appreciated, all  the vulnerability
+reports  are  public; register  them  using  the  Issue Tracker  at  the
+project's GitHub  site.  For  contributions and  patches please  use the
+Pull Requests feature at the project's GitHub site.
 
 
 C. Resources
 ------------
 
-The GNU Project software can be found here:
+The latest release of this package can be downloaded from:
 
-			 <http://www.gnu.org/>
+	 <https://bitbucket.org/marcomaggi/annealing/downloads>
+
+development takes place at:
+
+	      <https://github.com/marcomaggi/annealing/>
+
+and as backup at:
+
+	     <https://bitbucket.org/marcomaggi/annealing/>
+
+the documentation is available online:
+
+	   <https://marcomaggi.github.io/docs/annealing.html>
+
+the GNU Project software can be found here:
+
+			 <https://www.gnu.org/>
 
 the latest revision of the GNU Scientific Library can be found here:
 
 		   <http://www.gnu.org/software/gsl/>
 
-the development of this package takes place at:
+D. Badges and static analysis
+-----------------------------
 
-	       <http://github.com/marcomaggi/annealing/>
+D.1 Travis CI
+-------------
+
+Travis CI is  a hosted, distributed continuous  integration service used
+to build and test software projects  hosted at GitHub.  We can find this
+project's dashboard at:
+
+	     <https://travis-ci.org/marcomaggi/annealing>
+
+  Usage of this service is configured through the file ".travis.yml" and
+the scripts under the directory "meta/travis-ci".
+
+
+D.2 Clang's Static Analyzer
+---------------------------
+
+The Clang Static Analyzer is a source code analysis tool that finds bugs
+in C, C++, and Objective-C programs.  It is distributed along with Clang
+and we can find it at:
+
+		   <http://clang-analyzer.llvm.org/>
+
+  Usage of this service is implemented with make rules; see the relevant
+section in the file "Makefile.am".
+
+
+D.3 Codecov
+-----------
+
+Codecov is a service providing code  coverage reports.  We can find this
+project's dashboard at:
+
+	     <https://codecov.io/gh/marcomaggi/annealing>
+
+Usage of  this service is  implemented through direct  interface between
+GitHub and Codecov  sites; it configured through  the file `codecov.yml`
+and appropriate entries in Travis CI's matrix of builds.
+
+
+D.4 Codacy
+----------
+
+Codacy is  an online service  providing code  review.  We can  find this
+project's dashboard at:
+
+	   <https://www.codacy.com/app/marcomaggi/annealing>
+
+Usage of this service is  implemented through direct integration between
+GitHub and Codacy sites.
 
 
 ### end of file
