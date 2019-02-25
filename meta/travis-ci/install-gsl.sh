@@ -38,7 +38,7 @@ fi
 
 cd "$TOP_SRCDIR"
 
-if ! ./configure --prefix="$prefix"
+if ! ./configure --prefix="$prefix" --disable-static --enable-shared
 then script_error 'error configuring %s' "$STEM"
 fi
 
