@@ -150,8 +150,8 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - texinfo
             - gcc-5
+            - gsl-2.5
       script: "./configure --enable-maintainer-mode; make all; make check;"
 
     # Plain build under Ubuntu GNU+Linux "trusty", GCC 6.
@@ -163,8 +163,8 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - texinfo
             - gcc-6
+            - gsl-2.5
       script: "./configure --enable-maintainer-mode; make all; make check;"
 
     # Plain build under Ubuntu GNU+Linux "trusty", GCC 7.
@@ -176,8 +176,8 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - texinfo
             - gcc-7
+            - gsl-2.5
       script: "./configure --enable-maintainer-mode; make all; make check;"
 
     # Plain build under Ubuntu GNU+Linux "trusty", GCC 8.
@@ -189,8 +189,8 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - texinfo
             - gcc-8
+            - gsl-2.5
       script: "./configure --enable-maintainer-mode; make all; make check;"
 
     # Plain build under Ubuntu GNU+Linux "trusty", CLang automatically selected by Travis CI.
@@ -201,7 +201,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - texinfo
+            - gsl-2.5
       compiler: clang
       script: "./configure --enable-maintainer-mode CFLAGS='-Wno-unknown-attributes'; make all; make check;"
 
@@ -209,12 +209,20 @@ matrix:
     - os: osx
       osx_image: xcode7.3
       compiler: clang
+      addons:
+        homebrew:
+          packages:
+            - gsl-2.5
       script: "./configure --enable-maintainer-mode CFLAGS='-Wno-unknown-attributes'; make all; make check;"
 
     # Plain build under OS X, XCode 8.3, CLang automatically selected by Travis CI.
     - os: osx
       osx_image: xcode8.3
       compiler: clang
+      addons:
+        homebrew:
+          packages:
+            - gsl-2.5
       script: "./configure --enable-maintainer-mode CFLAGS='-Wno-unknown-attributes'; make all; make check;"
 
     # Codecov support under Ubuntu GNU+Linux "trusty", GCC 8.
@@ -226,8 +234,8 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - texinfo
             - gcc-8
+            - gsl-2.5
       script: "./configure --enable-maintainer-mode CFLAGS='-O0 --coverage'; make all; make check;"
       after_success:
         bash <(curl -s https://codecov.io/bash) -xgcov-8
