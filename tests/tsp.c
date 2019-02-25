@@ -2,36 +2,40 @@
    Part of: annealing
    Contents: annealing test with traveling salesman problem
    Date: Fri Feb 23, 2007
-   
+
    Abstract
-   
+
 	Solve the TSP for 12 cities.
-   
-   Copyright (c) 2007 Marco Maggi
-   
-   
+
+   Copyright (c) 2007, 2019 Marco Maggi
+
+
    This  program  is free  software:  you  can redistribute  it
    and/or modify it  under the terms of the  GNU General Public
    License as published by the Free Software Foundation, either
    version  3 of  the License,  or (at  your option)  any later
    version.
-   
+
    This  program is  distributed in  the hope  that it  will be
    useful, but  WITHOUT ANY WARRANTY; without  even the implied
    warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
    PURPOSE.   See  the  GNU  General Public  License  for  more
    details.
-   
+
    You should  have received a  copy of the GNU  General Public
    License   along   with    this   program.    If   not,   see
    <http://www.gnu.org/licenses/>.
-   
+
 */
 
 
 /** ------------------------------------------------------------
  ** Headers.
  ** ----------------------------------------------------------*/
+
+/* Enable latest POSIX features. */
+#undef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE		200809L
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,7 +62,7 @@ static	annealing_copy_fun_t	copy_function;
 
 static const char * city_names[NUM] = {
   "Santa Fe", "Phoenix", "Albuquerque", "Clovis", "Durango", "Dallas",
-  "Tesuque", "Grants", "Los Alamos", "Las Cruces", "Cortez", "Gallup" 
+  "Tesuque", "Grants", "Los Alamos", "Las Cruces", "Cortez", "Gallup"
 };
 static const double city_latitudes[NUM] = {
   35.68, 33.54, 35.12,  34.41, 37.29, 32.79,
@@ -100,7 +104,7 @@ main (int argc, char ** argv)
   size_t		max_step = 5;
   configuration_t	configurations[3];
   int			verbose_mode = 0;
-  
+
 
   {
     int c;
@@ -122,7 +126,7 @@ main (int argc, char ** argv)
 
   printf("\n------------------------------------------------------------\n");
   printf("test_tsp: traveling salesman problem with simulated annealing\n");
-  
+
   /* problem data */
   {
     D.num = NUM;
@@ -161,7 +165,7 @@ main (int argc, char ** argv)
 
     /* start configuration */
     for (size_t i=0; i<D.num; ++i)
-      configurations[0][i] = i;	
+      configurations[0][i] = i;
 
     S.params			= &D;
   }
@@ -169,7 +173,7 @@ main (int argc, char ** argv)
   annealing_simple_solve(&S);
 
   printf("test_tsp: final best route:");
-  for (size_t i=0; i<D.num; ++i) printf(" %d", configurations[1][i]);
+  for (size_t i=0; i<D.num; ++i) printf(" %lu", configurations[1][i]);
   printf("; energy %.1f\n", energy_function(&S, configurations[1]));
   printf("test_tsp:");
   for (size_t i=0; i<D.num; ++i) printf(" %s,", city_names[configurations[1][i]]);
@@ -235,13 +239,13 @@ log_function (void * W)
   size_t *	N = S->new_configuration.data;
 
   printf("current: ");
-  for (size_t i=0; i<D->num; ++i) printf("%d,", C[i]);
+  for (size_t i=0; i<D->num; ++i) printf("%lud,", C[i]);
   printf(" (E %.1f)", S->current_configuration.energy);
   printf("; best: ");
-  for (size_t i=0; i<D->num; ++i) printf("%d,", B[i]);
+  for (size_t i=0; i<D->num; ++i) printf("%lu,", B[i]);
   printf(" (E %.1f)", S->best_configuration.energy);
   printf("; new: ");
-  for (size_t i=0; i<D->num; ++i) printf("%d,", N[i]);
+  for (size_t i=0; i<D->num; ++i) printf("%lu,", N[i]);
   printf(" (E %.1f)\n", S->new_configuration.energy);
 }
 

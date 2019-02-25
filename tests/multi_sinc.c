@@ -2,36 +2,40 @@
    Part of: annealing
    Contents: multibest annealing test with sinc(t) minimisation
    Date: Mon Feb 26, 2007
-   
+
    Abstract
-   
+
 	Find the 4 local minima of 'f(t) = -sin(t)/t'.
-   
-   Copyright (c) 2007 Marco Maggi
-   
-   
+
+   Copyright (c) 2007, 2019 Marco Maggi
+
+
    This  program  is free  software:  you  can redistribute  it
    and/or modify it  under the terms of the  GNU General Public
    License as published by the Free Software Foundation, either
    version  3 of  the License,  or (at  your option)  any later
    version.
-   
+
    This  program is  distributed in  the hope  that it  will be
    useful, but  WITHOUT ANY WARRANTY; without  even the implied
    warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
    PURPOSE.   See  the  GNU  General Public  License  for  more
    details.
-   
+
    You should  have received a  copy of the GNU  General Public
    License   along   with    this   program.    If   not,   see
    <http://www.gnu.org/licenses/>.
-   
+
 */
 
 
 /** ------------------------------------------------------------
  ** Headers.
  ** ----------------------------------------------------------*/
+
+/* Enable latest POSIX features. */
+#undef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE		200809L
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,15 +45,11 @@
 #include <gsl/gsl_rng.h>
 #include "annealing.h"
 
-
 static	annealing_energy_fun_t	energy_function;
 static	annealing_step_fun_t	step_function;
 static	annealing_metric_fun_t	metric_function;
-static	annealing_log_fun_t		log_function;
+static	annealing_log_fun_t	log_function;
 static	annealing_copy_fun_t	copy_function;
-
-
-/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -64,7 +64,7 @@ main (int argc, char ** argv)
   double	configurations[2+4]; /* new, current and 4 best */
   double	max_step = 10.0;
   int		verbose_mode = 0;
-  
+
 
   {
     int c;
@@ -119,7 +119,7 @@ main (int argc, char ** argv)
 
   annealing_multibest_solve(&S);
 
-  printf("test_multi_sinc: found %u best solutions:",
+  printf("test_multi_sinc: found %lu best solutions:",
 	 S.best_configurations_count);
   for (size_t i=0; i<S.best_configurations_count; ++i)
     {
@@ -179,7 +179,7 @@ log_function (void * W)
   double	current = *((double *)S->current_configuration.data);
 
 
-  printf("current %5.5g (energy %.4f), worst best energy %.4f, best (%u):",
+  printf("current %5.5g (energy %.4f), worst best energy %.4f, best (%lu):",
 	 current, S->current_configuration.energy,
 	 S->best_configurations[S->best_configurations_count-1].energy,
 	 S->best_configurations_count);

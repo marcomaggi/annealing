@@ -2,36 +2,40 @@
    Part of: annealing
    Contents: annealing test with dumped bidimensional sin minimisation
    Date: Thu Feb 22, 2007
-   
+
    Abstract
-   
+
 	Find the minimum of 'f(t) = -sin(sqrt(X*X + Y*Y))/(X*X + Y*Y)'.
-   
-   Copyright (c) 2007 Marco Maggi
-   
-   
+
+   Copyright (c) 2007, 2019 Marco Maggi
+
+
    This  program  is free  software:  you  can redistribute  it
    and/or modify it  under the terms of the  GNU General Public
    License as published by the Free Software Foundation, either
    version  3 of  the License,  or (at  your option)  any later
    version.
-   
+
    This  program is  distributed in  the hope  that it  will be
    useful, but  WITHOUT ANY WARRANTY; without  even the implied
    warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
    PURPOSE.   See  the  GNU  General Public  License  for  more
    details.
-   
+
    You should  have received a  copy of the GNU  General Public
    License   along   with    this   program.    If   not,   see
    <http://www.gnu.org/licenses/>.
-   
+
 */
 
 
 /** ------------------------------------------------------------
  ** Headers.
  ** ----------------------------------------------------------*/
+
+/* Enable latest POSIX features. */
+#undef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE		200809L
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,8 +51,6 @@ static	annealing_step_fun_t	step_function;
 static	annealing_log_fun_t	log_function;
 static	annealing_copy_fun_t	copy_function;
 
-/* ------------------------------------------------------------ */
-
 
 /** ------------------------------------------------------------
  ** Main.
@@ -61,7 +63,7 @@ main (int argc, char ** argv)
   double	configurations[3][2];
   double	max_step = 100.0;
   int		verbose_mode = 0;
-  
+
 
   {
     int c;

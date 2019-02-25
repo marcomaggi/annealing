@@ -2,25 +2,25 @@
    Part of: annealing
    Contents: annealing test with parameters fitting
    Date: Fri Feb 23, 2007
-   
+
    Abstract
-   
+
 	Find the best fit against a vector of sample for the exponential
 	model: 'y(t)  = A *  exp(-lam * t)  + b', with  parameters: 'A',
 	'lam', 'b'.
-   
-   Copyright (c) 2007 Marco Maggi
-   
+
+   Copyright (c) 2007, 2019 Marco Maggi
+
    This is free  software you can redistribute it  and/or modify it under
    the terms of  the GNU General Public License as  published by the Free
    Software Foundation; either  version 2, or (at your  option) any later
    version.
-   
+
    This  file is  distributed in  the hope  that it  will be  useful, but
    WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
    MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
    General Public License for more details.
-   
+
    You  should have received  a copy  of the  GNU General  Public License
    along with this file; see the file COPYING.  If not, write to the Free
    Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
@@ -31,6 +31,10 @@
 /** ------------------------------------------------------------
  ** Headers.
  ** ----------------------------------------------------------*/
+
+/* Enable latest POSIX features. */
+#undef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE		200809L
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -89,7 +93,7 @@ main (int argc, char ** argv)
   fitting_step_t	max_step = { 1.0, 0.1, 1.0 };
   configuration_t	configurations[3];
   int			verbose_mode = 0;
-  
+
 
   {
     int c;
@@ -111,7 +115,7 @@ main (int argc, char ** argv)
 
   printf("\n------------------------------------------------------------\n");
   printf("test_fitting: exponential parameters fitting with simulated annealing\n");
-  
+
   /* fitting data initialisation */
   {
     D.num = NUM;
@@ -247,7 +251,7 @@ void
 linspace (double * t, size_t num, double beg, double end)
 {
   double step = (end - beg) / (num-1);
-  
+
   *t = beg;
   for (size_t i=1; i<num; ++i, ++t)
     t[1] = *t + step;
